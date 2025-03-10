@@ -15,9 +15,13 @@ export default function NavLink({ href, children, className }: NavLinkProps) {
   return (
     <Link
       href={href}
-      className={clsx("text-lg", className, {
-        "text-utils-scent-orange": isActive,
-      })}
+      className={clsx(
+        "hover:text-utils-scent-orange flex text-xs font-medium opacity-50 transition-all ease-in-out hover:opacity-100",
+        className,
+        {
+          "opacity-100": isActive,
+        },
+      )}
     >
       {children}
     </Link>
