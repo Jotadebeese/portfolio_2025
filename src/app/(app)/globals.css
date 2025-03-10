@@ -6,6 +6,7 @@
   --background: #fffdfc;
   --foreground: #181411;
   --utils-scent-orange: #ffa600;
+  --utils-scent-gray-01: #e6d9d1;
 }
 
 @theme inline {
@@ -13,6 +14,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-utils-scent-orange: var(--utils-scent-orange);
+  --color-utils-scent-gray-01: var(--utils-scent-gray-01);
   --font-sans: var(--font-dm-sans);
   --font-serif: var(--font-pt-serif);
 }

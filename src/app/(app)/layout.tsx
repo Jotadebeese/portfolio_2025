@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, PT_Serif, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/navbar/indext";
+import Navbar from "@/components/navbar";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -31,9 +31,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${dm_sans.variable} ${space_grotestk.variable} ${pt_serif.variable}  antialiased`}
+        className={`${dm_sans.variable} ${space_grotestk.variable} ${pt_serif.variable} antialiased`}
       >
-        <div className="flex flex-col justify-between min-h-screen">
+        <div className="flex min-h-screen flex-col justify-between">
           <Navbar />
           {children}
           <footer className="">Footer</footer>
