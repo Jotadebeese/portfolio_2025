@@ -16,6 +16,7 @@
     "@payloadcms/payload-cloud": "^3.27.0",
     "@payloadcms/richtext-lexical": "^3.27.0",
     "@payloadcms/storage-vercel-blob": "^3.27.0",
+    "@types/react-color": "^3.0.13",
     "clsx": "^2.1.1",
     "graphql": "^16.8.1",
     "lucide-react": "^0.477.0",

@@ -1,10 +1,10 @@
 import type { CollectionConfig } from "payload";
 
-export const Tags: CollectionConfig = {
-  slug: "tags",
+export const Tech: CollectionConfig = {
+  slug: "techs",
   labels: {
-    singular: "Tag",
-    plural: "Tags",
+    singular: "Technology",
+    plural: "Technologies",
   },
   admin: {
     useAsTitle: "name",
@@ -20,16 +20,12 @@ export const Tags: CollectionConfig = {
       label: "Name",
     },
     {
-      name: "color",
-      type: "text",
-      label: "Color",
+      name: "icon",
+      type: "upload",
+      relationTo: "media",
       required: true,
-      defaultValue: "#ffffff",
-      admin: {
-        components: {
-          Field: "@/fields/ColorPicker",
-        },
-      },
+      label: "Icon",
+      displayPreview: true,
     },
   ],
 };

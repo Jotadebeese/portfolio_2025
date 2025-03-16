@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, PT_Serif, Space_Grotesk } from "next/font/google";
+import { DM_Sans, PT_Serif, Roboto, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 
@@ -17,12 +17,17 @@ export const dm_sans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],
 });
+export const roboto = Roboto({
+  variable: "--font-roboto",
+  subsets: ["latin"],
+});
 const pt_serif = PT_Serif({
   subsets: ["latin"],
   weight: ["400", "700"],
   display: "swap",
   variable: "--font-pt-serif",
 });
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${dm_sans.variable} ${space_grotestk.variable} ${pt_serif.variable} antialiased`}
+        className={`${dm_sans.variable} ${roboto.variable} ${space_grotestk.variable} ${pt_serif.variable} antialiased`}
       >
         <div className="flex min-h-screen flex-col justify-between">
           <Navbar />

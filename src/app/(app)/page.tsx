@@ -2,9 +2,9 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <main className="px-5 pt-20 flex flex-col items-center w-full flex-grow">
-      <div className="max-w-6xl w-full ">
-        <div className="max-w-3xl w-full flex flex-col gap-10">
+    <main className="flex w-full flex-grow flex-col items-center px-5 pt-20">
+      <div className="w-full max-w-6xl">
+        <div className="flex w-full max-w-3xl flex-col gap-10">
           <h1 className="text-7xl md:text-[10rem]">
             Hey!
             <br />

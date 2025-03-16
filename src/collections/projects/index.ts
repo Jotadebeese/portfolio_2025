@@ -15,12 +15,6 @@ export const Projects: CollectionConfig = {
   },
   fields: [
     {
-      name: "title",
-      type: "text",
-      required: true,
-      label: "Title",
-    },
-    {
       name: "slug",
       type: "text",
       required: true,
@@ -32,37 +26,22 @@ export const Projects: CollectionConfig = {
         position: "sidebar",
       },
     },
-    /* {
-      name: "tags",
+    {
+      name: "projectType",
       type: "relationship",
       relationTo: "tags",
       hasMany: true,
-    }, */
-    {
-      name: "shortDescription",
-      type: "richText",
-      label: "Short Description",
-      required: true,
-    },
-    {
-      name: "liveUrl",
-      type: "text",
-      label: "Live URL",
-    },
-    {
-      name: "githubUrl",
-      type: "text",
-      label: "GitHub URL",
-    },
-    {
-      name: "publishedAt",
-      type: "date",
-      required: true,
-      label: "Date Published",
       admin: {
-        date: {
-          displayFormat: "dd/MM/yyyy",
-        },
+        position: "sidebar",
+      },
+    },
+    {
+      name: "technologies",
+      type: "relationship",
+      relationTo: "techs",
+      hasMany: true,
+      admin: {
+        position: "sidebar",
       },
     },
     {
@@ -76,6 +55,46 @@ export const Projects: CollectionConfig = {
       admin: {
         position: "sidebar",
       },
+    },
+    {
+      name: "liveUrl",
+      type: "text",
+      label: "Live URL",
+      admin: {
+        position: "sidebar",
+      },
+    },
+    {
+      name: "githubUrl",
+      type: "text",
+      label: "GitHub URL",
+      admin: {
+        position: "sidebar",
+      },
+    },
+    {
+      name: "publishedAt",
+      type: "date",
+      required: true,
+      label: "Date Published",
+      admin: {
+        date: {
+          displayFormat: "dd/MM/yyyy",
+        },
+        position: "sidebar",
+      },
+    },
+    {
+      name: "title",
+      type: "text",
+      required: true,
+      label: "Title",
+    },
+    {
+      name: "shortDescription",
+      type: "richText",
+      label: "Short Description",
+      required: true,
     },
     {
       name: "icon",
