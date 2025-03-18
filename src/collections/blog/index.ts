@@ -1,3 +1,4 @@
+import { formatSlugHook } from "@/fields/slug/formatSlug";
 import type { CollectionConfig } from "payload";
 
 export const Blog: CollectionConfig = {
@@ -5,13 +6,65 @@ export const Blog: CollectionConfig = {
   admin: {
     useAsTitle: "title",
   },
+  versions: {
+    drafts: true,
+  },
   fields: [
+    {
+      name: "slug",
+      type: "text",
+      required: true,
+      unique: true,
+      hooks: {
+        beforeValidate: [formatSlugHook("title")],
+      },
+      admin: {
+        position: "sidebar",
+      },
+    },
+    {
+      name: "featuredImage",
+      type: "relationship",
+      relationTo: "media",
+      label: "Featured Image",
+      admin: {
+        position: "sidebar",
+      },
+    },
+    {
+      name: "blogTags",
+      type: "relationship",
+      relationTo: "blogTags",
+      hasMany: true,
+      admin: {
+        position: "sidebar",
+      },
+    },
+    {
+      name: "publishedAt",
+      type: "date",
+      required: true,
+      label: "Date Published",
+      admin: {
+        date: {
+          displayFormat: "dd/MM/yyyy",
+        },
+        position: "sidebar",
+      },
+    },
     {
       name: "title",
       label: "Title",
       type: "text",
       required: true,
     },
+    {
+      name: "shortDescription",
+      label: "Short Description",
+      type: "richText",
+      required: true,
+    },
+
     {
       name: "content",
       type: "blocks",
