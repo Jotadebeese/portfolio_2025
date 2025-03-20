@@ -24,7 +24,7 @@ export const Blog: CollectionConfig = {
     },
     {
       name: "featuredImage",
-      type: "relationship",
+      type: "upload",
       relationTo: "media",
       label: "Featured Image",
       admin: {
@@ -38,6 +38,7 @@ export const Blog: CollectionConfig = {
       hasMany: true,
       admin: {
         position: "sidebar",
+        isSortable: true,
       },
     },
     {
@@ -87,7 +88,7 @@ export const Blog: CollectionConfig = {
           fields: [
             {
               name: "image",
-              type: "relationship",
+              type: "upload",
               relationTo: "media",
               required: true,
               label: "Image",

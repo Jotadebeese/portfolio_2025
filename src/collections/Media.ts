@@ -20,8 +20,20 @@ export const Media: CollectionConfig = {
         width: 400,
         height: 300,
         position: "centre",
-        generateImageName: ({ height, sizeName, extension, width }) => {
-          return `custom-${sizeName}-${height}-${width}.${extension}`;
+        formatOptions: {
+          format: "webp",
+          options: {
+            quality: 90,
+          },
+        },
+        generateImageName: ({
+          height,
+          sizeName,
+          extension,
+          width,
+          originalName,
+        }) => {
+          return `${originalName}-${sizeName}-${height}-${width}.${extension}`;
         },
       },
       {
@@ -29,8 +41,21 @@ export const Media: CollectionConfig = {
         width: 768,
         height: 1024,
         position: "centre",
-        generateImageName: ({ height, sizeName, extension, width }) => {
-          return `custom-${sizeName}-${height}-${width}.${extension}`;
+
+        formatOptions: {
+          format: "webp",
+          options: {
+            quality: 90,
+          },
+        },
+        generateImageName: ({
+          height,
+          sizeName,
+          extension,
+          width,
+          originalName,
+        }) => {
+          return `${originalName}-${sizeName}-${height}-${width}.${extension}`;
         },
       },
       {
@@ -38,6 +63,33 @@ export const Media: CollectionConfig = {
         width: 1024,
         height: undefined,
         position: "centre",
+        formatOptions: {
+          format: "webp",
+          options: {
+            quality: 90,
+          },
+        },
+        generateImageName: ({
+          height,
+          sizeName,
+          extension,
+          width,
+          originalName,
+        }) => {
+          return `${originalName}-${sizeName}-${height}-${width}.${extension}`;
+        },
+      },
+      {
+        name: "desktop",
+        width: 1440,
+        height: undefined,
+        position: "centre",
+        formatOptions: {
+          format: "webp",
+          options: {
+            quality: 90,
+          },
+        },
         generateImageName: ({
           height,
           sizeName,
@@ -51,5 +103,11 @@ export const Media: CollectionConfig = {
     ],
     mimeTypes: ["image/*"],
     displayPreview: true,
+    formatOptions: {
+      format: "webp",
+      options: {
+        quality: 90,
+      },
+    },
   },
 };

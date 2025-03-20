@@ -33,6 +33,7 @@ export const Projects: CollectionConfig = {
       hasMany: true,
       admin: {
         position: "sidebar",
+        isSortable: true,
       },
     },
     {
@@ -42,6 +43,7 @@ export const Projects: CollectionConfig = {
       hasMany: true,
       admin: {
         position: "sidebar",
+        isSortable: true,
       },
     },
     {
@@ -123,7 +125,7 @@ export const Projects: CollectionConfig = {
           fields: [
             {
               name: "image",
-              type: "relationship",
+              type: "upload",
               relationTo: "media",
               required: true,
               label: "Image",
