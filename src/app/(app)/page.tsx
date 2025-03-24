@@ -1,3 +1,4 @@
+import ProjectsSection from "@/components/projects/layouts/projects-section";
 import Image from "next/image";
 
 export default function Home() {
@@ -21,6 +22,7 @@ export default function Home() {
             </small>
           </div>
         </div>
+        <ProjectsSection />
       </div>
     </main>
   );
