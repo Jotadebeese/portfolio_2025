@@ -4,7 +4,7 @@ export default function ProjectsContainer({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid w-full grid-cols-1 gap-4 py-10 md:grid-cols-2">
+    <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
       {children}
     </div>
   );

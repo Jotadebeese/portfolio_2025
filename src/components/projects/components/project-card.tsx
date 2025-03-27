@@ -2,24 +2,36 @@ import { Project } from "@/payload-types";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import Image from "next/image";
 import { Media, Tag } from "@/payload-types";
+import ButtonToLink from "./button-to-link";
+import clsx from "clsx";
 export default function ProjectCard({ project }: { project: Project }) {
   const icon = project.icon as Media;
   const publishedAt = new Date(project.publishedAt);
-  console.log(project.projectType);
+  const formattedDate = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    year: "numeric",
+  }).format(publishedAt);
+  const projectType = project.projectType as Tag[];
+
   return (
-    <div className="flex w-full flex-col gap-5 rounded-lg bg-white p-5 shadow-xs">
+    <div className="flex w-full flex-col gap-5 rounded-lg bg-white p-4 shadow-sm">
       <div className="flex w-full items-center justify-between">
-        <small>{publishedAt.toDateString()}</small>
+        <small>{formattedDate}</small>
         <div className="flex items-center gap-1">
           <small>
             {project.stage === "indevelopment" ? "In Development" : "Live"}
           </small>
-          <div className="h-4 w-4 rounded-full bg-amber-600"></div>
+          <div
+            className={clsx("h-4 w-4 rounded-full", {
+              "bg-amber-600": project.stage === "indevelopment",
+              "bg-green-600": project.stage === "live",
+            })}
+          />
         </div>
       </div>
-      <div className="flex w-full flex-col items-start gap-2 md:flex-row">
+      <div className="flex w-full flex-col items-start gap-2 sm:flex-row">
         {icon.url && (
-          <div className="border-border-color relative flex w-fit items-center justify-center rounded-lg border p-2">
+          <div className="bg-background border-border-color relative flex h-full w-fit min-w-28 items-center justify-center rounded-2xl border p-4">
             <Image
               src={icon.url}
               alt={icon.alt}
@@ -29,16 +41,25 @@ export default function ProjectCard({ project }: { project: Project }) {
             />
           </div>
         )}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col justify-center gap-1">
           <h2>{project.title}</h2>
-          {project.projectType &&
-            project.projectType.map((type) => {
-              return <small key={type.id}>{type.name}</small>;
-            })}
+          <RichText className="text-sm" data={project.shortDescription} />
         </div>
       </div>
 
-      <RichText data={project.shortDescription} />
+      <div className="flex flex-grow flex-wrap items-end justify-end gap-4">
+        {project.liveUrl && (
+          <ButtonToLink url={project.liveUrl} openInNewTab>
+            Live
+          </ButtonToLink>
+        )}
+        {project.githubUrl && (
+          <ButtonToLink url={project.githubUrl} openInNewTab>
+            Github
+          </ButtonToLink>
+        )}
+        <ButtonToLink url={`/projects/${project.slug}`}>Details</ButtonToLink>
+      </div>
     </div>
   );
 }
