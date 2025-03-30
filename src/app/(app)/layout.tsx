@@ -29,7 +29,9 @@ export default function RootLayout({
       >
         <div className="flex min-h-screen flex-col justify-between">
           <Navbar />
-          {children}
+          <main className="flex w-full flex-grow flex-col items-center">
+            <div className="w-full max-w-6xl">{children}</div>
+          </main>
           <footer className="">Footer</footer>
         </div>
       </body>

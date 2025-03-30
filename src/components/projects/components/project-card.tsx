@@ -11,7 +11,6 @@ export default function ProjectCard({ project }: { project: Project }) {
     month: "short",
     year: "numeric",
   }).format(publishedAt);
-  const projectType = project.projectType as Tag[];
 
   return (
     <div className="flex w-full flex-col gap-5 rounded-lg bg-white p-4 shadow-sm">
@@ -58,7 +57,9 @@ export default function ProjectCard({ project }: { project: Project }) {
             Github
           </ButtonToLink>
         )}
-        <ButtonToLink url={`/projects/${project.slug}`}>Details</ButtonToLink>
+        {project.individualPage && (
+          <ButtonToLink url={`/projects/${project.slug}`}>Details</ButtonToLink>
+        )}
       </div>
     </div>
   );

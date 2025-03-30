@@ -34,24 +34,24 @@ export default async function ProjectsSection() {
 
   return (
     <div className="flex flex-col gap-8 py-10">
-      {sortedProjects.map(([year, projects]) => (
-        <div key={year} className="flex flex-col gap-4">
-          <div className="border-border-color flex w-full justify-end border-b border-dashed">
-            <h3>{year}</h3>
-          </div>
-          <ProjectsContainer>
-            {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </ProjectsContainer>
+      {projects.length === 0 ? (
+        <div className="border-border-color flex w-full border-t border-dashed pt-4">
+          <p className="font-light">Work in progress, nothing to see here.</p>
         </div>
-      ))}
-
-      {/* <ProjectsContainer>
-      {projects.map((project) => (
-        <ProjectCard key={project.id} project={project} />
-      ))}
-    </ProjectsContainer> */}
+      ) : (
+        sortedProjects.map(([year, projects]) => (
+          <div key={year} className="flex flex-col gap-4">
+            <div className="border-border-color flex w-full justify-end border-b border-dashed">
+              <h3>{year}</h3>
+            </div>
+            <ProjectsContainer>
+              {projects.map((project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+            </ProjectsContainer>
+          </div>
+        ))
+      )}
     </div>
   );
 }

@@ -75,6 +75,16 @@ export const Projects: CollectionConfig = {
       },
     },
     {
+      name: "individualPage",
+      type: "checkbox",
+      label: "Individual Page",
+      defaultValue: false,
+      admin: {
+        position: "sidebar",
+        description: "If enabled, this project will have its own page",
+      },
+    },
+    {
       name: "publishedAt",
       type: "date",
       required: true,
