@@ -18,7 +18,36 @@
   --font-sans: var(--font-dm-sans);
   --font-serif: var(--font-pt-serif);
 }
-
+@layer utilities {
+  .RichText h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+  }
+  .RichText h2 {
+    font-size: 2rem;
+    font-weight: 700;
+  }
+  .RichText h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .RichText h4 {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+  .RichText h5 {
+    font-size: 1.125rem;
+    font-weight: 700;
+  }
+  .RichText h6 {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .RichText p {
+    font-size: 0.875rem;
+    font-weight: 400;
+  }
+}
 body {
   background: var(--background);
   font-family: var(--font-dm-sans);
@@ -33,7 +62,7 @@ h5,
 h6 {
   font-family: var(--font-roboto);
   font-weight: 300;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.02em;
 }
 h2 {
   font-size: 1.25rem;

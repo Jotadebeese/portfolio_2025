@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, PT_Serif, Roboto, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -32,7 +33,7 @@ export default function RootLayout({
           <main className="flex w-full flex-grow flex-col items-center">
             <div className="w-full max-w-6xl">{children}</div>
           </main>
-          <footer className="">Footer</footer>
+          <Footer />
         </div>
       </body>
     </html>

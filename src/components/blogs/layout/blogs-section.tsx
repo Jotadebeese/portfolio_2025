@@ -14,10 +14,9 @@ export default async function BlogsSection() {
     depth: 2,
   });
   const blogs = blogsData.docs;
-  console.log(blogs);
 
   return (
-    <div className="flex flex-col gap-5 p-2.5 sm:px-0">
+    <div className="flex flex-col gap-5 p-2.5 sm:px-5">
       {blogs.length === 0 ? (
         <div className="border-border-color flex w-full border-b border-dashed py-5">
           <p className="font-light">Work in progress, nothing to see here.</p>
