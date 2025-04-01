@@ -35,13 +35,11 @@ export default function BlogHero({
       />
       <div className="relative rounded-lg border-2 border-white bg-[#ffffff67] p-2 shadow-sm">
         <h1 className="text-2xl font-medium! text-white">{title}</h1>
-        <p className="max-w-lg text-white">
-          {typeof description === "string" ? (
-            description
-          ) : (
-            <RichText data={description} className="text-sm" />
-          )}
-        </p>
+        {typeof description === "string" ? (
+          <p className="max-w-lg text-white">{description}</p>
+        ) : (
+          <RichText data={description} className="text-sm text-white" />
+        )}
       </div>
     </div>
   );

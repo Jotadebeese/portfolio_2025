@@ -1,5 +1,6 @@
 import { formatSlugHook } from "@/fields/slug/formatSlug";
 import type { CollectionConfig } from "payload";
+import { revalidateProject } from "./hooks/revalidateProject";
 
 export const Projects: CollectionConfig = {
   slug: "projects",
@@ -150,4 +151,7 @@ export const Projects: CollectionConfig = {
       ],
     },
   ],
+  hooks: {
+    afterChange: [revalidateProject],
+  },
 };
