@@ -43,10 +43,6 @@
     font-size: 1rem;
     font-weight: 700;
   }
-  .RichText p {
-    font-size: 0.875rem;
-    font-weight: 400;
-  }
 }
 body {
   background: var(--background);

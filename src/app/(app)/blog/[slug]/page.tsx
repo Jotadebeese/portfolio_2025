@@ -4,6 +4,8 @@ import BlogHero from "@/components/blogs/components/blog-hero";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import { Media } from "@/payload-types";
 import Image from "next/image";
+import { getBlogBySlug } from "@/lib/payload/actions";
+import { notFound } from "next/navigation";
 
 export default async function BlogsPage({
   params,
@@ -11,20 +13,14 @@ export default async function BlogsPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const payload = await getPayload({ config });
-  const blogData = await payload.find({
-    collection: "blog",
-    where: {
-      slug: {
-        equals: slug,
-      },
-    },
-    limit: 1,
-    depth: 2,
-  });
-  const blog = blogData.docs[0];
+
+  const blog = await getBlogBySlug(slug);
+  if (!blog) {
+    return notFound();
+  }
+
   const image = blog.featuredImage as { url: string; alt: string };
-  console.log(blog.content);
+
   return (
     <>
       <BlogHero

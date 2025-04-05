@@ -1,6 +1,6 @@
 import { Project } from "@/payload-types";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { CollectionAfterChangeHook } from "payload";
+import { CollectionAfterChangeHook, CollectionAfterDeleteHook } from "payload";
 
 export const revalidateProject: CollectionAfterChangeHook<Project> = ({
   doc,
@@ -11,7 +11,7 @@ export const revalidateProject: CollectionAfterChangeHook<Project> = ({
     if (doc._status === "published") {
       const path = `/projects/${doc.slug}`;
 
-      payload.logger.info(`Revalidating post at ${path}`);
+      payload.logger.info(`Revalidating project at ${path}`);
 
       revalidatePath(path);
       revalidateTag("projects");
@@ -20,11 +20,26 @@ export const revalidateProject: CollectionAfterChangeHook<Project> = ({
     if (previousDoc._status === "published" && doc._status !== "published") {
       const oldPath = `/projects/${previousDoc.slug}`;
 
-      payload.logger.info(`Revalidating old post at ${oldPath}`);
+      payload.logger.info(`Revalidating old project at ${oldPath}`);
 
       revalidatePath(oldPath);
       revalidateTag("projects");
     }
+  }
+  return doc;
+};
+
+export const revalidateDelete: CollectionAfterDeleteHook<Project> = ({
+  doc,
+  req: { payload, context },
+}) => {
+  if (!context.disableRevalidate) {
+    const path = `/projects/${doc?.slug}`;
+
+    payload.logger.info(`Revalidating project deletion at ${path}`);
+
+    revalidatePath(path);
+    revalidateTag("projects");
   }
   return doc;
 };

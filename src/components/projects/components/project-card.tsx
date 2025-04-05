@@ -1,7 +1,7 @@
 import { Project } from "@/payload-types";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import Image from "next/image";
-import { Media, Tag } from "@/payload-types";
+import { Media } from "@/payload-types";
 import ButtonToLink from "./button-to-link";
 import clsx from "clsx";
 export default function ProjectCard({ project }: { project: Project }) {
