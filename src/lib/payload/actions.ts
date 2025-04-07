@@ -1,4 +1,4 @@
-import { Blog, Project } from "@/payload-types";
+import { Blog, Project, About, BlogPage, HomePage } from "@/payload-types";
 import { unstable_cache } from "next/cache";
 import { getPayload } from "payload";
 import config from "@payload-config";
@@ -77,4 +77,41 @@ export const getBlogBySlug = unstable_cache(
   },
   ["blog-by-slug"],
   { tags: ["blogs"] },
+);
+
+// Globals
+export const getAboutPage = unstable_cache(
+  async (): Promise<About> => {
+    const res = await payload.findGlobal({
+      slug: "about",
+      depth: 2,
+    });
+    return res;
+  },
+  ["about-page"],
+  { tags: ["about-page"] },
+);
+
+export const getBlogPage = unstable_cache(
+  async (): Promise<BlogPage> => {
+    const res = await payload.findGlobal({
+      slug: "blogPage",
+      depth: 2,
+    });
+    return res;
+  },
+  ["blog-page"],
+  { tags: ["blog-page"] },
+);
+
+export const getHomePage = unstable_cache(
+  async (): Promise<HomePage> => {
+    const res = await payload.findGlobal({
+      slug: "homePage",
+      depth: 2,
+    });
+    return res;
+  },
+  ["home-page"],
+  { tags: ["home-page"] },
 );

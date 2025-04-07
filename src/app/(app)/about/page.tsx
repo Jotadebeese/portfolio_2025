@@ -1,8 +1,19 @@
-export default function About() {
+import BlockContent from "@/components/common/block-content";
+import Hero from "@/components/common/hero";
+import { getAboutPage } from "@/lib/payload/actions";
+
+export default async function About() {
+  const aboutPage = await getAboutPage();
+  const featuredImage = aboutPage.featuredImage as { url: string; alt: string };
   return (
-    <div>
-      <h1>About</h1>
-      <p>This is the about page</p>
-    </div>
+    <>
+      <Hero
+        title={aboutPage.title}
+        description={aboutPage.shortDescription}
+        image={featuredImage}
+        goBack={false}
+      />
+      <BlockContent data={aboutPage.content} />
+    </>
   );
 }

@@ -1,11 +1,10 @@
-import { Media } from "@/payload-types";
 import { SerializedEditorState } from "@payloadcms/richtext-lexical/lexical";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import { ChevronLeft } from "lucide-react";
-import Image, { StaticImageData } from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 
-export default function BlogHero({
+export default function Hero({
   image,
   title,
   description,
@@ -13,7 +12,7 @@ export default function BlogHero({
 }: {
   image: { url: string; alt: string };
   title: string;
-  description: string | SerializedEditorState;
+  description?: string | SerializedEditorState;
   goBack?: boolean;
 }) {
   return (
@@ -35,11 +34,15 @@ export default function BlogHero({
       />
       <div className="relative rounded-lg border-2 border-white bg-[#ffffff67] p-2 shadow-sm">
         <h1 className="text-2xl font-medium! text-white">{title}</h1>
-        {typeof description === "string" ? (
-          <p className="max-w-lg text-white">{description}</p>
-        ) : (
-          <RichText data={description} className="text-sm text-white" />
-        )}
+        {description &&
+          (typeof description === "string" ? (
+            <p className="max-w-lg text-white">{description}</p>
+          ) : (
+            <RichText
+              data={description}
+              className="max-w-lg text-sm text-white"
+            />
+          ))}
       </div>
     </div>
   );

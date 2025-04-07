@@ -1,19 +1,16 @@
-import Image from "next/image";
-import bowser from "@/assets/error.png";
 import BlogsSection from "@/components/blogs/layout/blogs-section";
-import BlogHero from "@/components/blogs/components/blog-hero";
+import Hero from "@/components/common/hero";
+import { getBlogPage } from "@/lib/payload/actions";
 
-const image = {
-  url: bowser.src,
-  alt: "Bowser",
-};
+export default async function Blog() {
+  const blogPage = await getBlogPage();
 
-export default function Blog() {
+  const image = blogPage.featuredImage as { url: string; alt: string };
   return (
     <>
-      <BlogHero
-        title="Blogs"
-        description="Here are some writes about thenology, personal topics and anything that catch my attention."
+      <Hero
+        title={blogPage.title}
+        description={blogPage.shortDescription}
         image={image}
       />
       <BlogsSection />
