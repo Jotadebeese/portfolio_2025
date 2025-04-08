@@ -57,7 +57,7 @@ h4,
 h5,
 h6 {
   font-family: var(--font-roboto);
-  font-weight: 300;
+  font-weight: 200;
   letter-spacing: -0.02em;
 }
 h2 {
