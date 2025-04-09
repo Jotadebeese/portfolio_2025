@@ -4,7 +4,7 @@ import Image from "next/image";
 import jota from "@/assets/jota.png";
 export default function Navbar() {
   return (
-    <div className="fixed z-50 flex w-full justify-center pt-2 pr-5">
+    <div className="fixed z-10 flex w-full justify-center pt-2 pr-2.5 sm:pr-5">
       <div className="flex w-full max-w-6xl justify-end">
         <div className="group hover:shadow-foreground rounded-full transition-all duration-500 ease-in-out hover:shadow-[-4px_-4px]">
           <nav className="border-border-color bg-background hover:shadow-utils-scent-gray-01 flex justify-start gap-5 rounded-l-4xl rounded-r-4xl border py-1 pr-3 pl-1 transition-all duration-500 ease-in-out outline-none hover:shadow-[4px_4px]">

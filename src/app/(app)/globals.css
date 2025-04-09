@@ -64,3 +64,8 @@ h2 {
   font-size: 1.25rem;
   font-weight: 500;
 }
+
+.contact-form input,
+.contact-form textarea {
+  @apply rounded-lg border border-dashed border-white p-2 focus:border-amber-600 focus:outline-none;
+}

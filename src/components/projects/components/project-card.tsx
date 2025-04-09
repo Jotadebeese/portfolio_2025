@@ -23,7 +23,7 @@ export default function ProjectCard({ project }: { project: Project }) {
           <div
             className={clsx("h-4 w-4 rounded-full", {
               "bg-amber-600": project.stage === "indevelopment",
-              "bg-green-600": project.stage === "live",
+              "bg-emerald-600": project.stage === "live",
             })}
           />
         </div>
