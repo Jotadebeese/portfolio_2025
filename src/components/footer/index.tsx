@@ -5,7 +5,7 @@ import linkedIn from "@/assets/linkedin.svg";
 import github from "@/assets/github.svg";
 import Image from "next/image";
 import Link from "next/link";
-import ContactForm from "../forms/layouts/contact-form";
+import ContactForm from "../forms/components/contact-form";
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
 
@@ -35,10 +35,10 @@ export default function Footer() {
     <>
       <div
         className={clsx(
-          "bg-foreground fixed top-0 z-10 h-dvh w-full transition-all ease-in-out",
+          "bg-foreground fixed top-0 h-dvh w-full transition-all ease-in-out",
           {
-            "translate-y-0 opacity-25": open,
-            "translate-y-[-100%] opacity-0": !open,
+            "z-1 opacity-25": open,
+            "z-[-1] opacity-0": !open,
           },
         )}
       ></div>
@@ -50,7 +50,7 @@ export default function Footer() {
       >
         <div className="flex w-full max-w-3xl items-end justify-end pr-6">
           <button
-            onClick={() => setOpen(!open)}
+            onMouseDown={() => setOpen(!open)}
             className="bg-foreground text-background z-1 w-20 translate-y-0.5 cursor-pointer rounded-t-xl px-2 pt-0.5 pb-1 text-xs shadow-md transition-all ease-in-out hover:translate-y-0"
           >
             {!open ? "contact" : "x"}
