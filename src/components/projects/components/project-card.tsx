@@ -1,9 +1,10 @@
-import { Project } from "@/payload-types";
+import { Project, Tag } from "@/payload-types";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import Image from "next/image";
 import { Media } from "@/payload-types";
 import ButtonToLink from "./button-to-link";
 import clsx from "clsx";
+import { Scan } from "lucide-react";
 export default function ProjectCard({ project }: { project: Project }) {
   const icon = project.icon as Media;
   const publishedAt = new Date(project.publishedAt);
@@ -11,6 +12,8 @@ export default function ProjectCard({ project }: { project: Project }) {
     month: "short",
     year: "numeric",
   }).format(publishedAt);
+
+  const projectTypes = project.projectType as Tag[];
 
   return (
     <div className="flex w-full flex-col gap-5 rounded-lg bg-white p-4 shadow-sm">
@@ -43,6 +46,20 @@ export default function ProjectCard({ project }: { project: Project }) {
         <div className="flex flex-col justify-center gap-1">
           <h2>{project.title}</h2>
           <RichText className="text-sm" data={project.shortDescription} />
+          {projectTypes && projectTypes.length > 0 && (
+            <ul className="mt-1 flex flex-wrap items-center gap-2">
+              {projectTypes.map((tag) => (
+                <li
+                  key={tag.id}
+                  style={{ ["--tag-color" as any]: tag.color }}
+                  className="flex w-fit items-center gap-1 rounded-md bg-[var(--tag-color)]/10 px-1.5 text-[var(--tag-color)]"
+                >
+                  <Scan size={12} />
+                  <small>{tag.name}</small>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 

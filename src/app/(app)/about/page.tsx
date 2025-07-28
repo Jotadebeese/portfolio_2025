@@ -8,7 +8,7 @@ export default async function About() {
   return (
     <>
       <Hero
-        title={aboutPage.title}
+        title={aboutPage.title || ""}
         description={aboutPage.shortDescription}
         image={featuredImage}
         goBack={false}

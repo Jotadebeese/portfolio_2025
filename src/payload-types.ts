@@ -655,7 +655,7 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface About {
   id: number;
-  title: string;
+  title?: string | null;
   shortDescription: {
     root: {
       type: string;
@@ -711,7 +711,7 @@ export interface About {
  */
 export interface BlogPage {
   id: number;
-  title: string;
+  title?: string | null;
   shortDescription: {
     root: {
       type: string;

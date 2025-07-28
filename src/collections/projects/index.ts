@@ -10,6 +10,7 @@ export const Projects: CollectionConfig = {
   },
   admin: {
     useAsTitle: "title",
+    group: "Projects",
   },
   versions: {
     drafts: true,

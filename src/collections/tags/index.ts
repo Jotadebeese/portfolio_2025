@@ -1,3 +1,4 @@
+import { revalidatePath, revalidateTag } from "next/cache";
 import type { CollectionConfig } from "payload";
 
 export const Tags: CollectionConfig = {
@@ -8,6 +9,7 @@ export const Tags: CollectionConfig = {
   },
   admin: {
     useAsTitle: "name",
+    group: "Projects",
   },
   access: {
     read: () => true,
@@ -32,4 +34,16 @@ export const Tags: CollectionConfig = {
       },
     },
   ],
+  hooks: {
+    afterChange: [
+      async ({ doc, req: { payload, context } }) => {
+        if (!context.disableRevalidate) {
+          payload.logger.info(`Revalidating home page after tag change`);
+          revalidateTag("home-page");
+          revalidatePath("/");
+        }
+        return doc;
+      },
+    ],
+  },
 };

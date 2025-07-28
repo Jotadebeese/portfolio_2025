@@ -22,7 +22,12 @@ export default function Navbar() {
                 <NavLink href="/about">About</NavLink>
               </li>
               <li>
-                <NavLink href="/blog">Blog</NavLink>
+                <NavLink
+                  className="rounded-full bg-white px-1.5 py-0.5 text-emerald-700"
+                  href="/notes"
+                >
+                  #self.log()
+                </NavLink>
               </li>
             </ul>
           </nav>

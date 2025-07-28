@@ -1,6 +1,3 @@
-import { RichText } from "@payloadcms/richtext-lexical/react";
-import { Media } from "@/payload-types";
-import Image from "next/image";
 import { getBlogBySlug } from "@/lib/payload/actions";
 import { notFound } from "next/navigation";
 import Hero from "@/components/common/hero";

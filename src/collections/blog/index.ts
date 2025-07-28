@@ -6,6 +6,7 @@ export const Blog: CollectionConfig = {
   slug: "blog",
   admin: {
     useAsTitle: "title",
+    group: "Notes",
   },
   versions: {
     drafts: true,

@@ -1,6 +1,14 @@
-import { Blog } from "@/payload-types";
+import { Blog, BlogTag } from "@/payload-types";
 import { RichText } from "@payloadcms/richtext-lexical/react";
-import { ChevronRight } from "lucide-react";
+import clsx from "clsx";
+import {
+  ChevronRight,
+  CircleDotDashed,
+  LucideTag,
+  Tag,
+  TagIcon,
+  Tags,
+} from "lucide-react";
 import Link from "next/link";
 
 export default function BlogCard(blog: Blog) {
@@ -9,6 +17,7 @@ export default function BlogCard(blog: Blog) {
     month: "long",
     day: "numeric",
   });
+  const blogTags = blog.blogTags as BlogTag[];
   return (
     <div
       className="border-border-color flex w-full flex-col gap-2 border-b border-dashed py-5"
@@ -16,7 +25,7 @@ export default function BlogCard(blog: Blog) {
     >
       <div className="flex flex-col">
         <Link
-          href={`/blog/${blog.slug}`}
+          href={`/notes/${blog.slug}`}
           className="group flex items-center gap-1 transition-all ease-in-out hover:text-amber-600"
         >
           <h3>{blog.title}</h3>
@@ -27,10 +36,25 @@ export default function BlogCard(blog: Blog) {
         </Link>
         <small className="font-medium">{publishedAt}</small>
       </div>
+
       <RichText
         data={blog.shortDescription}
         className="max-w-lg text-sm font-light"
       />
+      {blogTags && blogTags.length > 0 && (
+        <ul className="flex flex-wrap items-center gap-2">
+          {blogTags.map((tag) => (
+            <li
+              key={tag.id}
+              style={{ ["--tag-color" as any]: tag.color }}
+              className="flex w-fit items-center gap-1 rounded-md bg-[var(--tag-color)]/10 px-1.5 text-[var(--tag-color)]"
+            >
+              <CircleDotDashed size={12} />
+              <small>{tag.name}</small>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

@@ -8,6 +8,7 @@ export const Tech: CollectionConfig = {
   },
   admin: {
     useAsTitle: "name",
+    group: "Projects",
   },
   access: {
     read: () => true,

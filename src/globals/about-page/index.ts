@@ -11,7 +11,6 @@ export const AboutPage: GlobalConfig = {
       name: "title",
       label: "Title",
       type: "text",
-      required: true,
     },
     {
       name: "shortDescription",

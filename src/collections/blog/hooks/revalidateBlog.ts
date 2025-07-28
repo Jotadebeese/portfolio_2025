@@ -9,7 +9,7 @@ export const revalidateBlog: CollectionAfterChangeHook<Blog> = ({
 }) => {
   if (!context.disableRevalidate) {
     if (doc._status === "published") {
-      const path = `/blog/${doc.slug}`;
+      const path = `/notes/${doc.slug}`;
 
       payload.logger.info(`Revalidating blog at ${path}`);
 
@@ -18,7 +18,7 @@ export const revalidateBlog: CollectionAfterChangeHook<Blog> = ({
     }
 
     if (previousDoc._status === "published" && doc._status !== "published") {
-      const oldPath = `/blog/${previousDoc.slug}`;
+      const oldPath = `/notes/${previousDoc.slug}`;
 
       payload.logger.info(`Revalidating old blog at ${oldPath}`);
 
@@ -34,7 +34,7 @@ export const revalidateDetete: CollectionAfterDeleteHook<Blog> = ({
   req: { payload, context },
 }) => {
   if (!context.disableRevalidate) {
-    const path = `/blog/${doc?.slug}`;
+    const path = `/notes/${doc?.slug}`;
 
     payload.logger.info(`Revalidating blog deletion at ${path}`);
 

@@ -9,7 +9,7 @@ export default async function Blog() {
   return (
     <>
       <Hero
-        title={blogPage.title}
+        title={blogPage.title || ""}
         description={blogPage.shortDescription}
         image={image}
       />

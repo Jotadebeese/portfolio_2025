@@ -11,7 +11,6 @@ export const BlogPage: GlobalConfig = {
       name: "title",
       label: "Title",
       type: "text",
-      required: true,
     },
     {
       name: "shortDescription",

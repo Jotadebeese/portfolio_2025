@@ -66,7 +66,7 @@ export default function Footer() {
               href={"https://www.linkedin.com/in/jotadebeese/"}
               target="_blank"
             >
-              <Image src={linkedIn} alt="LinkedIn" width={14} height={14} />
+              <Image src={linkedIn} alt="LinkedIn" width={16} height={16} />
             </Link>
             <Link
               className="hover:opacity-80"
@@ -79,7 +79,7 @@ export default function Footer() {
               href={"https://github.com/Jotadebeese"}
               target="_blank"
             >
-              <Image src={github} alt="GitHub" width={14} height={14} />
+              <Image src={github} alt="GitHub" width={16} height={16} />
             </Link>
           </div>
           <ContactForm />
