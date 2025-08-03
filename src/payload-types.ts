@@ -264,6 +264,18 @@ export interface Project {
         blockType: 'image';
       }
   )[];
+  /**
+   * Best to keep this under 60 characters.
+   */
+  metaTitle?: string | null;
+  /**
+   * Best to keep this under 160 characters.
+   */
+  metaDescription?: string | null;
+  /**
+   * This image will be used for social media sharing (Open Graph). Recommended size: 1200x630px.
+   */
+  metaImage?: (number | null) | Media;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -356,6 +368,18 @@ export interface Blog {
         blockType: 'image';
       }
   )[];
+  /**
+   * Best to keep this under 60 characters.
+   */
+  metaTitle?: string | null;
+  /**
+   * Best to keep this under 160 characters.
+   */
+  metaDescription?: string | null;
+  /**
+   * This image will be used for social media sharing (Open Graph). Recommended size: 1200x630px.
+   */
+  metaImage?: (number | null) | Media;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -549,6 +573,9 @@ export interface ProjectsSelect<T extends boolean = true> {
               blockName?: T;
             };
       };
+  metaTitle?: T;
+  metaDescription?: T;
+  metaImage?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -613,6 +640,9 @@ export interface BlogSelect<T extends boolean = true> {
               blockName?: T;
             };
       };
+  metaTitle?: T;
+  metaDescription?: T;
+  metaImage?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -701,6 +731,18 @@ export interface About {
         blockType: 'image';
       }
   )[];
+  /**
+   * Best to keep this under 60 characters.
+   */
+  metaTitle?: string | null;
+  /**
+   * Best to keep this under 160 characters.
+   */
+  metaDescription?: string | null;
+  /**
+   * This image will be used for social media sharing (Open Graph). Recommended size: 1200x630px.
+   */
+  metaImage?: (number | null) | Media;
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -728,6 +770,18 @@ export interface BlogPage {
     [k: string]: unknown;
   };
   featuredImage: number | Media;
+  /**
+   * Best to keep this under 60 characters.
+   */
+  metaTitle?: string | null;
+  /**
+   * Best to keep this under 160 characters.
+   */
+  metaDescription?: string | null;
+  /**
+   * This image will be used for social media sharing (Open Graph). Recommended size: 1200x630px.
+   */
+  metaImage?: (number | null) | Media;
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -783,6 +837,18 @@ export interface HomePage {
     };
     [k: string]: unknown;
   };
+  /**
+   * Best to keep this under 60 characters.
+   */
+  metaTitle?: string | null;
+  /**
+   * Best to keep this under 160 characters.
+   */
+  metaDescription?: string | null;
+  /**
+   * This image will be used for social media sharing (Open Graph). Recommended size: 1200x630px.
+   */
+  metaImage?: (number | null) | Media;
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -814,6 +880,9 @@ export interface AboutSelect<T extends boolean = true> {
               blockName?: T;
             };
       };
+  metaTitle?: T;
+  metaDescription?: T;
+  metaImage?: T;
   _status?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -827,6 +896,9 @@ export interface BlogPageSelect<T extends boolean = true> {
   title?: T;
   shortDescription?: T;
   featuredImage?: T;
+  metaTitle?: T;
+  metaDescription?: T;
+  metaImage?: T;
   _status?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -840,6 +912,9 @@ export interface HomePageSelect<T extends boolean = true> {
   title?: T;
   subTitle?: T;
   shortDescription?: T;
+  metaTitle?: T;
+  metaDescription?: T;
+  metaImage?: T;
   _status?: T;
   updatedAt?: T;
   createdAt?: T;
