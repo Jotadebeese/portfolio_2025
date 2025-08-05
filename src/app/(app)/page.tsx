@@ -1,6 +1,39 @@
 import ProjectsSection from "@/components/projects/layouts/projects-section";
 import { getHomePage } from "@/lib/payload/actions";
+import { Media } from "@/payload-types";
 import { RichText } from "@payloadcms/richtext-lexical/react";
+import { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const homePage = await getHomePage();
+  const metaImage = homePage.metaImage as Media;
+
+  const title = homePage.metaTitle || "Start";
+  const description =
+    homePage.metaDescription ||
+    "A Software Developer, with background in electronics engineering and a big passion in AI.";
+  const imageUrl = metaImage?.url || "/assets/bowser.jpeg";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [
+        {
+          url: imageUrl,
+          alt: metaImage.alt || "Lego set of Bowser from Mario.",
+        },
+      ],
+    },
+    twitter: {
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
 
 export default async function Home() {
   const homePage = await getHomePage();
