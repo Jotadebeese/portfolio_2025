@@ -3,6 +3,7 @@ import { DM_Sans, PT_Serif, Roboto, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -59,6 +60,7 @@ export default function RootLayout({
           <main className="flex w-full flex-grow flex-col items-center pb-12">
             <div className="w-full max-w-6xl">{children}</div>
           </main>
+          <Analytics />
           <Footer />
         </div>
       </body>
