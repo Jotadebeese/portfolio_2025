@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [
         {
           url: imageUrl,
-          alt: metaImage.alt || "Lego set of Bowser from Mario.",
+          alt: metaImage?.alt || "Lego set of Bowser from Mario.",
         },
       ],
     },
