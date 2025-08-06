@@ -55,7 +55,7 @@ export default async function BlogsPage({ params }: Props) {
     return notFound();
   }
 
-  const image = blog.featuredImage as { url: string; alt: string };
+  const image = blog.featuredImage as Media;
 
   return (
     <>

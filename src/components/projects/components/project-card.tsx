@@ -40,6 +40,8 @@ export default function ProjectCard({ project }: { project: Project }) {
               width={150}
               height={150}
               className="max-h-12.5 w-fit object-contain"
+              placeholder="blur"
+              blurDataURL={icon?.blurData}
             />
           </div>
         )}

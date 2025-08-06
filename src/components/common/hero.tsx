@@ -1,3 +1,4 @@
+import { Media } from "@/payload-types";
 import { SerializedEditorState } from "@payloadcms/richtext-lexical/lexical";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import { ChevronLeft } from "lucide-react";
@@ -10,7 +11,7 @@ export default function Hero({
   description,
   goBack = false,
 }: {
-  image: { url: string; alt: string };
+  image: Media;
   title?: string;
   description?: string | SerializedEditorState;
   goBack?: boolean;
@@ -27,10 +28,12 @@ export default function Hero({
         </Link>
       )}
       <Image
-        src={image.url}
+        src={image?.url || ""}
         alt={image.alt}
         fill
         className="w-full max-w-6xl object-cover object-center"
+        placeholder="blur"
+        blurDataURL={image?.blurData}
       />
       <div className="relative rounded-lg border-2 border-white bg-[#ffffff67] p-2 shadow-sm">
         {title && <h1 className="text-2xl font-medium! text-white">{title}</h1>}

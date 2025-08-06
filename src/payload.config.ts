@@ -7,7 +7,6 @@ import sharp from "sharp";
 import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
 import { AboutPage } from "./globals/about-page";
 import { Users } from "./collections/Users";
-import { Media } from "./collections/Media";
 import { BlogPage } from "./globals/blog-page";
 import { HomePage } from "./globals/home-page";
 import { Projects } from "./collections/projects";
@@ -15,6 +14,7 @@ import { Tags } from "./collections/tags";
 import { Tech } from "./collections/tech";
 import { BlogTags } from "./collections/blogTags";
 import { Blog } from "./collections/blog";
+import { Media } from "./collections/Media";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);

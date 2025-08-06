@@ -31,6 +31,8 @@ export default function BlockContent({ data }: { data: Blog["content"] }) {
                         alt={image.alt}
                         fill
                         className="object-cover"
+                        placeholder="blur"
+                        blurDataURL={image?.blurData}
                       />
                     </div>
                     {block.caption && (

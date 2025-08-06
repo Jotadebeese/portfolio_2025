@@ -1,13 +1,24 @@
 import type { CollectionConfig } from "payload";
+import { generateBlurData } from "./hooks/generateBlurData";
+import { revalidateAll } from "./hooks/revalidateAll";
 
 export const Media: CollectionConfig = {
   slug: "media",
   access: {
     read: () => true,
   },
+  hooks: {
+    beforeChange: [generateBlurData],
+    afterChange: [revalidateAll],
+  },
   fields: [
     {
       name: "alt",
+      type: "text",
+      required: true,
+    },
+    {
+      name: "blurData",
       type: "text",
       required: true,
     },

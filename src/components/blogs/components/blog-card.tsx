@@ -1,14 +1,6 @@
 import { Blog, BlogTag } from "@/payload-types";
 import { RichText } from "@payloadcms/richtext-lexical/react";
-import clsx from "clsx";
-import {
-  ChevronRight,
-  CircleDotDashed,
-  LucideTag,
-  Tag,
-  TagIcon,
-  Tags,
-} from "lucide-react";
+import { ChevronRight, CircleDotDashed } from "lucide-react";
 import Link from "next/link";
 
 export default function BlogCard(blog: Blog) {
