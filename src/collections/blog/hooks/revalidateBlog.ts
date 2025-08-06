@@ -14,6 +14,7 @@ export const revalidateBlog: CollectionAfterChangeHook<Blog> = ({
       payload.logger.info(`Revalidating blog at ${path}`);
 
       revalidatePath(path);
+      revalidatePath("/notes");
       revalidateTag("blogs");
     }
 
@@ -24,6 +25,7 @@ export const revalidateBlog: CollectionAfterChangeHook<Blog> = ({
 
       revalidatePath(oldPath);
       revalidateTag("blogs");
+      revalidatePath("/notes");
     }
   }
   return doc;
@@ -37,7 +39,7 @@ export const revalidateDetete: CollectionAfterDeleteHook<Blog> = ({
     const path = `/notes/${doc?.slug}`;
 
     payload.logger.info(`Revalidating blog deletion at ${path}`);
-
+    revalidatePath("/notes");
     revalidatePath(path);
     revalidateTag("blogs");
   }
