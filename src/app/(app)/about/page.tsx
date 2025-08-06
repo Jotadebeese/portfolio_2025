@@ -36,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function About() {
   const aboutPage = await getAboutPage();
-  const featuredImage = aboutPage.featuredImage as { url: string; alt: string };
+  const featuredImage = aboutPage.featuredImage as Media;
   return (
     <>
       <Hero
