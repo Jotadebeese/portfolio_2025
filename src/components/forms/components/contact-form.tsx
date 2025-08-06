@@ -62,6 +62,7 @@ export default function ContactForm() {
               defaultValue={state?.submittedData?.name ?? ""}
               aria-invalid={!!state?.errors?.name}
               aria-describedby="name-error"
+              className="text-base"
             />
             {state?.errors?.name && (
               <p id="name-error" className="mt-1 text-xs text-red-600">
@@ -77,6 +78,7 @@ export default function ContactForm() {
               defaultValue={state?.submittedData?.email ?? ""}
               aria-invalid={!!state?.errors?.email}
               aria-describedby="email-error"
+              className="text-base"
             />
             {state?.errors?.email && (
               <p id="email-error" className="mt-1 text-xs text-red-600">
@@ -92,6 +94,7 @@ export default function ContactForm() {
               defaultValue={state?.submittedData?.message ?? ""}
               aria-invalid={!!state?.errors?.message}
               aria-describedby="message-error"
+              className="min-h-24 text-base"
             ></textarea>
             {state?.errors?.message && (
               <p id="message-error" className="mt-1 text-xs text-red-600">
