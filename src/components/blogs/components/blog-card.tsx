@@ -20,7 +20,7 @@ export default function BlogCard(blog: Blog) {
           href={`/notes/${blog.slug}`}
           className="group flex items-center gap-1 transition-all ease-in-out hover:text-amber-600"
         >
-          <h3>{blog.title}</h3>
+          <h3 className="text-lg">{blog.title}</h3>
           <ChevronRight
             size={16}
             className="text-foreground transition-all ease-in-out"
