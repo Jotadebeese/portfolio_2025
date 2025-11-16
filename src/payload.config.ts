@@ -6,16 +6,16 @@ import { fileURLToPath } from "url";
 import sharp from "sharp";
 import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
 import { AboutPage } from "./globals/about-page";
-import { Users } from "./collections/Users";
 import { BlogPage } from "./globals/blog-page";
 import { HomePage } from "./globals/home-page";
 
-import { Media } from "./collections/Media";
-import { Projects } from "./collections/Projects";
-import { Tech } from "./collections/Tech";
-import { BlogTags } from "./collections/BlogTags";
-import { Blog } from "./collections/Blog";
-import { Tags } from "./collections/Tags";
+import { Media } from "./collections/media";
+import { Projects } from "./collections/projects";
+import { Tech } from "./collections/tech";
+import { BlogTags } from "./collections/blogtags";
+import { Blog } from "./collections/blog";
+import { Tags } from "./collections/tags";
+import { Users } from "./collections/users";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
