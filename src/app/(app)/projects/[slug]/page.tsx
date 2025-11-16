@@ -1,5 +1,5 @@
 import BlockContent from "@/components/common/block-content";
-import { getProjectBySlug } from "@/lib/payload/actions";
+import { getProjectBySlug, getProjectSlugs } from "@/lib/payload/actions";
 import { Media } from "@/payload-types";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -7,6 +7,13 @@ import { notFound } from "next/navigation";
 type Props = {
   params: Promise<{ slug: string }>;
 };
+
+export async function generateStaticParams() {
+  const projects = await getProjectSlugs();
+  return projects.map((project) => ({
+    slug: project.slug,
+  }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

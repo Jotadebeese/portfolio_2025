@@ -1,4 +1,4 @@
-import { getBlogBySlug } from "@/lib/payload/actions";
+import { getBlogBySlug, getBlogSlugs } from "@/lib/payload/actions";
 import { notFound } from "next/navigation";
 import Hero from "@/components/common/hero";
 import BlockContent from "@/components/common/block-content";
@@ -8,6 +8,14 @@ import { Media } from "@/payload-types";
 type Props = {
   params: Promise<{ slug: string }>;
 };
+
+export async function generateStaticParams() {
+  const notes = await getBlogSlugs();
+
+  return notes.map((note) => ({
+    slug: note.slug,
+  }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
