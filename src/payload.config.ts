@@ -9,13 +9,13 @@ import { AboutPage } from "./globals/about-page";
 import { BlogPage } from "./globals/blog-page";
 import { HomePage } from "./globals/home-page";
 
-import { Media } from "./collections/media";
+import { Media } from "./collections/media_temp";
 import { Projects } from "./collections/projects";
 import { Tech } from "./collections/tech";
 import { BlogTags } from "./collections/blogtags";
 import { Blog } from "./collections/blog";
 import { Tags } from "./collections/tags";
-import { Users } from "./collections/users";
+import { Users } from "./collections/users_temp";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
