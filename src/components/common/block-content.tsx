@@ -4,6 +4,8 @@ import clsx from "clsx";
 import Image from "next/image";
 
 export default function BlockContent({ data }: { data: Blog["content"] }) {
+  if (!data) return null;
+
   return (
     <div className="relative px-2.5 sm:px-0">
       <div
@@ -22,24 +24,27 @@ export default function BlockContent({ data }: { data: Blog["content"] }) {
             }
             if (block.blockType === "image") {
               const image = block.image as Media;
+              const imageUrl = image.sizes?.tablet?.url || image.url;
+
+              if (!imageUrl) return null;
+
               return (
-                image.url && (
-                  <div className="flex flex-col" key={index}>
-                    <div className="relative h-80 overflow-hidden rounded-lg shadow-sm">
-                      <Image
-                        src={image.url}
-                        alt={image.alt}
-                        fill
-                        className="object-cover"
-                        placeholder="blur"
-                        blurDataURL={image?.blurData}
-                      />
-                    </div>
-                    {block.caption && (
-                      <small className="italic">{block.caption}</small>
-                    )}
+                <div className="flex flex-col" key={index}>
+                  <div className="relative h-80 overflow-hidden rounded-lg shadow-sm">
+                    <Image
+                      src={imageUrl}
+                      alt={image.alt}
+                      fill
+                      className="object-cover"
+                      placeholder={image.blurData ? "blur" : "empty"}
+                      blurDataURL={image.blurData || undefined}
+                      sizes="(max-width: 768px) 100vw, 768px"
+                    />
                   </div>
-                )
+                  {block.caption && (
+                    <small className="italic">{block.caption}</small>
+                  )}
+                </div>
               );
             }
             return null;
