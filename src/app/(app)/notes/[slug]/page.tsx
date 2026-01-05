@@ -64,6 +64,7 @@ export default async function BlogsPage({ params }: Props) {
   }
 
   const image = blog.featuredImage as Media;
+  console.log(image);
 
   return (
     <>

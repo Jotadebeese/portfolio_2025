@@ -3,13 +3,17 @@ import { RichText } from "@payloadcms/richtext-lexical/react";
 import { ChevronRight, CircleDotDashed } from "lucide-react";
 import Link from "next/link";
 
-export default function BlogCard(blog: Blog) {
-  const publishedAt = new Date(blog.publishedAt).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const blogTags = blog.blogTags as BlogTag[];
+export default function BlogCard(blog: Partial<Blog>) {
+  const publishedAt = blog.publishedAt
+    ? new Date(blog.publishedAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "";
+  const blogTags = (
+    Array.isArray(blog.blogTags) ? blog.blogTags : []
+  ) as BlogTag[];
   return (
     <div
       className="border-border-color flex w-full flex-col gap-2 border-b border-dashed py-5"
@@ -29,16 +33,19 @@ export default function BlogCard(blog: Blog) {
         <small className="font-medium">{publishedAt}</small>
       </div>
 
-      <RichText
-        data={blog.shortDescription}
-        className="max-w-lg text-sm font-light"
-      />
+      {blog.shortDescription && (
+        <RichText
+          data={blog.shortDescription}
+          className="max-w-lg text-sm font-light"
+        />
+      )}
+
       {blogTags && blogTags.length > 0 && (
         <ul className="flex flex-wrap items-center gap-2">
           {blogTags.map((tag) => (
             <li
               key={tag.id}
-              style={{ ["--tag-color" as any]: tag.color }}
+              style={{ ["--tag-color" as any]: tag.color || "#666" }}
               className="flex w-fit items-center gap-1 rounded-md bg-[var(--tag-color)]/10 px-1.5 text-[var(--tag-color)]"
             >
               <CircleDotDashed size={12} />

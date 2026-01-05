@@ -137,6 +137,7 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  name?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -155,7 +156,7 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
-  blurData: string;
+  blurData?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -467,6 +468,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

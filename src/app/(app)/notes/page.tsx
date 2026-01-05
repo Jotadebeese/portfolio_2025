@@ -1,8 +1,10 @@
 import BlogsSection from "@/components/blogs/layout/blogs-section";
+import { BlogsSkeleton } from "@/components/blogs/layout/blogs-section-skeleton";
 import Hero from "@/components/common/hero";
 import { getBlogPage } from "@/lib/payload/actions";
 import { Media } from "@/payload-types";
 import { Metadata } from "next";
+import { Suspense } from "react";
 
 export async function generateMetadata(): Promise<Metadata> {
   const heroPage = await getBlogPage();
@@ -46,7 +48,9 @@ export default async function Blog() {
         description={blogPage.shortDescription}
         image={image}
       />
-      <BlogsSection />
+      <Suspense fallback={<BlogsSkeleton />}>
+        <BlogsSection />
+      </Suspense>
     </>
   );
 }

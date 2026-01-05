@@ -1,8 +1,10 @@
 import ProjectsSection from "@/components/projects/layouts/projects-section";
+import { ProjectsSkeleton } from "@/components/projects/layouts/projects-section-skeleton";
 import { getHomePage } from "@/lib/payload/actions";
 import { Media } from "@/payload-types";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import { Metadata } from "next";
+import { Suspense } from "react";
 
 export async function generateMetadata(): Promise<Metadata> {
   const homePage = await getHomePage();
@@ -49,7 +51,9 @@ export default async function Home() {
           <RichText className="text-base" data={homePage.shortDescription} />
         </div>
       </div>
-      <ProjectsSection />
+      <Suspense fallback={<ProjectsSkeleton />}>
+        <ProjectsSection />
+      </Suspense>
     </div>
   );
 }

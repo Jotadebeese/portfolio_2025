@@ -1,0 +1,107 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&family=Roboto:wght@100;300;400;500;700&display=swap");
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+/* @import "tailwindcss/preflight.css" layer(base);*/
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+:root {
+  --border-color: #cecece;
+  --theme-bg: #eeeeee;
+  --foreground: #181411;
+  --utils-scent-orange: #ff9900;
+  --utils-scent-gray-01: #e6d9d1;
+  --font-dm-sans: "DM Sans", sans-serif;
+  --font-roboto: "Roboto", sans-serif;
+}
+
+@theme inline {
+  --color-border-color: var(--border-color);
+  --color-background: var(--theme-bg);
+  --color-foreground: var(--foreground);
+  --color-utils-scent-orange: var(--utils-scent-orange);
+  --color-utils-scent-gray-01: var(--utils-scent-gray-01);
+  --font-sans: var(--font-dm-sans);
+  --font-serif: var(--font-pt-serif);
+}
+
+html[data-theme="dark"] {
+  --border-color: #333333;
+  --theme-bg: #181411;
+  --foreground: #eeeeee;
+  --utils-scent-orange: #ffad33;
+  --utils-scent-gray-01: #2a2420;
+}
+
+body {
+  font-family: var(--font-dm-sans);
+  color: var(--foreground);
+  font-size: 100%;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-roboto);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+input,
+textarea {
+  @apply border-border-color text-foreground rounded-lg border bg-white p-2 shadow-none;
+  @variant dark {
+    @apply border-border-color text-foreground bg-background rounded-lg border p-2 shadow-none;
+  }
+}
+
+.nav-group__indicator svg .stroke {
+  @apply stroke-foreground;
+}
+
+.nav-group__toggle {
+  @apply border-border-color border-b pb-2;
+}
+.nav-group__label {
+  @apply text-foreground opacity-100;
+}
+.nav {
+  @apply border-border-color text-foreground/50 bg-foreground/10 rounded-tr-4xl border border-r;
+}
+
+.btn--style-primary {
+  @apply rounded-xl shadow-sm;
+}
+
+.pill {
+  @apply rounded-lg;
+}
+
+.doc-header__title {
+  @apply bg-foreground text-background rounded-xl pt-2 pl-4 text-xl;
+}
+
+.dashboard__label {
+  @apply font-normal;
+}
+
+.card {
+  background-color: white;
+  border-radius: 8px;
+  border: none;
+  @apply shadow-sm;
+
+  @variant dark {
+    background-color: var(--theme-bg);
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+  }
+}

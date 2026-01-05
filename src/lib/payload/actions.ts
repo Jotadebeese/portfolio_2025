@@ -13,7 +13,20 @@ export const getAllProjects = unstable_cache(
         _status: { equals: "published" },
       },
       sort: "-publishedAt",
-      depth: 2,
+      depth: 1,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        publishedAt: true,
+        stage: true,
+        icon: true,
+        shortDescription: true,
+        projectType: true,
+        liveUrl: true,
+        githubUrl: true,
+        individualPage: true,
+      },
     });
     return res.docs;
   },
@@ -66,7 +79,15 @@ export const getAllBlogs = unstable_cache(
         _status: { equals: "published" },
       },
       sort: "-publishedAt",
-      depth: 2,
+      depth: 1,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        publishedAt: true,
+        shortDescription: true,
+        blogTags: true,
+      },
     });
     return res.docs;
   },

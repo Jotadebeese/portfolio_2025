@@ -16,6 +16,8 @@ export default function Hero({
   description?: string | SerializedEditorState;
   goBack?: boolean;
 }) {
+  const heroUrl = image?.sizes?.tablet?.url || image?.url || "";
+
   return (
     <div className="sm:border-border-color relative flex h-80 w-full max-w-3xl items-end overflow-hidden p-2.5 sm:rounded-lg sm:border sm:p-5 sm:shadow-sm">
       {goBack && (
@@ -28,12 +30,14 @@ export default function Hero({
         </Link>
       )}
       <Image
-        src={image?.url || ""}
+        src={heroUrl}
         alt={image.alt}
         fill
-        className="w-full max-w-6xl object-cover object-center"
-        placeholder="blur"
-        blurDataURL={image?.blurData}
+        className="object-cover object-center"
+        placeholder={image?.blurData ? "blur" : "empty"}
+        blurDataURL={image?.blurData!}
+        sizes="(max-width: 768px) 100vw, 800px"
+        priority={true}
       />
       <div className="relative rounded-lg border-2 border-white bg-[#ffffff67] p-2 shadow-sm">
         {title && <h1 className="text-2xl font-medium! text-white">{title}</h1>}

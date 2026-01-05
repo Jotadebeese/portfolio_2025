@@ -26,6 +26,15 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    components: {
+      graphics: {
+        Logo: "/components/payload/logo",
+        Icon: "/components/payload/icon",
+      },
+    },
+    avatar: {
+      Component: "/components/payload/custom-avatar",
+    },
   },
   collections: [Users, Media, Projects, Tags, Tech, BlogTags, Blog],
   globals: [AboutPage, BlogPage, HomePage],

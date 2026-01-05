@@ -20,10 +20,13 @@ export const Media: CollectionConfig = {
     {
       name: "blurData",
       type: "text",
-      required: true,
+      admin: {
+        readOnly: true,
+      },
     },
   ],
   upload: {
+    disableLocalStorage: true,
     adminThumbnail: "thumbnail",
     imageSizes: [
       {
