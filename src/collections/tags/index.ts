@@ -39,7 +39,7 @@ export const Tags: CollectionConfig = {
       async ({ doc, req: { payload, context } }) => {
         if (!context.disableRevalidate) {
           payload.logger.info(`Revalidating home page after tag change`);
-          revalidateTag("home-page");
+          revalidateTag("home-page", { expire: 0 });
           revalidatePath("/");
         }
         return doc;

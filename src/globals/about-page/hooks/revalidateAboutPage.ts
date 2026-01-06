@@ -9,7 +9,7 @@ export const revalidateAboutPage: GlobalAfterChangeHook = async ({
     const path = "/about";
 
     payload.logger.info(`Revalidating about page at ${path}`);
-    revalidateTag("about-page");
+    revalidateTag("about-page", { expire: 0 });
   }
   return doc;
 };

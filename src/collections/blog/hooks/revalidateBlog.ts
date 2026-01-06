@@ -15,7 +15,7 @@ export const revalidateBlog: CollectionAfterChangeHook<Blog> = ({
 
       revalidatePath(path);
       revalidatePath("/notes");
-      revalidateTag("blogs");
+      revalidateTag("blogs", { expire: 0 });
     }
 
     if (previousDoc._status === "published" && doc._status !== "published") {
@@ -24,8 +24,7 @@ export const revalidateBlog: CollectionAfterChangeHook<Blog> = ({
       payload.logger.info(`Revalidating old blog at ${oldPath}`);
 
       revalidatePath(oldPath);
-      revalidateTag("blogs");
-      revalidatePath("/notes");
+      revalidateTag("blogs", { expire: 0 });
     }
   }
   return doc;
@@ -41,7 +40,7 @@ export const revalidateDetete: CollectionAfterDeleteHook<Blog> = ({
     payload.logger.info(`Revalidating blog deletion at ${path}`);
     revalidatePath("/notes");
     revalidatePath(path);
-    revalidateTag("blogs");
+    revalidateTag("blogs", { expire: 0 });
   }
   return doc;
 };

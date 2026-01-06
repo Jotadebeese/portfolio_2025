@@ -39,7 +39,7 @@ export const BlogTags: CollectionConfig = {
       async ({ doc, req: { payload, context } }) => {
         if (!context.disableRevalidate) {
           payload.logger.info(`Revalidating blog page after tag change`);
-          revalidateTag("blog-page");
+          revalidateTag("blog-page", { expire: 0 });
           revalidatePath("/notes");
         }
         return doc;

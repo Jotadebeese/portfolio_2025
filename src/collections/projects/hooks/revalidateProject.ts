@@ -14,7 +14,7 @@ export const revalidateProject: CollectionAfterChangeHook<Project> = ({
       payload.logger.info(`Revalidating project at ${path}`);
 
       revalidatePath(path);
-      revalidateTag("projects");
+      revalidateTag("projects", { expire: 0 });
     }
 
     if (previousDoc._status === "published" && doc._status !== "published") {
@@ -23,7 +23,7 @@ export const revalidateProject: CollectionAfterChangeHook<Project> = ({
       payload.logger.info(`Revalidating old project at ${oldPath}`);
 
       revalidatePath(oldPath);
-      revalidateTag("projects");
+      revalidateTag("projects", { expire: 0 });
     }
   }
   return doc;
@@ -39,7 +39,7 @@ export const revalidateDelete: CollectionAfterDeleteHook<Project> = ({
     payload.logger.info(`Revalidating project deletion at ${path}`);
 
     revalidatePath(path);
-    revalidateTag("projects");
+    revalidateTag("projects", { expire: 0 });
   }
   return doc;
 };

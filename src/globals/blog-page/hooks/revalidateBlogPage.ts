@@ -10,7 +10,7 @@ export const revalidateBlogPage: GlobalAfterChangeHook = async ({
 
     payload.logger.info(`Revalidating blog page at ${path}`);
     revalidatePath(path);
-    revalidateTag("blog-page");
+    revalidateTag("blog-page", { expire: 0 });
   }
   return doc;
 };

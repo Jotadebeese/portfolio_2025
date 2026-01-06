@@ -9,7 +9,7 @@ export const revalidateHomePage: GlobalAfterChangeHook = async ({
     const path = "/";
 
     payload.logger.info(`Revalidating home page at ${path}`);
-    revalidateTag("home-page");
+    revalidateTag("home-page", { expire: 0 });
   }
   return doc;
 };
