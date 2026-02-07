@@ -1,4 +1,11 @@
-import { Blog, Project, About, BlogPage, HomePage } from "@/payload-types";
+import {
+  Blog,
+  Project,
+  About,
+  BlogPage,
+  HomePage,
+  BlogTag,
+} from "@/payload-types";
 import { unstable_cache } from "next/cache";
 import { getPayload } from "payload";
 import config from "@payload-config";
@@ -71,14 +78,41 @@ export async function getProjectSlugs(): Promise<{ slug: string }[]> {
   }
 }
 
+export const getAllTags = unstable_cache(
+  async (): Promise<BlogTag[]> => {
+    const res = await payload.find({
+      collection: "blogTags",
+      sort: "name",
+      limit: 100,
+    });
+    return res.docs;
+  },
+  ["all-blog-tags"],
+  { tags: ["blog-tags"] },
+);
+
 export const getAllBlogs = unstable_cache(
-  async (): Promise<Blog[]> => {
+  async (
+    tagIds?: number[],
+    sortOption: string = "newest",
+  ): Promise<Partial<Blog>[]> => {
+    const whereQuery: any = {
+      _status: { equals: "published" },
+    };
+
+    if (tagIds && tagIds.length > 0) {
+      whereQuery.blogTags = { in: tagIds };
+    }
+
+    let sortString = "-publishedAt";
+    if (sortOption === "oldest") sortString = "publishedAt";
+    if (sortOption === "title-asc") sortString = "title";
+    if (sortOption === "title-desc") sortString = "-title";
+
     const res = await payload.find({
       collection: "blog",
-      where: {
-        _status: { equals: "published" },
-      },
-      sort: "-publishedAt",
+      where: whereQuery,
+      sort: sortOption,
       depth: 1,
       select: {
         id: true,
@@ -91,7 +125,7 @@ export const getAllBlogs = unstable_cache(
     });
     return res.docs;
   },
-  ["all-blogs"],
+  ["filtered-blogs"],
   { tags: ["blogs"] },
 );
 

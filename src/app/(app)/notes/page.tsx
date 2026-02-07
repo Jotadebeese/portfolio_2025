@@ -1,10 +1,15 @@
+import BlogFilters from "@/components/blogs/components/blog-filters";
 import BlogsSection from "@/components/blogs/layout/blogs-section";
 import { BlogsSkeleton } from "@/components/blogs/layout/blogs-section-skeleton";
 import Hero from "@/components/common/hero";
-import { getBlogPage } from "@/lib/payload/actions";
+import { getAllTags, getBlogPage } from "@/lib/payload/actions";
 import { Media } from "@/payload-types";
 import { Metadata } from "next";
 import { Suspense } from "react";
+
+type Props = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const heroPage = await getBlogPage();
@@ -37,10 +42,25 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Blog() {
-  const blogPage = await getBlogPage();
+export default async function Blog(props: Props) {
+  const searchParams = await props.searchParams;
+  const tagsParam =
+    typeof searchParams.tags === "string" ? searchParams.tags : undefined;
+  const sort =
+    typeof searchParams.sort === "string" ? searchParams.sort : "newest";
+
+  const [blogPage, allTags] = await Promise.all([getBlogPage(), getAllTags()]);
 
   const image = blogPage.featuredImage as Media;
+
+  const selectedTagNames = tagsParam ? tagsParam.split(",") : [];
+
+  const activeTagIds =
+    selectedTagNames.length > 0
+      ? allTags
+          .filter((t) => selectedTagNames.includes(t.name))
+          .map((t) => t.id)
+      : undefined;
   return (
     <>
       <Hero
@@ -48,8 +68,9 @@ export default async function Blog() {
         description={blogPage.shortDescription}
         image={image}
       />
-      <Suspense fallback={<BlogsSkeleton />}>
-        <BlogsSection />
+      <BlogFilters tags={allTags} />
+      <Suspense key={`${tagsParam}-${sort}`} fallback={<BlogsSkeleton />}>
+        <BlogsSection tagIds={activeTagIds} sort={sort} />
       </Suspense>
     </>
   );

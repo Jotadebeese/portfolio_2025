@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, PT_Serif, Roboto, Space_Grotesk } from "next/font/google";
+import { DM_Sans, Roboto } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";

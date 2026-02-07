@@ -15,7 +15,7 @@
   --color-utils-scent-orange: var(--utils-scent-orange);
   --color-utils-scent-gray-01: var(--utils-scent-gray-01);
   --font-sans: var(--font-dm-sans);
-  --font-serif: var(--font-pt-serif);
+  --font-roboto: var(--font-roboto);
 }
 @layer utilities {
   .RichText h1 {

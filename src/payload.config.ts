@@ -35,6 +35,24 @@ export default buildConfig({
     avatar: {
       Component: "/components/payload/custom-avatar",
     },
+    meta: {
+      titleSuffix: "- Jota",
+      icons: [
+        {
+          rel: "icon",
+          type: "image/ico",
+          url: "/assets/favicon.ico",
+        },
+      ],
+      openGraph: {
+        images: [
+          {
+            url: "/assets/bowser.jpeg",
+            alt: "Lego set of Bowser from Mario.",
+          },
+        ],
+      },
+    },
   },
   collections: [Users, Media, Projects, Tags, Tech, BlogTags, Blog],
   globals: [AboutPage, BlogPage, HomePage],
