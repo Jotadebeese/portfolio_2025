@@ -36,7 +36,7 @@ export default buildConfig({
       Component: "/components/payload/custom-avatar",
     },
     meta: {
-      titleSuffix: "- Jota",
+      titleSuffix: "- Admin Jota",
       icons: [
         {
           rel: "icon",

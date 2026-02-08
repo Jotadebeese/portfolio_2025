@@ -112,7 +112,7 @@ export const getAllBlogs = unstable_cache(
     const res = await payload.find({
       collection: "blog",
       where: whereQuery,
-      sort: sortOption,
+      sort: sortString,
       depth: 1,
       select: {
         id: true,

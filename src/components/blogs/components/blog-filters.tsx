@@ -2,7 +2,7 @@
 
 import { BlogTag } from "@/payload-types";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, X } from "lucide-react";
+import { X } from "lucide-react";
 import clsx from "clsx";
 
 export default function BlogFilters({ tags }: { tags: BlogTag[] }) {
