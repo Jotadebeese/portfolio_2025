@@ -46,7 +46,8 @@ export default function Hero({
           onError={() => setIsError(true)}
         />
       )}
-      <div className="relative rounded-lg border-2 border-white bg-[#ffffff67] p-2 shadow-sm">
+      <div className="from-foreground via-foreground/50 absolute top-0 left-0 h-full w-full bg-linear-to-t via-40% to-transparent"></div>
+      <div className="relative">
         {title && <h1 className="text-2xl font-medium! text-white">{title}</h1>}
         {description &&
           (typeof description === "string" ? (

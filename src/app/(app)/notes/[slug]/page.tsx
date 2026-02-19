@@ -4,6 +4,7 @@ import Hero from "@/components/common/hero";
 import BlockContent from "@/components/common/block-content";
 import { Metadata } from "next";
 import { Media } from "@/payload-types";
+import { extractHeadings } from "@/lib/payload/utils/extract-headings";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -62,6 +63,10 @@ export default async function BlogsPage({ params }: Props) {
   if (!blog) {
     return notFound();
   }
+
+  const headings = extractHeadings(blog.content);
+
+  console.log(headings);
 
   const image = blog.featuredImage as Media;
 
