@@ -13,10 +13,9 @@ export default function ContactForm() {
 
   return (
     <>
-      {/* Success State */}
       {state?.result === "success" && (
         <div className="flex flex-col items-center justify-center">
-          <h3>Thank you!</h3>
+          <h4>Thank you!</h4>
           <p className="text-foreground text-sm">
             {state.message || "Your message has been sent successfully."}
           </p>
@@ -41,8 +40,7 @@ export default function ContactForm() {
           className="flex w-full max-w-md flex-col divide-dashed rounded-[18px]"
           noValidate
         >
-          <h3 className="px-5 py-2.5">Send me a message if you feel like:</h3>
-          {/* Display general server errors or validation summary messages */}
+          <h4 className="px-5 py-2.5">Send me a message if you feel like:</h4>
           {state?.result === "error" && state.message && (
             <div className="mb-4 rounded-xl bg-red-100 px-5 py-2.5 text-xs text-red-600">
               {state.message}

@@ -30,7 +30,7 @@ export default async function ProjectsSection() {
         sortedProjects.map(([year, projects]) => (
           <div key={year} className="flex flex-col gap-4">
             <div className="border-border-color flex w-full justify-end border-b border-dashed">
-              <h3>{year}</h3>
+              <h4>{year}</h4>
             </div>
             <ProjectsContainer>
               {projects.map((project) => (

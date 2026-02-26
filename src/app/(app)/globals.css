@@ -18,36 +18,12 @@
   --font-roboto: var(--font-roboto);
 }
 @layer utilities {
-  .RichText h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-  }
-  .RichText h2 {
-    font-size: 2rem;
-    font-weight: 700;
-  }
-  .RichText h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-  }
-  .RichText h4 {
-    font-size: 1.25rem;
-    font-weight: 700;
-  }
-  .RichText h5 {
-    font-size: 1.125rem;
-    font-weight: 700;
-  }
-  .RichText h6 {
-    font-size: 1rem;
-    font-weight: 700;
-  }
   .RichText ul li {
     list-style: disc;
   }
   .RichText ul,
   .RichText ol {
-    padding-left: 20px;
+    padding-left: 40px;
   }
 
   .RichText ol li {
@@ -67,12 +43,25 @@ h4,
 h5,
 h6 {
   font-family: var(--font-roboto);
-  font-weight: 200;
+  font-weight: 700;
   letter-spacing: -0.02em;
+  line-height: normal;
 }
 h2 {
   font-size: 1.25rem;
-  font-weight: 500;
+}
+
+h3 {
+  font-size: 1.125rem;
+}
+
+h4 {
+  font-size: 1rem;
+}
+
+h1,
+h4 {
+  font-weight: 200;
 }
 
 .contact-form input,

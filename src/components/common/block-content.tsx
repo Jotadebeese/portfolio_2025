@@ -1,16 +1,16 @@
 import { Blog, Media } from "@/payload-types";
-import { RichText } from "@payloadcms/richtext-lexical/react";
 import clsx from "clsx";
 import Image from "next/image";
+import { RichText } from "../RichText";
 
 export default function BlockContent({ data }: { data: Blog["content"] }) {
   if (!data) return null;
 
   return (
-    <div className="relative px-2.5 sm:px-0">
+    <div className="prose prose-lg relative px-2.5 sm:px-0">
       <div
         className={clsx(
-          "border-border-color mt-5 flex w-full flex-col items-center justify-center border-y border-dashed pt-8 pb-8",
+          "border-border-color mt-5 flex w-full flex-col items-center justify-center border-y border-dashed pt-5 pb-8",
         )}
       >
         <div className="flex max-w-3xl flex-col gap-5">

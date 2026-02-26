@@ -47,12 +47,25 @@ h4,
 h5,
 h6 {
   font-family: var(--font-roboto);
-  font-weight: 300;
+  font-weight: 700;
   letter-spacing: -0.02em;
+  line-height: normal;
 }
 h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
   font-size: 1.25rem;
-  font-weight: 500;
+}
+
+h4 {
+  font-size: 1.125rem;
+}
+
+h1,
+h4 {
+  font-weight: 200;
 }
 
 input,

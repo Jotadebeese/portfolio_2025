@@ -1,21 +1,20 @@
-export function extractHeadings(content: any) {
-  if (!content || !content.root || !content.root.children) return [];
+export function extractHeadingsFromBlocks(blocks: any[]) {
+  const headings: { id: string; text: string }[] = [];
 
-  const headings: { id: string; text: string; level: number }[] = [];
+  if (!blocks || !Array.isArray(blocks)) return headings;
 
-  content.root.children.forEach((node: any) => {
-    if (node.type === "heading") {
-      const text = node.children.map((c: any) => c.text).join("");
+  blocks.forEach((block) => {
+    if (block.blockType === "text" && block.text?.root?.children) {
+      block.text.root.children.forEach((node: any) => {
+        if (node.type === "heading" && node.tag === "h2") {
+          const text = node.children.map((c: any) => c.text).join("");
+          const id = text
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9-]/g, "");
 
-      const id = text
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)+/g, "");
-
-      headings.push({
-        id,
-        text,
-        level: node.tag === "h2" ? 2 : 3,
+          headings.push({ id, text });
+        }
       });
     }
   });
