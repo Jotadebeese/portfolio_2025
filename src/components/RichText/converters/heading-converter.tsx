@@ -1,5 +1,6 @@
 import { SerializedHeadingNode } from "@payloadcms/richtext-lexical";
 import { JSXConverters } from "@payloadcms/richtext-lexical/react";
+import { Link2 } from "lucide-react";
 
 export const headingConverter: JSXConverters<SerializedHeadingNode> = {
   heading: ({ node, nodesToJSX }) => {
@@ -13,7 +14,15 @@ export const headingConverter: JSXConverters<SerializedHeadingNode> = {
         .replace(/[^a-z0-9-]/g, "");
       return (
         <h2 id={id} className="scroll-mt-24">
-          {text}
+          <a
+            href={`#${id}`}
+            className="hover:text-utils-scent-orange group text-inherit transition-all"
+          >
+            {text}
+            <span className="text-foreground/50 group-hover:text-foreground ml-2 inline-block transition-all">
+              <Link2 size={20} className="inline" />
+            </span>
+          </a>
         </h2>
       );
     } else {
