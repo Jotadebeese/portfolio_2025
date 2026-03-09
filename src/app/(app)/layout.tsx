@@ -55,7 +55,7 @@ export default function RootLayout({
       <body
         className={`${dm_sans.variable} ${roboto.variable} selection:text-background antialiased selection:bg-amber-600`}
       >
-        <div className="flex min-h-screen flex-col justify-between">
+        <div className="flex min-h-dvh flex-col justify-between">
           <Navbar />
           <main className="flex w-full flex-grow flex-col items-center pb-12">
             <div className="w-full max-w-6xl">{children}</div>
