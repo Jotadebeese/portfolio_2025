@@ -6,6 +6,7 @@ import { Metadata } from "next";
 import { Media } from "@/payload-types";
 import { extractHeadingsFromBlocks } from "@/lib/payload/utils/extract-headings";
 import Link from "next/link";
+import TableOfContents from "@/components/blogs/components/table-of-contents";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -77,32 +78,11 @@ export default async function BlogsPage({ params }: Props) {
         image={image}
         goBack={true}
       />
-      <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 lg:gap-5">
-        <main className="flex justify-start lg:col-span-9">
+      <div className="flex flex-col-reverse md:grid md:grid-cols-12 md:gap-5">
+        <main className="flex justify-start md:col-span-9">
           <BlockContent data={blog.content} />
         </main>
-        <aside className="mt-5 max-w-3xl lg:col-span-3 lg:block">
-          <div className="sticky top-24 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-            <h4 className="mb-4 border-b pb-2 font-bold text-gray-900">
-              Contents
-            </h4>
-            <nav className="flex flex-col gap-3">
-              {headings.length === 0 && (
-                <p className="text-sm text-gray-400">No sections</p>
-              )}
-
-              {headings.map((heading) => (
-                <Link
-                  key={heading.id}
-                  href={`#${heading.id}`}
-                  className="text-sm text-gray-500 transition-all hover:pl-1 hover:text-amber-600"
-                >
-                  {heading.text}
-                </Link>
-              ))}
-            </nav>
-          </div>
-        </aside>
+        <TableOfContents headings={headings} />
       </div>
     </>
   );

@@ -37,14 +37,14 @@ export default function Footer() {
         className={clsx(
           "bg-foreground fixed top-0 h-dvh w-full transition-all ease-in-out",
           {
-            "z-1 opacity-25": open,
+            "z-1 opacity-40": open,
             "z-[-1] opacity-0": !open,
           },
         )}
       ></div>
       <footer
         className={clsx(
-          "fixed bottom-0 z-10 flex w-full flex-col items-center justify-center transition-all duration-300 ease-in-out sm:px-5",
+          "fixed bottom-0 z-50 flex w-full flex-col items-center justify-center transition-all duration-300 ease-in-out sm:px-5",
           { "translate-y-0": open, "translate-y-[calc(100%-54px)]": !open },
         )}
       >

@@ -51,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body
         className={`${dm_sans.variable} ${roboto.variable} selection:text-background antialiased selection:bg-amber-600`}
       >
