@@ -3,22 +3,29 @@ import clsx from "clsx";
 import Image from "next/image";
 import { RichText } from "../RichText";
 
-export default function BlockContent({ data }: { data: Blog["content"] }) {
+export default function BlockContent({
+  data,
+  className,
+}: {
+  data: Blog["content"];
+  className?: string;
+}) {
   if (!data) return null;
 
   return (
-    <div className="prose prose-lg relative px-2.5 sm:px-0">
+    <div className="prose prose-lg relative w-full max-w-3xl px-2.5 sm:px-0">
       <div
         className={clsx(
-          "border-border-color mt-5 flex w-full flex-col items-center justify-center border-y border-dashed pt-5 pb-8",
+          "border-border-color mt-5 flex flex-col items-center justify-center border-y border-dashed pt-5 pb-8",
+          className,
         )}
       >
-        <div className="flex max-w-3xl flex-col gap-5">
+        <div className="flex w-full max-w-3xl flex-col gap-5">
           {data.map((block, index) => {
             if (block.blockType === "text") {
               return (
-                <div key={index}>
-                  <RichText data={block.text} className="RichText" />
+                <div key={index} className="w-full">
+                  <RichText data={block.text} className="RichText w-full" />
                 </div>
               );
             }

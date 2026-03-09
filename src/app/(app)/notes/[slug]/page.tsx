@@ -5,8 +5,8 @@ import BlockContent from "@/components/common/block-content";
 import { Metadata } from "next";
 import { Media } from "@/payload-types";
 import { extractHeadingsFromBlocks } from "@/lib/payload/utils/extract-headings";
-import Link from "next/link";
 import TableOfContents from "@/components/blogs/components/table-of-contents";
+import clsx from "clsx";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -79,7 +79,12 @@ export default async function BlogsPage({ params }: Props) {
         goBack={true}
       />
       <div className="flex flex-col-reverse md:grid md:grid-cols-12 md:gap-5">
-        <main className="flex justify-start md:col-span-9">
+        <main
+          className={clsx(
+            "flex justify-start",
+            headings.length > 0 ? "md:col-span-9" : "md:col-span-12",
+          )}
+        >
           <BlockContent data={blog.content} />
         </main>
         <TableOfContents headings={headings} />

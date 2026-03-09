@@ -29,6 +29,9 @@
   .RichText ol li {
     list-style: decimal;
   }
+  .RichText h1 {
+    font-size: 2rem !important;
+  }
 }
 body {
   background: var(--background);
@@ -47,6 +50,7 @@ h6 {
   letter-spacing: -0.02em;
   line-height: normal;
 }
+
 h2 {
   font-size: 1.25rem;
 }
