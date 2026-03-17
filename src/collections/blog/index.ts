@@ -1,6 +1,7 @@
 import { formatSlugHook } from "@/fields/slug/formatSlug";
 import type { CollectionConfig } from "payload";
 import { revalidateBlog, revalidateDetete } from "./hooks/revalidateBlog";
+import { contentField } from "@/fields/content";
 
 export const Blog: CollectionConfig = {
   slug: "blog",
@@ -73,8 +74,9 @@ export const Blog: CollectionConfig = {
               type: "richText",
               required: true,
             },
+            contentField,
 
-            {
+            /*  {
               name: "content",
               type: "blocks",
               label: "Content",
@@ -109,7 +111,7 @@ export const Blog: CollectionConfig = {
                   ],
                 },
               ],
-            },
+            }, */
           ],
         },
         {

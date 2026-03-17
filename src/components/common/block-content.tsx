@@ -13,7 +13,7 @@ export default function BlockContent({
   if (!data) return null;
 
   return (
-    <div className="prose prose-lg relative w-full max-w-3xl px-2.5 sm:px-0">
+    <div className="relative w-full max-w-3xl px-2.5 sm:px-0">
       <div
         className={clsx(
           "border-border-color mt-5 flex flex-col items-center justify-center border-y border-dashed pt-5 pb-8",
@@ -25,7 +25,17 @@ export default function BlockContent({
             if (block.blockType === "text") {
               return (
                 <div key={index} className="w-full">
-                  <RichText data={block.text} className="RichText w-full" />
+                  <RichText
+                    data={block.text}
+                    className={clsx(
+                      "prose prose-base text-foreground w-full max-w-none",
+                      "prose-a:text-code-rust prose-a:no-underline hover:prose-a:underline",
+                      "prose-blockquote:text-sm prose-blockquote:text-foreground prose-blockquote:font-normal prose-blockquote:border-l-utils-scent-gray-01 prose-blockquote:bg-white prose-blockquote:rounded-r-lg prose-blockquote:px-5 prose-blockquote:py-2",
+                      "prose-code:text-code-rust prose-code:bg-code-light-gray prose-code:rounded-md prose-code:px-1.5 prose-code:py-1.5 prose-code:font-normal prose-code:before:content-none prose-code:after:content-none prose-code:border-code-silver prose-code:border",
+                      "prose-pre:bg-foreground prose-pre:text-background prose-pre:rounded-xl prose-pre:border prose-pre:border-foreground/50",
+                      "prose-li:marker:text-foreground/70",
+                    )}
+                  />
                 </div>
               );
             }
@@ -51,6 +61,17 @@ export default function BlockContent({
                   {block.caption && (
                     <small className="italic">{block.caption}</small>
                   )}
+                </div>
+              );
+            }
+            if (block.blockType === "code") {
+              return (
+                <div key={index} className="w-full">
+                  <pre className="bg-foreground text-background border-foreground/50 overflow-x-auto rounded-xl border p-4">
+                    <code className={`language-${block.language}`}>
+                      {block.code}
+                    </code>
+                  </pre>
                 </div>
               );
             }

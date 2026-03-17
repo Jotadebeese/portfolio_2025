@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
   --border-color: #cecece;
@@ -6,6 +7,9 @@
   --foreground: #181411;
   --utils-scent-orange: #ff9900;
   --utils-scent-gray-01: #e6d9d1;
+  --code-rust: #a31515;
+  --code-light-gray: #f3f3f3;
+  --code-silver: #d1d1d1;
 }
 
 @theme inline {
@@ -14,6 +18,9 @@
   --color-foreground: var(--foreground);
   --color-utils-scent-orange: var(--utils-scent-orange);
   --color-utils-scent-gray-01: var(--utils-scent-gray-01);
+  --color-code-rust: var(--code-rust);
+  --color-code-light-gray: var(--code-light-gray);
+  --color-code-silver: var(--code-silver);
   --font-sans: var(--font-dm-sans);
   --font-roboto: var(--font-roboto);
 }
@@ -46,13 +53,13 @@ h4,
 h5,
 h6 {
   font-family: var(--font-roboto);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.02em;
   line-height: normal;
 }
 
 h2 {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
 }
 
 h3 {

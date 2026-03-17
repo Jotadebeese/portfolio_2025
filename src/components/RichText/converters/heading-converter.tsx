@@ -13,10 +13,10 @@ export const headingConverter: JSXConverters<SerializedHeadingNode> = {
         .replace(/\s+/g, "-")
         .replace(/[^a-z0-9-]/g, "");
       return (
-        <h2 id={id} className="scroll-mt-24">
+        <h2 id={id} className="text-foreground scroll-mt-24">
           <a
             href={`#${id}`}
-            className="hover:text-utils-scent-orange group text-inherit transition-all"
+            className="hover:text-code-rust! text-foreground! group no-underline! transition-all"
           >
             {text}
             <span className="text-foreground/50 group-hover:text-foreground ml-2 inline-block transition-all">

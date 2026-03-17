@@ -265,6 +265,7 @@ export interface Project {
         blockName?: string | null;
         blockType: 'image';
       }
+    | CodeBlock
   )[];
   /**
    * Best to keep this under 60 characters.
@@ -303,6 +304,17 @@ export interface Tech {
   icon: number | Media;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CodeBlock".
+ */
+export interface CodeBlock {
+  language?: ('typescript' | 'javascript' | 'css' | 'html' | 'json' | 'python') | null;
+  code: string;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'code';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -369,6 +381,7 @@ export interface Blog {
         blockName?: string | null;
         blockType: 'image';
       }
+    | CodeBlock
   )[];
   /**
    * Best to keep this under 60 characters.
@@ -576,6 +589,7 @@ export interface ProjectsSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        code?: T | CodeBlockSelect<T>;
       };
   metaTitle?: T;
   metaDescription?: T;
@@ -583,6 +597,16 @@ export interface ProjectsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CodeBlock_select".
+ */
+export interface CodeBlockSelect<T extends boolean = true> {
+  language?: T;
+  code?: T;
+  id?: T;
+  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -643,6 +667,7 @@ export interface BlogSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        code?: T | CodeBlockSelect<T>;
       };
   metaTitle?: T;
   metaDescription?: T;

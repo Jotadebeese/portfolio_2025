@@ -1,6 +1,7 @@
 import { formatSlugHook } from "@/fields/slug/formatSlug";
 import type { CollectionConfig } from "payload";
 import { revalidateDelete, revalidateProject } from "./hooks/revalidateProject";
+import { contentField } from "@/fields/content";
 
 export const Projects: CollectionConfig = {
   slug: "projects",
@@ -121,7 +122,9 @@ export const Projects: CollectionConfig = {
               type: "upload",
               relationTo: "media",
             },
-            {
+            contentField,
+
+            /* {
               name: "content",
               type: "blocks",
               label: "Content",
@@ -156,7 +159,7 @@ export const Projects: CollectionConfig = {
                   ],
                 },
               ],
-            },
+            }, */
           ],
         },
         {
