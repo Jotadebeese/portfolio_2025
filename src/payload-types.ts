@@ -310,11 +310,48 @@ export interface Tech {
  * via the `definition` "CodeBlock".
  */
 export interface CodeBlock {
-  language?: ('typescript' | 'javascript' | 'css' | 'html' | 'json' | 'python') | null;
+  language?:
+    | (
+        | 'typescript'
+        | 'javascript'
+        | 'tsx'
+        | 'jsx'
+        | 'html'
+        | 'css'
+        | 'scss'
+        | 'postcss'
+        | 'vue'
+        | 'svelte'
+        | 'python'
+        | 'rust'
+        | 'go'
+        | 'cpp'
+        | 'c'
+        | 'csharp'
+        | 'java'
+        | 'php'
+        | 'ruby'
+        | 'bash'
+        | 'shell'
+        | 'powershell'
+        | 'json'
+        | 'yaml'
+        | 'toml'
+        | 'xml'
+        | 'graphql'
+        | 'sql'
+        | 'prisma'
+        | 'markdown'
+        | 'mdx'
+        | 'docker'
+        | 'nginx'
+        | 'text'
+      )
+    | null;
   code: string;
   id?: string | null;
   blockName?: string | null;
-  blockType: 'code';
+  blockType: 'code-block';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -589,7 +626,7 @@ export interface ProjectsSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
-        code?: T | CodeBlockSelect<T>;
+        'code-block'?: T | CodeBlockSelect<T>;
       };
   metaTitle?: T;
   metaDescription?: T;
@@ -667,7 +704,7 @@ export interface BlogSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
-        code?: T | CodeBlockSelect<T>;
+        'code-block'?: T | CodeBlockSelect<T>;
       };
   metaTitle?: T;
   metaDescription?: T;

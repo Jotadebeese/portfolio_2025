@@ -2,6 +2,8 @@ import { Blog, Media } from "@/payload-types";
 import clsx from "clsx";
 import Image from "next/image";
 import { RichText } from "../RichText";
+import { codeToHtml } from "shiki";
+import InteractiveCode from "./interactive-code";
 
 export default function BlockContent({
   data,
@@ -31,8 +33,8 @@ export default function BlockContent({
                       "prose prose-base text-foreground w-full max-w-none",
                       "prose-a:text-code-rust prose-a:no-underline hover:prose-a:underline",
                       "prose-blockquote:text-sm prose-blockquote:text-foreground prose-blockquote:font-normal prose-blockquote:border-l-utils-scent-gray-01 prose-blockquote:bg-white prose-blockquote:rounded-r-lg prose-blockquote:px-5 prose-blockquote:py-2",
-                      "prose-code:text-code-rust prose-code:bg-code-light-gray prose-code:rounded-md prose-code:px-1.5 prose-code:py-1.5 prose-code:font-normal prose-code:before:content-none prose-code:after:content-none prose-code:border-code-silver prose-code:border",
-                      "prose-pre:bg-foreground prose-pre:text-background prose-pre:rounded-xl prose-pre:border prose-pre:border-foreground/50",
+                      "prose-code:text-code-rust prose-code:text-sm prose-code:bg-code-light-gray prose-code:rounded-md prose-code:px-1.5 prose-code:py-1.5 prose-code:font-normal prose-code:before:content-none prose-code:after:content-none prose-code:border-code-silver prose-code:border",
+                      "prose-pre:bg-foreground prose-pre:text-sm! prose-pre:text-background prose-pre:rounded-xl prose-pre:border prose-pre:border-foreground/50",
                       "prose-li:marker:text-foreground/70",
                     )}
                   />
@@ -64,15 +66,13 @@ export default function BlockContent({
                 </div>
               );
             }
-            if (block.blockType === "code") {
+            if (block.blockType === "code-block") {
               return (
-                <div key={index} className="w-full">
-                  <pre className="bg-foreground text-background border-foreground/50 overflow-x-auto rounded-xl border p-4">
-                    <code className={`language-${block.language}`}>
-                      {block.code}
-                    </code>
-                  </pre>
-                </div>
+                <ShikiCode
+                  key={index}
+                  code={block.code}
+                  language={block.language || "typescript"}
+                />
               );
             }
             return null;
@@ -81,4 +81,22 @@ export default function BlockContent({
       </div>
     </div>
   );
+}
+
+async function ShikiCode({
+  code,
+  language,
+}: {
+  code: string;
+  language: string;
+}) {
+  const html = await codeToHtml(code, {
+    lang: language,
+    themes: {
+      light: "vitesse-light",
+      dark: "vitesse-dark",
+    },
+  });
+
+  return <InteractiveCode html={html} language={language} rawCode={code} />;
 }
