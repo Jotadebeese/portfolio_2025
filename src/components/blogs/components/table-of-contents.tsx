@@ -139,7 +139,7 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
       <div className="md:hidden">
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-foreground text-background fixed right-2.5 bottom-15 z-40 flex items-center justify-center rounded-full p-3 shadow-lg transition-transform active:scale-95 sm:right-5"
+          className="bg-foreground text-background fixed right-2.5 bottom-15 z-40 flex cursor-pointer items-center justify-center rounded-full p-3 shadow-lg transition-transform active:scale-95 sm:right-5"
           aria-label="Table of Contents"
         >
           <List size={20} />
