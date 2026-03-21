@@ -21,7 +21,7 @@ export default async function ProjectsSection() {
   );
 
   return (
-    <div className="flex flex-col gap-8 py-10">
+    <div className="flex flex-col gap-2 pb-10">
       {projects.length === 0 ? (
         <div className="border-border-color flex w-full border-t border-dashed pt-4">
           <p className="font-light">Work in progress, nothing to see here.</p>

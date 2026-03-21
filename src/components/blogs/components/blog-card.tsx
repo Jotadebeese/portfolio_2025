@@ -24,7 +24,7 @@ export default function BlogCard(blog: Partial<Blog>) {
           href={`/notes/${blog.slug}`}
           className="group flex items-center gap-1 transition-all ease-in-out hover:text-amber-600"
         >
-          <h2 className="text-lg font-extralight!">{blog.title}</h2>
+          <h2 className="font-extralight!">{blog.title}</h2>
           <ChevronRight
             size={16}
             className="text-foreground transition-all ease-in-out"

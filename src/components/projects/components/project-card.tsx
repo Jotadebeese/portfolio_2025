@@ -47,16 +47,23 @@ export default function ProjectCard({
       <div className="flex w-full flex-col items-start gap-2 sm:flex-row">
         {imageUrl && (
           <div className="bg-background border-border-color relative flex h-full w-fit min-w-28 items-center justify-center rounded-2xl border p-4">
-            <Image
-              src={imageUrl}
-              alt={icon?.alt || "Project Icon"}
-              width={150}
-              height={150}
-              className="max-h-12.5 w-fit object-contain"
-              placeholder={icon?.blurData ? "blur" : "empty"}
-              blurDataURL={icon?.blurData!}
-              sizes="(max-width: 768px) 150px, 150px"
-            />
+            {imageUrl.endsWith(".svg") ? (
+              <img
+                src={imageUrl}
+                alt={icon?.alt || "Project Icon"}
+                className="max-h-[50px] w-auto object-contain"
+              />
+            ) : (
+              <Image
+                src={imageUrl}
+                alt={icon?.alt || "Project Icon"}
+                width={150}
+                height={50}
+                className="max-h-[50px] w-auto object-contain"
+                placeholder={icon?.blurData ? "blur" : "empty"}
+                blurDataURL={icon?.blurData!}
+              />
+            )}
           </div>
         )}
         <div className="flex flex-col justify-center gap-1">
