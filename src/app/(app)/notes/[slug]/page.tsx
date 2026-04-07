@@ -15,7 +15,7 @@ type Props = {
 export async function generateStaticParams() {
   const notes = await getBlogSlugs();
 
-  return notes.map((note) => ({
+  return (notes || []).map((note) => ({
     slug: note.slug,
   }));
 }
@@ -51,6 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ],
     },
     twitter: {
+      card: "summary_large_image",
       title,
       description,
       images: [imageUrl],

@@ -1,5 +1,4 @@
 import { Field } from "payload";
-import { Code } from "@/blocks/code";
 
 export const contentField: Field = {
   name: "content",
@@ -101,6 +100,42 @@ export const contentField: Field = {
           name: "code",
           type: "code",
           required: true,
+        },
+      ],
+    },
+    {
+      slug: "gallery",
+      fields: [
+        {
+          name: "layout",
+          type: "select",
+          defaultValue: "grid",
+          options: [
+            { label: "Grid View", value: "grid" },
+            { label: "Carousel Slider", value: "carousel" },
+            { label: "Masonry View", value: "masonry" },
+          ],
+          required: true,
+        },
+        {
+          name: "images",
+          type: "array",
+          label: "Gallery Images",
+          minRows: 2,
+          required: true,
+          fields: [
+            {
+              name: "image",
+              type: "upload",
+              relationTo: "media",
+              required: true,
+            },
+            {
+              name: "caption",
+              type: "text",
+              label: "Caption",
+            },
+          ],
         },
       ],
     },

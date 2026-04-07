@@ -24,10 +24,12 @@
   --font-sans: var(--font-dm-sans);
   --font-roboto: var(--font-roboto);
 }
+
 @layer utilities {
   .RichText ul li {
     list-style: disc;
   }
+
   .RichText ul,
   .RichText ol {
     padding-left: 40px;
@@ -36,16 +38,28 @@
   .RichText ol li {
     list-style: decimal;
   }
+
   .RichText h1 {
     font-size: 2rem !important;
   }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
+
 body {
   background: var(--background);
   font-family: var(--font-dm-sans);
   color: var(--foreground);
   font-size: 100%;
 }
+
 h1,
 h2,
 h3,
@@ -96,13 +110,16 @@ h4 {
 .shiki-container pre::-webkit-scrollbar {
   height: 10px;
 }
+
 .shiki-container pre::-webkit-scrollbar-track {
   background: rgba(128, 128, 128, 0.5);
 }
+
 .shiki-container pre::-webkit-scrollbar-thumb {
   background: rgba(230, 217, 209, 0.9);
   border-radius: 50px;
 }
+
 .shiki-container pre::-webkit-scrollbar-thumb:hover {
   background: #e6d9d1;
 }

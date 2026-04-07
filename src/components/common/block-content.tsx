@@ -1,15 +1,16 @@
-import { Blog, Media } from "@/payload-types";
+import { Blog, Media, Project } from "@/payload-types";
 import clsx from "clsx";
 import Image from "next/image";
 import { RichText } from "../RichText";
 import { codeToHtml } from "shiki";
 import InteractiveCode from "./interactive-code";
+import BlockGallery from "./block-gallery";
 
 export default function BlockContent({
   data,
   className,
 }: {
-  data: Blog["content"];
+  data: Blog["content"] | Project["content"];
   className?: string;
 }) {
   if (!data) return null;
@@ -73,6 +74,16 @@ export default function BlockContent({
                   code={block.code}
                   language={block.language || "typescript"}
                 />
+              );
+            }
+            if (block.blockType === "gallery") {
+              return (
+                <div key={index} className="w-full my-4">
+                  <BlockGallery
+                    layout={block.layout}
+                    images={block.images}
+                  />
+                </div>
               );
             }
             return null;
