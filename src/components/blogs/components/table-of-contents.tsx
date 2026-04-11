@@ -85,7 +85,7 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
               className={clsx(
                 "block rounded-full px-3 py-2 text-sm transition-all",
                 isActive
-                  ? "bg-utils-scent-gray-01/60 border-utils-scent-gray-01 text-foreground border shadow-xs"
+                  ? "bg-utils-scent-gray-01/60 border-utils-scent-gray-01 text-foreground border shadow-sm"
                   : "hover:text-foreground text-foreground/50 hover:bg-utils-scent-gray-01/30 border border-transparent",
               )}
             >
@@ -139,7 +139,7 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
       <div className="md:hidden">
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-foreground text-background fixed right-2.5 bottom-15 z-40 flex cursor-pointer items-center justify-center rounded-full p-3 shadow-lg transition-transform active:scale-95 sm:right-5"
+          className="bg-foreground text-background fixed right-2.5 bottom-15 z-40 flex cursor-pointer items-center justify-center rounded-full p-3 shadow-sm transition-transform active:scale-95 sm:right-5"
           aria-label="Table of Contents"
         >
           <List size={20} />

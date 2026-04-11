@@ -30,7 +30,7 @@ export const revalidateBlog: CollectionAfterChangeHook<Blog> = ({
   return doc;
 };
 
-export const revalidateDetete: CollectionAfterDeleteHook<Blog> = ({
+export const revalidateDelete: CollectionAfterDeleteHook<Blog> = ({
   doc,
   req: { payload, context },
 }) => {

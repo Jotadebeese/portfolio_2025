@@ -1,6 +1,6 @@
 import { formatSlugHook } from "@/fields/slug/formatSlug";
 import type { CollectionConfig } from "payload";
-import { revalidateBlog, revalidateDetete } from "./hooks/revalidateBlog";
+import { revalidateBlog, revalidateDelete } from "./hooks/revalidateBlog";
 import { contentField } from "@/fields/content";
 
 export const Blog: CollectionConfig = {
@@ -150,6 +150,6 @@ export const Blog: CollectionConfig = {
   ],
   hooks: {
     afterChange: [revalidateBlog],
-    afterDelete: [revalidateDetete],
+    afterDelete: [revalidateDelete],
   },
 };
