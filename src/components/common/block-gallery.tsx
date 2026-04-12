@@ -75,7 +75,7 @@ export default function BlockGallery({
 
             return (
               <div key={item.id || index} className="relative break-inside-avoid group gap-1 cursor-pointer" onClick={() => setActiveImageIndex(index)}>
-                <ZoomIn size={16} className="absolute top-2 right-2 text-background z-50 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ZoomIn size={24} className="p-1 rounded-full bg-foreground/20 backdrop-blur-md absolute top-2 right-2 text-background z-10 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="relative rounded-lg overflow-hidden flex flex-col">
                   <Image
                     src={imageUrl}
@@ -121,7 +121,7 @@ export default function BlockGallery({
                   className="relative snap-center shrink-0 w-[85%] md:w-[60%] flex flex-col gap-1 group cursor-pointer"
                   onClick={() => setActiveImageIndex(index)}
                 >
-                  <ZoomIn size={16} className="absolute top-2 right-2 text-background z-50 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ZoomIn size={24} className="p-1 rounded-full bg-foreground/20 backdrop-blur-md absolute top-2 right-2 text-background z-10 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="relative h-64 md:h-80 w-full rounded-lg overflow-hidden bg-foreground/5">
                     <Image
                       src={imageUrl}
@@ -195,7 +195,7 @@ export default function BlockGallery({
 
           return (
             <div key={item.id || index} className="relative flex flex-col group gap-1 cursor-pointer" onClick={() => setActiveImageIndex(index)}>
-              <ZoomIn size={16} className="absolute top-2 right-2 text-background z-50 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ZoomIn size={24} className="p-1 rounded-full bg-foreground/20 backdrop-blur-md absolute top-2 right-2 text-background z-10 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative aspect-square sm:aspect-video w-full rounded-lg overflow-hidden bg-foreground/5">
                 <Image
                   src={imageUrl}
