@@ -48,6 +48,18 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
     }, 800);
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   const [isCopied, setIsCopied] = useState(false);
 
   const handleCopy = async () => {

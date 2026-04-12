@@ -21,12 +21,15 @@ export default function Footer() {
     };
 
     if (open) {
+      document.body.style.overflow = "hidden";
       document.addEventListener("mousedown", handleClickOutside);
     } else {
+      document.body.style.overflow = "";
       document.removeEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
+      document.body.style.overflow = "";
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [open]);
