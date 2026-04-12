@@ -89,7 +89,7 @@ export default function GalleryLightbox({
         className="absolute top-4 right-4 z-50 p-1 sm:p-2 bg-utils-scent-gray-01/60 border-utils-scent-gray-01 text-foreground border shadow-sm rounded-full cursor-pointer"
         aria-label="Close"
       >
-        <X className="sm:w-5 sm:h-5 w-4 h-4" />
+        <X size={20} />
       </button>
       <div className="flex items-center justify-center w-full max-w-7xl gap-2 sm:gap-4">
 
@@ -142,7 +142,7 @@ export default function GalleryLightbox({
               className="shrink-0 p-1 sm:p-2 rounded-full bg-utils-scent-gray-01/60 border-utils-scent-gray-01 text-foreground border shadow-sm cursor-pointer hover:bg-utils-scent-gray-01/80 transition-colors"
               aria-label="Previous image"
             >
-              <ChevronLeft className="sm:w-5 sm:h-5 w-4 h-4" />
+              <ChevronLeft size={20} />
             </button>
           )}
           {images.length > 1 && (
@@ -173,7 +173,7 @@ export default function GalleryLightbox({
               className="shrink-0 p-1 sm:p-2 rounded-full bg-utils-scent-gray-01/60 border-utils-scent-gray-01 text-foreground border shadow-sm cursor-pointer hover:bg-utils-scent-gray-01/80 transition-colors"
               aria-label="Next image"
             >
-              <ChevronRight className="sm:w-5 sm:h-5 w-4 h-4" />
+              <ChevronRight size={20} />
             </button>
           )}</div>
       </div>

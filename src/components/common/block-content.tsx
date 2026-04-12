@@ -5,6 +5,7 @@ import { RichText } from "../RichText";
 import { codeToHtml } from "shiki";
 import InteractiveCode from "./interactive-code";
 import BlockGallery from "./block-gallery";
+import BlockImage from "./block-image";
 
 export default function BlockContent({
   data,
@@ -44,26 +45,9 @@ export default function BlockContent({
             }
             if (block.blockType === "image") {
               const image = block.image as Media;
-              const imageUrl = image.sizes?.tablet?.url || image.url;
-
-              if (!imageUrl) return null;
-
               return (
-                <div className="flex flex-col gap-1" key={index}>
-                  <div className="relative h-80 overflow-hidden rounded-lg shadow-sm">
-                    <Image
-                      src={imageUrl}
-                      alt={image.alt}
-                      fill
-                      className="object-cover"
-                      placeholder={image.blurData ? "blur" : "empty"}
-                      blurDataURL={image.blurData || undefined}
-                      sizes="(max-width: 768px) 100vw, 768px"
-                    />
-                  </div>
-                  {block.caption && (
-                    <small className="italic">{block.caption}</small>
-                  )}
+                <div key={index} className="w-full">
+                  <BlockImage image={image} caption={block.caption} />
                 </div>
               );
             }

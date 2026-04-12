@@ -168,7 +168,7 @@ export default function BlockGallery({
                   className="shrink-0 p-1 sm:p-2 rounded-full bg-utils-scent-gray-01/60 border-utils-scent-gray-01 text-foreground border shadow-sm cursor-pointer hover:bg-utils-scent-gray-01/80 transition-colors"
                   aria-label="Scroll left"
                 >
-                  <ChevronLeft className="sm:w-5 sm:h-5 w-4 h-4" />
+                  <ChevronLeft size={20} />
                 </button>
               )}
 
@@ -178,7 +178,7 @@ export default function BlockGallery({
                   className="shrink-0 p-1 sm:p-2 rounded-full bg-utils-scent-gray-01/60 border-utils-scent-gray-01 text-foreground border shadow-sm cursor-pointer hover:bg-utils-scent-gray-01/80 transition-colors"
                   aria-label="Scroll right"
                 >
-                  <ChevronRight className="sm:w-5 sm:h-5 w-4 h-4" />
+                  <ChevronRight size={20} />
                 </button>
               )}</div>
           </div>
