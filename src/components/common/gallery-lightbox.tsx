@@ -24,6 +24,7 @@ export default function GalleryLightbox({
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -35,6 +36,7 @@ export default function GalleryLightbox({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
     };
   }, [currentIndex, onClose]);
 
@@ -57,12 +59,19 @@ export default function GalleryLightbox({
 
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+  const isPinching = useRef(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length > 1) {
+      isPinching.current = true;
+      return;
+    }
+    isPinching.current = false;
     touchStartX.current = e.changedTouches[0].screenX;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    if (isPinching.current) return;
     touchEndX.current = e.changedTouches[0].screenX;
     if (touchStartX.current - touchEndX.current > 50) nextImage();
     if (touchStartX.current - touchEndX.current < -50) prevImage();
@@ -116,9 +125,9 @@ export default function GalleryLightbox({
 
 
       </div>
-      <div className="absolute w-full z-50 sm:bottom-4 bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center gap-4">
+      <div className="absolute px-2 sm:px-4 w-full z-50 sm:bottom-4 bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center gap-4">
         {currentItem.caption && (
-          <small className="text-center text-sm text-foreground w-fit bg-background/40 backdrop-blur-md px-4 py-2 rounded-full border border-border-color">
+          <small className="block max-w-full truncate text-center text-sm text-foreground bg-background/40 backdrop-blur-md px-4 py-2 rounded-full border border-border-color">
             {currentItem.caption}
           </small>
         )}
