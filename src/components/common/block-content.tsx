@@ -49,7 +49,7 @@ export default function BlockContent({
               if (!imageUrl) return null;
 
               return (
-                <div className="flex flex-col" key={index}>
+                <div className="flex flex-col gap-1" key={index}>
                   <div className="relative h-80 overflow-hidden rounded-lg shadow-sm">
                     <Image
                       src={imageUrl}
