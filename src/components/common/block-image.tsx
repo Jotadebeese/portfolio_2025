@@ -21,7 +21,7 @@ export default function BlockImage({
   return (
     <>
       <div
-        className="relative group cursor-zoom-in flex flex-col gap-1 w-full"
+        className="relative group cursor-pointer flex flex-col gap-1 w-full"
         onClick={() => setIsOpen(true)}
       >
         <ZoomIn size={24} className="p-1 rounded-full bg-foreground/20 backdrop-blur-md absolute top-2 right-2 text-background z-10 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -38,7 +38,7 @@ export default function BlockImage({
           />
         </div>
         {caption && (
-          <small className="text-foreground block italic text-left px-1 mt-1">{caption}</small>
+          <small className="text-foreground block italic text-left">{caption}</small>
         )}
       </div>
 

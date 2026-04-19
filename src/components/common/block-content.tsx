@@ -20,7 +20,7 @@ export default function BlockContent({
     <div className="relative w-full max-w-3xl px-2.5 sm:px-0">
       <div
         className={clsx(
-          "border-border-color mt-5 flex flex-col items-center justify-center border-y border-dashed pt-5 pb-8",
+          "border-border-color mt-5 flex flex-col items-center justify-center border-t border-dashed pt-5 pb-20",
           className,
         )}
       >

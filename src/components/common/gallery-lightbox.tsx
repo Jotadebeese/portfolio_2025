@@ -86,7 +86,7 @@ export default function GalleryLightbox({
     >
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 z-50 p-1 sm:p-2 bg-utils-scent-gray-01/60 border-utils-scent-gray-01 text-foreground border shadow-sm rounded-full cursor-pointer"
+        className="absolute top-4 right-4 z-50 p-1 sm:p-2 bg-utils-scent-gray-01/60 border-utils-scent-gray-01 text-foreground border shadow-sm rounded-full cursor-pointer hover:bg-utils-scent-gray-01/80 transition-colors"
         aria-label="Close"
       >
         <X size={20} />
