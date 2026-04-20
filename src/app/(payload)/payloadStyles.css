@@ -14,12 +14,18 @@
   --utils-scent-gray-01: #e6d9d1;
   --font-dm-sans: "DM Sans", sans-serif;
   --font-roboto: "Roboto", sans-serif;
+  --code-rust: #a31515;
+  --code-light-gray: #f3f3f3;
+  --code-silver: #d1d1d1;
 }
 
 @theme inline {
   --color-border-color: var(--border-color);
   --color-background: var(--theme-bg);
   --color-foreground: var(--foreground);
+  --color-code-rust: var(--code-rust);
+  --color-code-light-gray: var(--code-light-gray);
+  --color-code-silver: var(--code-silver);
   --color-utils-scent-orange: var(--utils-scent-orange);
   --color-utils-scent-gray-01: var(--utils-scent-gray-01);
   --font-sans: var(--font-dm-sans);
@@ -51,6 +57,7 @@ h6 {
   letter-spacing: -0.02em;
   line-height: normal;
 }
+
 h2 {
   font-size: 1.5rem;
 }
@@ -71,6 +78,7 @@ h4 {
 input,
 textarea {
   @apply border-border-color text-foreground rounded-lg border bg-white p-2 shadow-none;
+
   @variant dark {
     @apply border-border-color text-foreground bg-background rounded-lg border p-2 shadow-none;
   }
@@ -83,15 +91,55 @@ textarea {
 .nav-group__toggle {
   @apply border-border-color border-b pb-2;
 }
+
 .nav-group__label {
   @apply text-foreground opacity-100;
 }
+
 .nav {
   @apply border-border-color text-foreground/50 bg-foreground/10 rounded-tr-4xl border border-r;
 }
 
-.btn--style-primary {
-  @apply rounded-xl shadow-sm;
+/* Modern Sidebar Links & Active State */
+.nav__link {
+  @apply rounded-xl px-4 py-2 mt-1 text-sm transition-all duration-200 text-foreground/70 flex items-center gap-2;
+  text-decoration: none !important;
+}
+
+.nav__link:hover {
+  @apply text-foreground bg-foreground/5;
+  text-decoration: none !important;
+}
+
+.nav__link--active,
+.nav__link:not([href]),
+.nav__link[aria-current="page"],
+a.active {
+  @apply bg-foreground/5 text-foreground font-normal shadow-none border-none;
+  text-decoration: none !important;
+}
+
+@variant dark {
+
+  .nav__link--active,
+  .nav__link:not([href]),
+  .nav__link[aria-current="page"],
+  a.active {
+    @apply bg-foreground/15 text-foreground border border-transparent;
+  }
+}
+
+.btn--style-primary,
+.btn--style-secondary {
+  @apply rounded-xl shadow-sm hover:opacity-90;
+}
+
+.btn--style-secondary {
+  @apply bg-white;
+
+  @variant dark {
+    @apply bg-utils-scent-gray-01;
+  }
 }
 
 .pill {
