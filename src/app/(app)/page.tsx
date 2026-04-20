@@ -39,9 +39,22 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Home() {
   const homePage = await getHomePage();
+  const baseUrl = process.env.NEXT_WEB_APP_PUBLIC_URL || "http://localhost:3000";
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: "Juan Bedoya",
+    url: baseUrl,
+    jobTitle: "Software Developer",
+  };
 
   return (
     <div className="w-full px-2.5 pt-20 sm:px-5">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="flex w-full max-w-3xl flex-col gap-10">
         <RichText className="text-7xl md:text-[10rem]" data={homePage.title} />
 

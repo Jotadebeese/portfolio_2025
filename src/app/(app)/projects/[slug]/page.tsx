@@ -73,8 +73,29 @@ export default async function ProjectsPage({ params }: Props) {
     year: "numeric",
   }).format(publishedAt);
 
+  const baseUrl = process.env.NEXT_WEB_APP_PUBLIC_URL || "http://localhost:3000";
+  const image = project.metaImage as Media;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    headline: project.title,
+    description: project.shortDescription || project.metaDescription,
+    image: image?.url,
+    datePublished: project.publishedAt,
+    author: {
+      "@type": "Person",
+      name: "Juan Bedoya",
+      url: baseUrl,
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="flex flex-col gap-0 px-2.5 pt-10 sm:px-0">
         <h2>{project.title}</h2>
         <small className="w-full">{formattedDate}</small>

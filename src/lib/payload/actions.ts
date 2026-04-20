@@ -62,21 +62,25 @@ export const getProjectBySlug = unstable_cache(
   { tags: ["projects"] },
 );
 
-export async function getProjectSlugs(): Promise<{ slug: string }[]> {
-  try {
-    const projects = await payload.find({
-      collection: "projects",
-      depth: 0,
-      limit: 1000,
-      select: { slug: true },
-    });
+export const getProjectSlugs = unstable_cache(
+  async (): Promise<{ slug: string }[]> => {
+    try {
+      const projects = await payload.find({
+        collection: "projects",
+        depth: 0,
+        limit: 1000,
+        select: { slug: true },
+      });
 
-    return projects.docs as { slug: string }[];
-  } catch (error) {
-    console.error("Error fetching project slugs:", error);
-    return [];
-  }
-}
+      return projects.docs as { slug: string }[];
+    } catch (error) {
+      console.error("Error fetching project slugs:", error);
+      return [];
+    }
+  },
+  ["project-slugs"],
+  { tags: ["projects"] },
+);
 
 export const getAllTags = unstable_cache(
   async (): Promise<BlogTag[]> => {
@@ -129,20 +133,24 @@ export const getAllBlogs = unstable_cache(
   { tags: ["blogs"] },
 );
 
-export async function getBlogSlugs(): Promise<{ slug: string }[]> {
-  try {
-    const blogs = await payload.find({
-      collection: "blog",
-      depth: 0,
-      limit: 1000,
-      select: { slug: true },
-    });
-    return blogs.docs as { slug: string }[];
-  } catch (error) {
-    console.error("Error fetching blog slugs:", error);
-    return [];
-  }
-}
+export const getBlogSlugs = unstable_cache(
+  async (): Promise<{ slug: string }[]> => {
+    try {
+      const blogs = await payload.find({
+        collection: "blog",
+        depth: 0,
+        limit: 1000,
+        select: { slug: true },
+      });
+      return blogs.docs as { slug: string }[];
+    } catch (error) {
+      console.error("Error fetching blog slugs:", error);
+      return [];
+    }
+  },
+  ["blog-slugs"],
+  { tags: ["blogs"] },
+);
 
 export const getBlogBySlug = unstable_cache(
   async (slug: string): Promise<Blog | null> => {

@@ -68,11 +68,30 @@ export default async function BlogsPage({ params }: Props) {
   }
 
   const image = blog.featuredImage as Media;
+  const baseUrl = process.env.NEXT_WEB_APP_PUBLIC_URL || "http://localhost:3000";
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: blog.title,
+    description: blog.shortDescription,
+    image: image?.url,
+    datePublished: blog.publishedAt,
+    author: {
+      "@type": "Person",
+      name: "Juan Bedoya",
+      url: baseUrl,
+    },
+  };
 
   const headings = extractHeadingsFromBlocks(blog.content);
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Hero
         title={blog.title}
         description={blog.shortDescription}
