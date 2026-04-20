@@ -38,7 +38,14 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
     return () => observer.disconnect();
   }, [headings]);
 
-  const handleClick = (id: string) => {
+  const handleClick = (e: React.MouseEvent, id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      e.preventDefault();
+      history.pushState(null, "", `#${id}`);
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+
     isClicking.current = true;
     setActiveId(id);
     setIsOpen(false);
@@ -96,7 +103,7 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
             <Link
               key={heading.id}
               href={`#${heading.id}`}
-              onClick={() => handleClick(heading.id)}
+              onClick={(e) => handleClick(e, heading.id)}
               className={clsx(
                 "block rounded-full px-3 py-2 text-sm transition-all",
                 isActive
