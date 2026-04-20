@@ -1,6 +1,6 @@
 export function BlogsSkeleton() {
   return (
-    <div className="flex animate-pulse flex-col gap-5 p-2.5 sm:px-5">
+    <div className="flex animate-pulse flex-col gap-5 p-2.5 sm:px-0">
       {[1, 2].map((i) => (
         <div
           key={i}
