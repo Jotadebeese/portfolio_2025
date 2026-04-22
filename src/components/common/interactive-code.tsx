@@ -29,7 +29,7 @@ export default function InteractiveCode({
         isDark && "local-dark",
       )}
     >
-      <div className="bg-utils-scent-gray-01 absolute top-0 left-4 z-10 rounded-b-md px-4 py-1">
+      <div className="bg-utils-scent-gray-01 absolute top-0 left-4 z-1 rounded-b-md px-4 py-1">
         <span className="text-foreground font-mono text-xs uppercase">
           {language}
         </span>

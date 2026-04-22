@@ -45,9 +45,9 @@ export default function Footer() {
       <footer className="pointer-events-none fixed bottom-2 z-50 flex w-full flex-col items-center justify-center px-2">
         <div
           ref={ref}
-          className="border-border-color pointer-events-auto relative z-10 flex w-full max-w-md flex-col items-center justify-center rounded-2xl border bg-white p-2 shadow-sm transition-all duration-300 ease-in-out"
+          className=" border-border-color pointer-events-auto relative z-10 bg-white flex w-full max-w-md flex-col items-center justify-center rounded-2xl border  p-2 shadow-sm transition-all duration-300 ease-in-out"
         >
-          <div className="flex w-full items-center justify-between">
+          <div className="flex w-full items-center justify-between ">
             <div className="flex flex-1 pl-1 items-center justify-start text-xs font-medium opacity-60">
               © {new Date().getFullYear()}
             </div>
@@ -105,8 +105,8 @@ export default function Footer() {
 
           <div
             className={clsx(
-              "grid w-full transition-all duration-300 ease-in-out",
-              open ? "mt-2 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0"
+              "grid w-full transition-opacity duration-300 ease-in-out",
+              open ? " grid-rows-[1fr] opacity-100" : " grid-rows-[0fr] opacity-0"
             )}
           >
             <div className="flex w-full justify-center overflow-hidden">
