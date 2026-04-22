@@ -6,7 +6,7 @@ This project uses **Next.js 16** (App Router) with **Tailwind CSS v4** and **Pay
 
 ---
 
-# AGENT.md — Portfolio 2025
+# AGENTS.md — Portfolio 2025
 
 > This document is the single source of truth for any AI agent working on this codebase.
 > Read this FIRST before making any changes.
@@ -205,6 +205,11 @@ The admin panel has extensive custom CSS. Key patterns:
 | `.card`                     | White bg in light mode, bordered in dark mode      |
 
 > **GOTCHA — Payload Active Links:** Payload renders inactive sidebar links as `<a class="nav__link">` but the ACTIVE page as `<div class="nav__link">` (no `href`). That's why `.nav__link:not([href])` is the correct selector for the active state. Do NOT use `a.active` or `a[aria-current]`.
+
+### React Component Overrides
+In addition to CSS, the Payload admin panel is white-labeled using custom React components injected via `payload.config.ts`. These components are located in `src/components/payload/`:
+- **Logo / Icon:** Replaces the default Payload branding in the sidebar and login screens.
+- **CustomAvatar:** Replaces the default user gravatar in the bottom-left corner of the sidebar.
 
 ---
 

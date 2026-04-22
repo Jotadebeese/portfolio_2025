@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail } from "lucide-react";
+import { Mail, MessageCircle, X, ChevronsUp, ChevronsDown } from "lucide-react";
 import linkedIn from "@/assets/linkedin.svg";
 import github from "@/assets/github.svg";
 import Image from "next/image";
@@ -21,18 +21,12 @@ export default function Footer() {
     };
 
     if (open) {
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
       document.addEventListener("mousedown", handleClickOutside);
     } else {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
       document.removeEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [open]);
@@ -48,47 +42,77 @@ export default function Footer() {
           },
         )}
       ></div>
-      <footer
-        className={clsx(
-          "fixed bottom-0 z-50 flex w-full flex-col items-center justify-center transition-all duration-300 ease-in-out sm:px-5",
-          { "translate-y-0": open, "translate-y-[calc(100%-54px)]": !open },
-        )}
-      >
-        <div className="flex w-full max-w-3xl items-end justify-end pr-6">
-          <button
-            onMouseDown={() => setOpen(!open)}
-            className="bg-foreground text-background z-1 w-20 translate-y-0.5 cursor-pointer rounded-t-xl px-2 pt-0.5 pb-1 text-xs shadow-md transition-all ease-in-out hover:translate-y-0"
-          >
-            {!open ? "contact" : "x"}
-          </button>
-        </div>
+      <footer className="pointer-events-none fixed bottom-2 z-50 flex w-full flex-col items-center justify-center px-2">
         <div
           ref={ref}
-          className="border-border-color z-10 flex w-full max-w-3xl flex-col items-center justify-center gap-2 rounded-t-2xl border bg-white p-2 shadow-md"
+          className="border-border-color pointer-events-auto relative z-10 flex w-full max-w-md flex-col items-center justify-center rounded-2xl border bg-white p-2 shadow-sm transition-all duration-300 ease-in-out"
         >
-          <div className="flex items-center justify-center gap-2">
-            <Link
-              className="hover:opacity-80"
-              href={"https://www.linkedin.com/in/jotadebeese/"}
-              target="_blank"
-            >
-              <Image src={linkedIn} alt="LinkedIn" width={16} height={16} />
-            </Link>
-            <Link
-              className="hover:opacity-80"
-              href={"mailto:jotadebeese@gmail.com"}
-            >
-              <Mail size={16} />
-            </Link>
-            <Link
-              className="hover:opacity-80"
-              href={"https://github.com/Jotadebeese"}
-              target="_blank"
-            >
-              <Image src={github} alt="GitHub" width={16} height={16} />
-            </Link>
+          <div className="flex w-full items-center justify-between">
+            <div className="flex flex-1 pl-1 items-center justify-start text-xs font-medium opacity-60">
+              © {new Date().getFullYear()}
+            </div>
+
+            <div className="flex flex-1 items-center justify-center gap-4">
+              <Link
+                className="transition-opacity hover:opacity-80"
+                href={"https://www.linkedin.com/in/jotadebeese/"}
+                target="_blank"
+              >
+                <Image src={linkedIn} alt="LinkedIn" width={18} height={18} />
+              </Link>
+              <Link
+                className="transition-opacity hover:opacity-80"
+                href={"mailto:jotadebeese@gmail.com"}
+              >
+                <Mail size={18} />
+              </Link>
+              <Link
+                className="transition-opacity hover:opacity-80"
+                href={"https://github.com/Jotadebeese"}
+                target="_blank"
+              >
+                <Image src={github} alt="GitHub" width={18} height={18} />
+              </Link>
+            </div>
+
+            <div className="flex flex-1 items-center justify-end">
+              <button
+                onMouseDown={() => setOpen(!open)}
+                className="bg-foreground text-background group relative z-10 flex h-9 w-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:bg-utils-scent-orange"
+              >
+                {!open ? (
+                  <>
+                    <span className="absolute flex h-full w-full items-center justify-center transition-transform duration-300 ease-in-out group-hover:-translate-y-full">
+                      <MessageCircle size={18} />
+                    </span>
+                    <span className="absolute flex h-full w-full translate-y-full items-center justify-center transition-transform duration-300 ease-in-out group-hover:translate-y-0">
+                      <ChevronsUp size={18} />
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="absolute flex h-full w-full items-center justify-center transition-transform duration-300 ease-in-out group-hover:-translate-y-full">
+                      <X size={18} />
+                    </span>
+                    <span className="absolute flex h-full w-full translate-y-full items-center justify-center transition-transform duration-300 ease-in-out group-hover:translate-y-0">
+                      <ChevronsDown size={18} />
+                    </span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
-          <ContactForm />
+
+          <div
+            className={clsx(
+              "grid w-full transition-all duration-300 ease-in-out",
+              open ? "mt-2 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0"
+            )}
+          >
+            <div className="flex w-full justify-center overflow-hidden">
+              <ContactForm />
+            </div>
+          </div>
         </div>
       </footer>
     </>

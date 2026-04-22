@@ -129,21 +129,21 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
             className="hover:bg-utils-scent-gray-01/30 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-all"
             aria-label="Share on X"
           >
-            <Image src={X} alt="X" width={16} height={16} />
+            <Image src={X} alt="X" width={18} height={18} />
           </button>
           <button
             onClick={() => shareTo("linkedin")}
             className="hover:bg-utils-scent-gray-01/30 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-all"
             aria-label="Share on LinkedIn"
           >
-            <Image src={linkedIn} alt="LinkedIn" width={16} height={16} />
+            <Image src={linkedIn} alt="LinkedIn" width={18} height={18} />
           </button>
           <button
             onClick={handleCopy}
             className="hover:bg-utils-scent-gray-01/30 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-all"
             aria-label="Copy link"
           >
-            {isCopied ? <Check size={16} /> : <Link2 size={16} />}
+            {isCopied ? <Check size={18} /> : <Link2 size={18} />}
           </button>
         </div>
       </div>
@@ -161,21 +161,21 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
       <div className="md:hidden">
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-foreground text-background fixed right-2.5 bottom-15 z-40 flex cursor-pointer items-center justify-center rounded-full p-3 shadow-sm transition-transform active:scale-95 sm:right-5"
+          className="bg-foreground text-background fixed right-2.5 bottom-18 z-40 flex cursor-pointer items-center justify-center rounded-full p-3 shadow-sm transition-transform active:scale-95 sm:right-5"
           aria-label="Table of Contents"
         >
           <List size={20} />
         </button>
         {isOpen && (
           <div
-            className="fixed inset-0 z-50 bg-black/40 transition-opacity"
+            className="fixed inset-0 z-[60] bg-black/40 transition-opacity"
             onClick={() => setIsOpen(false)}
           />
         )}
 
         <div
           className={clsx(
-            "fixed right-0 bottom-0 left-0 z-50 rounded-t-3xl bg-white p-2 shadow-2xl transition-transform duration-300 ease-in-out",
+            "fixed right-0 bottom-0 left-0 z-[70] rounded-t-3xl bg-white p-2 shadow-2xl transition-transform duration-300 ease-in-out",
             isOpen ? "translate-y-0" : "translate-y-full",
           )}
         >
@@ -188,7 +188,7 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
               <XIcon size={20} />
             </button>
           </div>
-          <div className="max-h-[60vh] overflow-y-auto pb-8">{content}</div>
+          <div className="max-h-[60vh] overflow-y-auto ">{content}</div>
         </div>
       </div>
     </>
