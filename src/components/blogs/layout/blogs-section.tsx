@@ -11,7 +11,7 @@ export default async function BlogsSection({
   const blogs = await getAllBlogs(tagIds, sort);
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-5 p-2.5 sm:px-0">
+      <div className="flex flex-col gap-5 p-2.5 sm:px-0 pb-8">
         {blogs.length === 0 ? (
           <div className="flex w-full py-5">
             <p className="font-light">Work in progress, nothing to see here.</p>

@@ -1,8 +1,8 @@
 "use server";
 
-import { z } from "zod";
+import { ContactFormSchema } from "./schema";
 
-// Define the shaoe of the state returned by the action
+
 export interface ActionResult {
   result: "success" | "error";
   message?: string;
@@ -19,16 +19,7 @@ export interface ActionResult {
   };
 }
 
-// Define the Zod schema for validation
-const ContactFormSchema = z.object({
-  name: z.string().min(1, "Name is required."),
-  email: z
-    .string()
-    .email("Please enter a valid email address.")
-    .optional()
-    .or(z.literal("")),
-  message: z.string().min(5, "Message must be at least 5 characters long."),
-});
+
 
 export default async function sendMessage(
   prevState: ActionResult | null,
@@ -42,7 +33,6 @@ export default async function sendMessage(
 
   const validatedFields = ContactFormSchema.safeParse(rawFormData);
 
-  // If validation fails, return errors
   if (!validatedFields.success) {
     console.error(
       "Validation Errors:",
@@ -56,7 +46,6 @@ export default async function sendMessage(
     };
   }
 
-  // 2. If validation succeeds, proceed to send data
   const { name, email, message } = validatedFields.data;
   const appScriptUrl = process.env.APP_SCRIPT_URL;
 
@@ -119,7 +108,7 @@ export default async function sendMessage(
     console.error("Error sending message:", error);
     let errorMessage = "An unexpected error occurred. Please try again later.";
     if (error instanceof Error) {
-      errorMessage = error.message; // More specific error if available
+      errorMessage = error.message;
     }
     return {
       result: "error",
