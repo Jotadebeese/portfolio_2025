@@ -219,11 +219,11 @@ Each dynamic route has a dedicated `loading.tsx` that mirrors the exact layout o
 
 | Route               | Skeleton Mirrors                                |
 | -------------------- | ----------------------------------------------- |
-| `/notes`             | Hero + BlogFilters + BlogsSkeleton              |
+| `/notes`             | In-page `<Suspense>` on `BlogsSection` (Hero & Filters remain static) |
 | `/notes/[slug]`      | Hero (with back button) + BlockContent + ToC    |
 | `/projects/[slug]`   | Title + Date + BlockContent + ToC               |
 
-> **Why `/notes` is dynamic:** It accepts `searchParams` (tags, sort), which forces Next.js to SSR it on every request. The `loading.tsx` ensures instant client-side navigation despite the SSR delay.
+> **Why `/notes` uses in-page Suspense:** The Hero and tag filters are cached/static, so only the `BlogsSection` suspends with `BlogsSkeleton` when filtering or loading entries. This avoids flashing the top Hero on each visit.
 
 ---
 
