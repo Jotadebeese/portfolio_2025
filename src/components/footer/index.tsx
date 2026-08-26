@@ -43,7 +43,7 @@ export default function Footer() {
           },
         )}
       ></div>
-      <footer className="pointer-events-none fixed bottom-0 left-0 right-0 z-50 flex w-full flex-col items-center justify-center px-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] transform-gpu will-change-transform">
+      <footer className="pointer-events-none fixed bottom-0 left-0 right-0 z-50 flex w-full flex-col items-center justify-center px-2 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.5rem))] sm:pb-4 transform-gpu will-change-transform">
         <div
           ref={ref}
           className="border-border-color pointer-events-auto relative z-10 flex w-full max-w-md flex-col items-center justify-center rounded-2xl border bg-white p-2 shadow-sm transition-all duration-300 ease-in-out"
