@@ -1980,6 +1980,26 @@
   resolved "https://registry.yarnpkg.com/@polka/url/-/url-1.0.0-next.29.tgz#5a40109a1ab5f84d6fd8fc928b19f367cbe7e7b1"
   integrity sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==
 
+"@posthog/browser-common@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@posthog/browser-common/-/browser-common-0.6.0.tgz#488531cb9618db751d3201f8b29b2545c7964946"
+  integrity sha512-d6yBE7VeoU3JTpaab3CaCoDCseh0Ytx7sTe0v2ZxhtHNxoKk7rdqr92+bUz9F1T2CuJO5/OTkes4HWT2VHNrTA==
+  dependencies:
+    "@posthog/core" "^1.48.11"
+    "@posthog/types" "^1.406.1"
+
+"@posthog/core@^1.48.11":
+  version "1.48.11"
+  resolved "https://registry.yarnpkg.com/@posthog/core/-/core-1.48.11.tgz#cc4bf2518a53eedd8ca44faf26ab09690db4feb5"
+  integrity sha512-fvKbxGaUM8RuCDB1jdhSqAHYjk42INfJDWT1KVezn74sCrfnr1YaUafxzmcS+87D5FzbA2tu7IT0GQRV2WkkRg==
+  dependencies:
+    "@posthog/types" "^1.405.3"
+
+"@posthog/types@^1.405.3", "@posthog/types@^1.406.1":
+  version "1.406.1"
+  resolved "https://registry.yarnpkg.com/@posthog/types/-/types-1.406.1.tgz#130ed253c74e7ab89f379c354bef7c85db859f5b"
+  integrity sha512-RhA00AvWrcEW3wbYgvIPr4EeUTu1BDHJx8eajwJ1moOYIchQtgkQcqgnUjwXz6jL1a8XJAIaZ9w7SZfYo1b/Rw==
+
 "@shikijs/core@4.0.2":
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/@shikijs/core/-/core-4.0.2.tgz#386a00acc6965ced582e9066bfb237de7ee99174"
@@ -2765,6 +2785,11 @@
   resolved "https://registry.yarnpkg.com/@types/reactcss/-/reactcss-1.2.13.tgz#11c7468cc96b5353f7af998a5664deae21c7af08"
   integrity sha512-gi3S+aUi6kpkF5vdhUsnkwbiSEIU/BEJyD7kBy2SudWBUuKmJk8AQKE0OVcQQeEy40Azh0lV6uynxlikYIJuwg==
 
+"@types/trusted-types@^2.0.7":
+  version "2.0.7"
+  resolved "https://registry.yarnpkg.com/@types/trusted-types/-/trusted-types-2.0.7.tgz#baccb07a970b91707df3a3e8ba6896c57ead2d11"
+  integrity sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==
+
 "@types/unist@*", "@types/unist@^3.0.0":
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/@types/unist/-/unist-3.0.3.tgz#acaab0f919ce69cce629c2d4ed2eb4adc1b6c20c"
@@ -3055,6 +3080,11 @@ convert-source-map@^1.5.0:
   resolved "https://registry.yarnpkg.com/convert-source-map/-/convert-source-map-1.9.0.tgz#7faae62353fb4213366d0ca98358d22e8368b05f"
   integrity sha512-ASFBup0Mz1uyiIjANan1jzLQami9z1PoYSZCiiYW2FczPbenXc45FZdBZLzOT+r6+iciuEModtmCti+hjaAk0A==
 
+core-js@^3.49.0:
+  version "3.50.0"
+  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.50.0.tgz#a18646fcb0097650189b4504c803e887bcae4c0a"
+  integrity sha512-BRWgOLKkFeCgRudR6zrs8p9XJZcE14grzKMMssoYrk6krtuEZ7MTKPIY5RzOnqsEKIR9kst7wNzphttraT+Yqw==
+
 cosmiconfig@^7.0.0:
   version "7.1.0"
   resolved "https://registry.yarnpkg.com/cosmiconfig/-/cosmiconfig-7.1.0.tgz#1443b9afa596b670082ea46cbd8f6a62b84635f6"
@@ -3190,6 +3220,13 @@ dom-helpers@^5.0.1:
   dependencies:
     "@babel/runtime" "^7.8.7"
     csstype "^3.0.2"
+
+dompurify@^3.4.13:
+  version "3.4.14"
+  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.4.14.tgz#a789edb2c7bcdb69a93713a34edb7e0a5245d8c9"
+  integrity sha512-dVoH9z+MY+C9IilgGCk3YfFqjLi3fChm2OiKJMzh6axrJ5qwxqWaZamgmHrpv22CN/KdbZJuGEGgfQoL00LTdg==
+  optionalDependencies:
+    "@types/trusted-types" "^2.0.7"
 
 drizzle-kit@0.28.0:
   version "0.28.0"
@@ -3403,6 +3440,11 @@ fdir@^6.4.3:
   version "6.4.3"
   resolved "https://registry.yarnpkg.com/fdir/-/fdir-6.4.3.tgz#011cdacf837eca9b811c89dbb902df714273db72"
   integrity sha512-PMXmW2y1hDDfTSRc9gaXIuCCRpuoz3Kaz8cUelp3smouvfT632ozg2vrT6lJsHKKOF59YLbOGfAWGUcKEfRMQw==
+
+fflate@^0.4.8:
+  version "0.4.9"
+  resolved "https://registry.yarnpkg.com/fflate/-/fflate-0.4.9.tgz#b5d1fd9776e4d3cbcd1a83a1f163b984a0972e21"
+  integrity sha512-zdxgIEddhfsyCaWpJ2SdXEP8ZMrKJ6+5jl4OupODcywU0IhRk6gdXuVGcPICyfx2H97hVK7xmJtRLPjkxAX8Vw==
 
 file-type@19.3.0:
   version "19.3.0"
@@ -4692,6 +4734,27 @@ postgres-range@^1.1.1:
   resolved "https://registry.yarnpkg.com/postgres-range/-/postgres-range-1.1.4.tgz#a59c5f9520909bcec5e63e8cf913a92e4c952863"
   integrity sha512-i/hbxIE9803Alj/6ytL7UHQxRvZkI9O4Sy+J3HGc4F4oo/2eQAjTSNJ0bfxyse3bH0nuVesCk+3IRLaMtG3H6w==
 
+posthog-js@^1.419.4:
+  version "1.419.4"
+  resolved "https://registry.yarnpkg.com/posthog-js/-/posthog-js-1.419.4.tgz#da4d9df0566ce40ea9f26dfa591866f135571599"
+  integrity sha512-SpEgcWtHZ54HxtWl5jCxjHiG9C6t90iQVIra1T+U3veN9Q8vNx3yYsUuEV+dNF6g4M7HeV8Y1ZpNlTalWI8EYw==
+  dependencies:
+    "@posthog/browser-common" "^0.6.0"
+    "@posthog/core" "^1.48.11"
+    "@posthog/types" "^1.406.1"
+    core-js "^3.49.0"
+    dompurify "^3.4.13"
+    fflate "^0.4.8"
+    preact "^10.29.3"
+    query-selector-shadow-dom "^1.0.1"
+    web-vitals "^5.3.0"
+    web-vitals-soft-navs "npm:web-vitals@6.0.0"
+
+preact@^10.29.3:
+  version "10.29.8"
+  resolved "https://registry.yarnpkg.com/preact/-/preact-10.29.8.tgz#fc85b82dc2474e245b1430b51781d417361f5fc3"
+  integrity sha512-ej2aVZ+vZ8WO7tvlQWRM9N63A0KzF9q4mWJfDUHgYaIofWY9hu74QdnQrjoPMmZi2/nZ5gN0bJCQF49xQqx09Q==
+
 prettier-plugin-tailwindcss@^0.6.11:
   version "0.6.11"
   resolved "https://registry.yarnpkg.com/prettier-plugin-tailwindcss/-/prettier-plugin-tailwindcss-0.6.11.tgz#cfacd60c4f81997353ee913e589037f796df0f5f"
@@ -4746,6 +4809,11 @@ qs-esm@7.0.2:
   version "7.0.2"
   resolved "https://registry.yarnpkg.com/qs-esm/-/qs-esm-7.0.2.tgz#cdd52c8ddba8270258e0808423e8f28d8a7195c9"
   integrity sha512-D8NAthKSD7SGn748v+GLaaO6k08Mvpoqroa35PqIQC4gtUa8/Pb/k+r0m0NnGBVbHDP1gKZ2nVywqfMisRhV5A==
+
+query-selector-shadow-dom@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/query-selector-shadow-dom/-/query-selector-shadow-dom-1.0.1.tgz#1c7b0058eff4881ac44f45d8f84ede32e9a2f349"
+  integrity sha512-lT5yCqEBgfoMYpf3F2xQRK7zEr1rhIIZuceDK6+xRkJQ4NMbHTwXqk4NkwDwQMNqXgG9r9fyHnzwNVs6zV5KRw==
 
 queue@6.0.2:
   version "6.0.2"
@@ -5433,6 +5501,16 @@ vfile@^6.0.0:
   dependencies:
     "@types/unist" "^3.0.0"
     vfile-message "^4.0.0"
+
+"web-vitals-soft-navs@npm:web-vitals@6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/web-vitals/-/web-vitals-6.0.0.tgz#05c7c10e7c4bba4acfe35c59767bd52894e22350"
+  integrity sha512-Guaibvy/+uNtL6Bsu4jmMJGzuSl91oeRH5iO9pPRbYftnFUr3yqT1TUNX/OE4o9HexuEMU3Kb/Wg7iKhlffZUA==
+
+web-vitals@^5.3.0:
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/web-vitals/-/web-vitals-5.3.0.tgz#a67f57f229fdf68be99eb99d3725946def284ff3"
+  integrity sha512-q6LWsLatGYZp5VGBIOvbTj6JBV2nOmC8KvWztXBmwJcfFAzhwKwbOxhUH306XY3CcaZDUlSmSuNPBsCn0bFu+g==
 
 webidl-conversions@^3.0.0:
   version "3.0.1"
