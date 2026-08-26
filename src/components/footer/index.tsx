@@ -34,21 +34,22 @@ export default function Footer() {
   return (
     <>
       <div
+        onClick={() => setOpen(false)}
         className={clsx(
-          "bg-foreground fixed top-0 h-dvh w-full transition-all ease-in-out",
+          "fixed inset-0 bg-foreground transition-all duration-300 ease-in-out",
           {
-            "z-1 opacity-40": open,
-            "z-[-1] opacity-0": !open,
+            "z-40 opacity-40 pointer-events-auto": open,
+            "z-[-1] opacity-0 pointer-events-none": !open,
           },
         )}
       ></div>
-      <footer className="pointer-events-none fixed bottom-2 z-50 flex w-full flex-col items-center justify-center px-2">
+      <footer className="pointer-events-none fixed bottom-0 left-0 right-0 z-50 flex w-full flex-col items-center justify-center px-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] transform-gpu will-change-transform">
         <div
           ref={ref}
-          className=" border-border-color pointer-events-auto relative z-10 bg-white flex w-full max-w-md flex-col items-center justify-center rounded-2xl border  p-2 shadow-sm transition-all duration-300 ease-in-out"
+          className="border-border-color pointer-events-auto relative z-10 flex w-full max-w-md flex-col items-center justify-center rounded-2xl border bg-white p-2 shadow-sm transition-all duration-300 ease-in-out"
         >
-          <div className="flex w-full items-center justify-between ">
-            <div className="flex flex-1 pl-1 items-center justify-start text-xs font-medium opacity-60">
+          <div className="flex w-full items-center justify-between">
+            <div className="flex flex-1 items-center justify-start pl-1 text-xs font-medium opacity-60">
               © {new Date().getFullYear()}
             </div>
 
@@ -106,7 +107,9 @@ export default function Footer() {
           <div
             className={clsx(
               "grid w-full transition-opacity duration-300 ease-in-out",
-              open ? " grid-rows-[1fr] opacity-100" : " grid-rows-[0fr] opacity-0"
+              open
+                ? "grid-rows-[1fr] opacity-100"
+                : "grid-rows-[0fr] opacity-0",
             )}
           >
             <div className="flex w-full justify-center overflow-hidden">
