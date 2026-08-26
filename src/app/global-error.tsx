@@ -1,6 +1,8 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
+import "./(app)/globals.css";
+import { RotateCcw, Home } from "lucide-react";
+import Link from "next/link";
 
 export default function GlobalError({
   error,
@@ -11,18 +13,27 @@ export default function GlobalError({
 }) {
   return (
     <html lang="en">
-      <body className="bg-[#eeeeee] text-[#181411] antialiased flex min-h-screen flex-col items-center justify-center px-4 text-center">
-        <h1 className="text-6xl font-light">Oops!</h1>
-        <p className="mt-4 mb-8 max-w-md text-sm">
-          A critical error occurred. Please try refreshing the page.
+      <body className="bg-background text-foreground antialiased flex min-h-screen flex-col items-center justify-center px-4 text-center">
+        <h1 className="text-6xl md:text-[8rem] font-light">Oops!</h1>
+        <p className="text-foreground mt-4 mb-8 max-w-md text-sm sm:text-base">
+          A critical error occurred. Please try refreshing the page or head back home.
         </p>
-        <button
-          onClick={() => reset()}
-          className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#181411] px-5 py-2.5 text-sm font-medium text-[#eeeeee] transition-all hover:bg-[#ff9900]"
-        >
-          <RotateCcw size={16} />
-          Try Again
-        </button>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={() => reset()}
+            className="flex cursor-pointer items-center gap-2 rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-all hover:bg-utils-scent-orange focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:outline-none"
+          >
+            <RotateCcw size={16} />
+            Try Again
+          </button>
+          <Link
+            href="/"
+            className="bg-utils-scent-gray-01/60 border-utils-scent-gray-01 text-foreground hover:bg-utils-scent-gray-01 flex items-center gap-2 rounded-lg border px-5 py-2.5 text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:outline-none"
+          >
+            <Home size={16} />
+            Back Home
+          </Link>
+        </div>
       </body>
     </html>
   );
