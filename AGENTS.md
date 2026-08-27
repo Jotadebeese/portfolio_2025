@@ -219,11 +219,11 @@ Each dynamic route has a dedicated `loading.tsx` that mirrors the exact layout o
 
 | Route               | Skeleton Mirrors                                |
 | -------------------- | ----------------------------------------------- |
-| `/notes`             | In-page `<Suspense>` on `BlogsSection` (Hero & Filters remain static) |
+| `/notes`             | Statically prerendered (`○ Static`) with instant client-side filtering |
 | `/notes/[slug]`      | Hero (with back button) + BlockContent + ToC    |
 | `/projects/[slug]`   | Title + Date + BlockContent + ToC               |
 
-> **Why `/notes` uses in-page Suspense:** The Hero and tag filters are cached/static, so only the `BlogsSection` suspends with `BlogsSkeleton` when filtering or loading entries. This avoids flashing the top Hero on each visit.
+> **Why `/notes` is static:** All blog card metadata and tags are fetched at build time. Filtering by tag/sort is performed instantaneously on the client, giving a 0ms CDN load time while preserving URL search params. Revalidated automatically via Payload hooks.
 
 ---
 

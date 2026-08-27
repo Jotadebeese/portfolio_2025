@@ -1,15 +1,9 @@
-import BlogFilters from "@/components/blogs/components/blog-filters";
-import BlogsSection from "@/components/blogs/layout/blogs-section";
-import { BlogsSkeleton } from "@/components/blogs/layout/blogs-section-skeleton";
+import BlogsContainer from "@/components/blogs/components/blogs-container";
 import Hero from "@/components/common/hero";
-import { getAllTags, getBlogPage } from "@/lib/payload/actions";
+import { getAllBlogs, getAllTags, getBlogPage } from "@/lib/payload/actions";
 import { Media } from "@/payload-types";
 import { Metadata } from "next";
 import { Suspense } from "react";
-
-type Props = {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-};
 
 export async function generateMetadata(): Promise<Metadata> {
   const heroPage = await getBlogPage();
@@ -42,25 +36,15 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Blog(props: Props) {
-  const searchParams = await props.searchParams;
-  const tagsParam =
-    typeof searchParams.tags === "string" ? searchParams.tags : undefined;
-  const sort =
-    typeof searchParams.sort === "string" ? searchParams.sort : "newest";
-
-  const [blogPage, allTags] = await Promise.all([getBlogPage(), getAllTags()]);
+export default async function Blog() {
+  const [blogPage, allTags, allBlogs] = await Promise.all([
+    getBlogPage(),
+    getAllTags(),
+    getAllBlogs(),
+  ]);
 
   const image = blogPage.featuredImage as Media;
 
-  const selectedTagNames = tagsParam ? tagsParam.split(",") : [];
-
-  const activeTagIds =
-    selectedTagNames.length > 0
-      ? allTags
-          .filter((t) => selectedTagNames.includes(t.name))
-          .map((t) => t.id)
-      : undefined;
   return (
     <>
       <Hero
@@ -68,9 +52,8 @@ export default async function Blog(props: Props) {
         description={blogPage.shortDescription}
         image={image}
       />
-      <BlogFilters tags={allTags} />
-      <Suspense key={`${tagsParam}-${sort}`} fallback={<BlogsSkeleton />}>
-        <BlogsSection tagIds={activeTagIds} sort={sort} />
+      <Suspense fallback={null}>
+        <BlogsContainer blogs={allBlogs} tags={allTags} />
       </Suspense>
     </>
   );
