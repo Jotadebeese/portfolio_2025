@@ -846,6 +846,18 @@ export interface About {
         blockName?: string | null;
         blockType: 'image';
       }
+    | CodeBlock
+    | {
+        layout: 'grid' | 'carousel' | 'masonry';
+        images: {
+          image: number | Media;
+          caption?: string | null;
+          id?: string | null;
+        }[];
+        id?: string | null;
+        blockName?: string | null;
+        blockType: 'gallery';
+      }
   )[];
   /**
    * Best to keep this under 60 characters.
@@ -992,6 +1004,21 @@ export interface AboutSelect<T extends boolean = true> {
           | {
               image?: T;
               caption?: T;
+              id?: T;
+              blockName?: T;
+            };
+        'code-block'?: T | CodeBlockSelect<T>;
+        gallery?:
+          | T
+          | {
+              layout?: T;
+              images?:
+                | T
+                | {
+                    image?: T;
+                    caption?: T;
+                    id?: T;
+                  };
               id?: T;
               blockName?: T;
             };

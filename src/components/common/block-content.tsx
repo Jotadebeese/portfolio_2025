@@ -1,4 +1,4 @@
-import { Blog, Media, Project } from "@/payload-types";
+import { About, Blog, Media, Project } from "@/payload-types";
 import clsx from "clsx";
 import Image from "next/image";
 import { RichText } from "../RichText";
@@ -11,7 +11,7 @@ export default function BlockContent({
   data,
   className,
 }: {
-  data: Blog["content"] | Project["content"];
+  data: Blog["content"] | Project["content"] | About["content"];
   className?: string;
 }) {
   if (!data) return null;

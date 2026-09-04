@@ -1,5 +1,6 @@
 import { GlobalConfig } from "payload";
 import { revalidateAboutPage } from "./hooks/revalidateAboutPage";
+import { contentField } from "@/fields/content";
 
 export const AboutPage: GlobalConfig = {
   slug: "about",
@@ -31,42 +32,7 @@ export const AboutPage: GlobalConfig = {
               label: "Featured Image",
               required: true,
             },
-            {
-              name: "content",
-              type: "blocks",
-              label: "Content",
-              required: true,
-              blocks: [
-                {
-                  slug: "text",
-                  fields: [
-                    {
-                      name: "text",
-                      type: "richText",
-                      label: "Text Content",
-                      required: true,
-                    },
-                  ],
-                },
-                {
-                  slug: "image",
-                  fields: [
-                    {
-                      name: "image",
-                      type: "upload",
-                      relationTo: "media",
-                      required: true,
-                      label: "Image",
-                    },
-                    {
-                      name: "caption",
-                      type: "text",
-                      label: "Caption",
-                    },
-                  ],
-                },
-              ],
-            },
+            contentField,
           ],
         },
         {
