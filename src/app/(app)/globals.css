@@ -10,6 +10,9 @@
   --code-rust: #a31515;
   --code-light-gray: #f3f3f3;
   --code-silver: #d1d1d1;
+  --code-green: #008000;
+  --code-blue: #3b78ff;
+  --status-amber: oklch(66.6% 0.179 58.318);
 }
 
 @theme inline {
@@ -21,6 +24,10 @@
   --color-code-rust: var(--code-rust);
   --color-code-light-gray: var(--code-light-gray);
   --color-code-silver: var(--code-silver);
+  --color-code-green: var(--code-green);
+  --color-code-blue: var(--code-blue);
+  --color-status-amber: var(--status-amber);
+
   --font-sans: var(--font-dm-sans);
   --font-roboto: var(--font-roboto);
 }

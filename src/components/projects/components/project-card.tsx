@@ -38,15 +38,15 @@ export default function ProjectCard({
           </small>
           <div
             className={clsx("h-4 w-4 rounded-full", {
-              "bg-amber-600": project.stage === "indevelopment",
-              "bg-emerald-600": project.stage === "live",
+              "bg-code-blue": project.stage === "indevelopment",
+              "bg-code-green": project.stage === "live",
             })}
           />
         </div>
       </div>
       <div className="flex w-full flex-col items-start gap-2 sm:flex-row">
         {imageUrl && (
-          <div className="bg-background border-border-color relative flex h-full w-fit min-w-28 items-center justify-center rounded-2xl border p-4">
+          <div className="bg-background relative flex h-full w-fit min-w-28 items-center justify-center rounded-2xl p-4">
             {imageUrl.endsWith(".svg") ? (
               <img
                 src={imageUrl}

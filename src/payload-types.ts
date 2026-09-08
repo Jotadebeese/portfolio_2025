@@ -277,6 +277,7 @@ export interface Project {
         blockName?: string | null;
         blockType: 'gallery';
       }
+    | ToolsWorkbenchBlock
   )[];
   /**
    * Best to keep this under 60 characters.
@@ -366,6 +367,18 @@ export interface CodeBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ToolsWorkbenchBlock".
+ */
+export interface ToolsWorkbenchBlock {
+  heading?: string | null;
+  description?: string | null;
+  defaultTools?: ('secret-generator' | 'jwt-inspector' | 'image-optimizer')[] | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'tools-workbench';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "blogTags".
  */
 export interface BlogTag {
@@ -441,6 +454,7 @@ export interface Blog {
         blockName?: string | null;
         blockType: 'gallery';
       }
+    | ToolsWorkbenchBlock
   )[];
   /**
    * Best to keep this under 60 characters.
@@ -663,6 +677,7 @@ export interface ProjectsSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        'tools-workbench'?: T | ToolsWorkbenchBlockSelect<T>;
       };
   metaTitle?: T;
   metaDescription?: T;
@@ -678,6 +693,17 @@ export interface ProjectsSelect<T extends boolean = true> {
 export interface CodeBlockSelect<T extends boolean = true> {
   language?: T;
   code?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ToolsWorkbenchBlock_select".
+ */
+export interface ToolsWorkbenchBlockSelect<T extends boolean = true> {
+  heading?: T;
+  description?: T;
+  defaultTools?: T;
   id?: T;
   blockName?: T;
 }
@@ -755,6 +781,7 @@ export interface BlogSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        'tools-workbench'?: T | ToolsWorkbenchBlockSelect<T>;
       };
   metaTitle?: T;
   metaDescription?: T;
@@ -858,6 +885,7 @@ export interface About {
         blockName?: string | null;
         blockType: 'gallery';
       }
+    | ToolsWorkbenchBlock
   )[];
   /**
    * Best to keep this under 60 characters.
@@ -1022,6 +1050,7 @@ export interface AboutSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        'tools-workbench'?: T | ToolsWorkbenchBlockSelect<T>;
       };
   metaTitle?: T;
   metaDescription?: T;

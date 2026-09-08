@@ -1,11 +1,11 @@
 import { About, Blog, Media, Project } from "@/payload-types";
 import clsx from "clsx";
-import Image from "next/image";
 import { RichText } from "../RichText";
 import { codeToHtml } from "shiki";
 import InteractiveCode from "./interactive-code";
 import BlockGallery from "./block-gallery";
 import BlockImage from "./block-image";
+import ToolsWorkbench from "@/components/tools/layout/tools-workbench";
 
 export default function BlockContent({
   data,
@@ -66,6 +66,17 @@ export default function BlockContent({
                   <BlockGallery
                     layout={block.layout}
                     images={block.images}
+                  />
+                </div>
+              );
+            }
+            if (block.blockType === "tools-workbench") {
+              return (
+                <div key={index} className="w-full">
+                  <ToolsWorkbench
+                    heading={block.heading}
+                    description={block.description}
+                    defaultTools={block.defaultTools}
                   />
                 </div>
               );

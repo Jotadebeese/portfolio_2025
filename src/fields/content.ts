@@ -139,5 +139,49 @@ export const contentField: Field = {
         },
       ],
     },
+    {
+      slug: "tools-workbench",
+      interfaceName: "ToolsWorkbenchBlock",
+      labels: {
+        singular: "Tools Workbench",
+        plural: "Tools Workbenches",
+      },
+      fields: [
+        {
+          name: "heading",
+          type: "text",
+          label: "Section Heading",
+          defaultValue: "Tools Workbench",
+        },
+        {
+          name: "description",
+          type: "text",
+          label: "Section Description",
+          defaultValue:
+            "A browser-native suite of developer utilities running 100% locally with zero server requests.",
+        },
+        {
+          name: "defaultTools",
+          type: "select",
+          label: "Default Opened Tools",
+          hasMany: true,
+          defaultValue: ["secret-generator", "jwt-inspector"],
+          options: [
+            {
+              label: "Cryptographic Keys & UUID v7",
+              value: "secret-generator",
+            },
+            {
+              label: "Zero-Knowledge JWT Inspector",
+              value: "jwt-inspector",
+            },
+            {
+              label: "Web Image Optimizer",
+              value: "image-optimizer",
+            },
+          ],
+        },
+      ],
+    },
   ],
 };

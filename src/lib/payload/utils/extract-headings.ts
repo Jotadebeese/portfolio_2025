@@ -17,6 +17,34 @@ export function extractHeadingsFromBlocks(blocks: any[]) {
         }
       });
     }
+
+    if (block.blockType === "tools-workbench") {
+      const toolLabels: Record<string, string> = {
+        "secret-generator": "UUID & Key Generator",
+        "jwt-inspector": "JWT Inspector",
+        "image-optimizer": "Image Optimizer",
+      };
+
+      const sectionText = block.heading || "Tools Workbench";
+      const sectionId =
+        sectionText
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "") || "tools-workbench";
+
+      headings.push({ id: sectionId, text: sectionText });
+
+      if (Array.isArray(block.defaultTools)) {
+        block.defaultTools.forEach((tool: string) => {
+          if (toolLabels[tool]) {
+            headings.push({
+              id: tool,
+              text: `↳ ${toolLabels[tool]}`,
+            });
+          }
+        });
+      }
+    }
   });
 
   return headings;
