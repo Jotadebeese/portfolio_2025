@@ -117,22 +117,20 @@ export default function SecretGenerator() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="text-foreground flex flex-wrap items-center gap-1">
-          <small className="flex items-center gap-1">
-            <ShieldCheck className="text-code-blue h-4 w-4" />
-            Calculated entirely locally with native
-          </small>
-          <span className="text-xs">
-            <code className="text-code-rust bg-code-light-gray border-code-silver rounded-md border px-1.5 py-1">
-              crypto.getRandomValues()
-            </code>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1.5 text-xs">
+          <ShieldCheck className="text-code-blue h-4 w-4 shrink-0" />
+          <span className="text-foreground/80 hidden sm:inline">
+            Calculated locally with native{" "}
           </span>
+          <code className="text-code-rust bg-code-light-gray border-code-silver rounded-md border px-1.5 py-0.5 font-mono text-[11px]">
+            crypto.getRandomValues()
+          </code>
         </div>
 
         <button
           onClick={regenerateAll}
-          className="text-foreground bg-background flex cursor-pointer items-center gap-1.5 rounded-md p-1.5 text-xs transition-all hover:opacity-80"
+          className="text-foreground bg-background flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md p-1.5 text-xs transition-all hover:opacity-80"
         >
           <RefreshCw
             className={clsx("h-3.5 w-3.5", isRotating && "animate-spin")}
@@ -155,7 +153,7 @@ export default function SecretGenerator() {
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="border-border-color text-foreground flex-1 overflow-x-auto rounded-md border bg-white px-3 py-2 font-mono text-xs select-all sm:text-sm">
+              <div className="border-border-color text-foreground flex-1 overflow-x-auto whitespace-nowrap rounded-md border bg-white px-3 py-2 font-mono text-xs select-all sm:text-sm">
                 {item.value}
               </div>
 
@@ -201,28 +199,33 @@ export default function SecretGenerator() {
             </small>
           </div>
 
-          <div className="flex items-center text-xs">
-            <label className="border-border-color flex cursor-pointer items-center gap-1.5 border-r border-dashed pr-2 select-none">
+          <div className="flex flex-wrap items-center gap-2.5 text-xs sm:gap-3">
+            <label className="border-border-color flex cursor-pointer items-center gap-1.5 border-r border-dashed pr-2.5 select-none">
               <input
                 type="checkbox"
                 checked={includeSymbols}
                 onChange={toggleSymbols}
                 className="accent-status-amber rounded-md"
               />
-              <span>Include Symbols (!@#$)</span>
+              <span>
+                Symbols{" "}
+                <span className="text-foreground/60 hidden sm:inline">
+                  (!@#$)
+                </span>
+              </span>
             </label>
 
-            <div className="flex items-center gap-2 pl-2">
-              <span className="text-foreground">Length:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-foreground/80">Length:</span>
               <input
                 type="range"
                 min="12"
                 max="48"
                 value={passwordLength}
                 onChange={handleLengthChange}
-                className="accent-utils-scent-orange w-24 cursor-pointer"
+                className="accent-utils-scent-orange w-20 cursor-pointer sm:w-24"
               />
-              <span className="text-foreground w-5 text-right font-mono">
+              <span className="text-foreground w-5 text-right font-mono font-medium">
                 {passwordLength}
               </span>
             </div>
@@ -230,7 +233,7 @@ export default function SecretGenerator() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="border-border-color text-foreground flex-1 overflow-x-auto rounded-md border bg-white px-3 py-2 font-mono text-xs select-all sm:text-sm">
+          <div className="border-border-color text-foreground flex-1 overflow-x-auto whitespace-nowrap rounded-md border bg-white px-3 py-2 font-mono text-xs select-all sm:text-sm">
             {password}
           </div>
 

@@ -4,17 +4,13 @@ export default function ToolSkeleton({ toolId }: { toolId?: ToolId }) {
   if (toolId === "secret-generator") {
     return (
       <div className="flex animate-pulse flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="text-foreground flex flex-wrap items-center gap-1">
-            <small className="flex items-center gap-1">
-              <div className="bg-utils-scent-gray-01/70 h-4 w-4 rounded-full" />
-              <div className="bg-utils-scent-gray-01/60 h-4 w-44 rounded-md" />
-            </small>
-            <span className="text-xs">
-              <div className="bg-utils-scent-gray-01/40 h-6 w-36 rounded-md" />
-            </span>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-1.5 text-xs">
+            <div className="bg-utils-scent-gray-01/70 h-4 w-4 shrink-0 rounded-full" />
+            <div className="bg-utils-scent-gray-01/60 hidden h-4 w-40 rounded-md sm:inline-block" />
+            <div className="bg-utils-scent-gray-01/40 h-5 w-36 rounded-md" />
           </div>
-          <div className="bg-background h-7 w-28 rounded-md" />
+          <div className="bg-background h-7 w-28 shrink-0 rounded-md" />
         </div>
 
         <div className="flex flex-col">
@@ -37,7 +33,7 @@ export default function ToolSkeleton({ toolId }: { toolId?: ToolId }) {
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="border-border-color flex-1 overflow-x-auto rounded-md border bg-white px-3 py-2 font-mono text-xs select-all sm:text-sm">
+                <div className="border-border-color flex-1 overflow-x-auto whitespace-nowrap rounded-md border bg-white px-3 py-2 font-mono text-xs select-all sm:text-sm">
                   <div className="bg-utils-scent-gray-01/40 h-4 w-3/4 rounded" />
                 </div>
 
@@ -63,14 +59,14 @@ export default function ToolSkeleton({ toolId }: { toolId?: ToolId }) {
               </small>
             </div>
 
-            <div className="flex items-center gap-2 text-xs">
-              <div className="bg-utils-scent-gray-01/50 h-4 w-32 rounded-md" />
+            <div className="flex flex-wrap items-center gap-2.5 text-xs sm:gap-3">
+              <div className="bg-utils-scent-gray-01/50 h-4 w-24 rounded-md" />
               <div className="bg-utils-scent-gray-01/50 h-4 w-28 rounded-md" />
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="border-border-color flex-1 overflow-x-auto rounded-md border bg-white px-3 py-2 font-mono text-xs select-all sm:text-sm">
+            <div className="border-border-color flex-1 overflow-x-auto whitespace-nowrap rounded-md border bg-white px-3 py-2 font-mono text-xs select-all sm:text-sm">
               <div className="bg-utils-scent-gray-01/40 h-4 w-1/2 rounded" />
             </div>
 
