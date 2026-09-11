@@ -57,6 +57,19 @@ export default buildConfig({
   collections: [Users, Media, Projects, Tags, Tech, BlogTags, Blog],
   globals: [AboutPage, BlogPage, HomePage],
   editor: lexicalEditor({}),
+  ...(process.env.PAYLOAD_PUBLIC_SERVER_URL
+    ? { serverURL: process.env.PAYLOAD_PUBLIC_SERVER_URL }
+    : {}),
+  cors: [
+    process.env.NEXT_WEB_APP_PUBLIC_URL || "https://jotadebeese.com",
+    "http://localhost:3000",
+  ],
+  csrf: [
+    process.env.NEXT_WEB_APP_PUBLIC_URL || "https://jotadebeese.com",
+    "https://admin.jotadebeese.com",
+    "http://localhost:3000",
+    "http://admin.localhost:3000",
+  ],
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {
     outputFile: path.resolve(dirname, "payload-types.ts"),
