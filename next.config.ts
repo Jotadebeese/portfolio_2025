@@ -25,6 +25,34 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "admin.jotadebeese.com",
+      },
+      {
+        protocol: "https",
+        hostname: "jotadebeese.com",
+      },
+      {
+        protocol: "https",
+        hostname: "www.jotadebeese.com",
+      },
+      {
+        protocol: "http",
+        hostname: "admin.localhost",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+      },
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+      },
+    ],
+  },
   async redirects() {
     return [
       {
