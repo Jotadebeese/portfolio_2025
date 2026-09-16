@@ -41,10 +41,12 @@ export const metadata: Metadata = {
 const dm_sans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 const roboto = Roboto({
   variable: "--font-roboto",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export default function RootLayout({

@@ -51,6 +51,9 @@ export default function ProjectCard({
               <img
                 src={imageUrl}
                 alt={icon?.alt || "Project Icon"}
+                width={150}
+                height={50}
+                loading="lazy"
                 className="max-h-[50px] w-auto object-contain"
               />
             ) : (
