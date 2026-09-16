@@ -58,12 +58,14 @@ export default function Footer() {
                 className="transition-opacity hover:opacity-80"
                 href={"https://www.linkedin.com/in/jotadebeese/"}
                 target="_blank"
+                aria-label="Juan Bedoya on LinkedIn"
               >
                 <Image src={linkedIn} alt="LinkedIn" width={18} height={18} />
               </Link>
               <Link
                 className="transition-opacity hover:opacity-80"
                 href={"mailto:jotadebeese@gmail.com"}
+                aria-label="Send Juan an email"
               >
                 <Mail size={18} />
               </Link>
@@ -71,6 +73,7 @@ export default function Footer() {
                 className="transition-opacity hover:opacity-80"
                 href={"https://github.com/Jotadebeese"}
                 target="_blank"
+                aria-label="Juan Bedoya on GitHub"
               >
                 <Image src={github} alt="GitHub" width={18} height={18} />
               </Link>
@@ -79,6 +82,7 @@ export default function Footer() {
             <div className="flex flex-1 items-center justify-end">
               <button
                 onMouseDown={() => setOpen(!open)}
+                aria-label={open ? "Close contact form" : "Open contact form"}
                 className="bg-foreground text-background group relative z-10 flex h-9 w-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:bg-utils-scent-orange"
               >
                 {!open ? (

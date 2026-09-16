@@ -45,8 +45,11 @@ export default function BlogCard(blog: Partial<Blog>) {
           {blogTags.map((tag) => (
             <li
               key={tag.id}
-              style={{ ["--tag-color" as any]: tag.color || "#666" }}
-              className="flex w-fit items-center gap-1 rounded-md bg-[var(--tag-color)]/10 px-1.5 text-[var(--tag-color)]"
+              style={{
+                ["--tag-color" as any]: tag.color || "#666",
+                color: "color-mix(in srgb, var(--tag-color), #000 35%)",
+              }}
+              className="flex w-fit items-center gap-1 rounded-md bg-[var(--tag-color)]/10 px-1.5"
             >
               <CircleDotDashed size={12} />
               <small>{tag.name}</small>
