@@ -43,13 +43,27 @@ export default async function Home() {
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Person",
-    name: "Juan Bedoya",
-    url: baseUrl,
-    jobTitle: "Software Developer",
-    sameAs: [
-      "https://github.com/Jotadebeese",
-      "https://www.linkedin.com/in/jotadebeese/",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        name: "Juan Bedoya",
+        alternateName: ["Jotadebeese"],
+        url: baseUrl,
+      },
+      {
+        "@type": "Person",
+        name: "Juan Bedoya",
+        url: baseUrl,
+        jobTitle: [
+          "Full Stack Product Engineer",
+          "Product Engineer",
+          "Software Developer",
+        ],
+        sameAs: [
+          "https://github.com/Jotadebeese",
+          "https://www.linkedin.com/in/jotadebeese/",
+        ],
+      },
     ],
   };
 

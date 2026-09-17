@@ -44,9 +44,33 @@ export default async function Blog() {
   ]);
 
   const image = blogPage.featuredImage as Media;
+  const baseUrl = process.env.NEXT_WEB_APP_PUBLIC_URL || "http://localhost:3000";
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: baseUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Notes",
+        item: `${baseUrl}/notes`,
+      },
+    ],
+  };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Hero
         title={blogPage.title || ""}
         description={blogPage.shortDescription}

@@ -76,22 +76,44 @@ export default async function ProjectsPage({ params }: Props) {
   const baseUrl = process.env.NEXT_WEB_APP_PUBLIC_URL || "http://localhost:3000";
   const image = project.metaImage as Media;
 
+  const projectUrl = `${baseUrl}/projects/${project.slug}`;
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "CreativeWork",
-    headline: project.title,
-    description: project.shortDescription || project.metaDescription,
-    image: image?.url,
-    datePublished: project.publishedAt,
-    author: {
-      "@type": "Person",
-      name: "Juan Bedoya",
-      url: baseUrl,
-      sameAs: [
-        "https://github.com/Jotadebeese",
-        "https://www.linkedin.com/in/jotadebeese/",
-      ],
-    },
+    "@graph": [
+      {
+        "@type": "CreativeWork",
+        headline: project.title,
+        description: project.shortDescription || project.metaDescription,
+        image: image?.url,
+        datePublished: project.publishedAt,
+        author: {
+          "@type": "Person",
+          name: "Juan Bedoya",
+          url: baseUrl,
+          sameAs: [
+            "https://github.com/Jotadebeese",
+            "https://www.linkedin.com/in/jotadebeese/",
+          ],
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: baseUrl,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: project.title,
+            item: projectUrl,
+          },
+        ],
+      },
+    ],
   };
 
   return (

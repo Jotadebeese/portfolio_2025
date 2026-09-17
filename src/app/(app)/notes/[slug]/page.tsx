@@ -70,23 +70,60 @@ export default async function BlogsPage({ params }: Props) {
   const image = blog.featuredImage as Media;
   const baseUrl = process.env.NEXT_WEB_APP_PUBLIC_URL || "http://localhost:3000";
 
+  const postUrl = `${baseUrl}/notes/${blog.slug}`;
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Article",
-    headline: blog.title,
-    description: blog.shortDescription,
-    image: image?.url,
-    datePublished: blog.publishedAt,
-    dateModified: blog.updatedAt || blog.publishedAt,
-    author: {
-      "@type": "Person",
-      name: "Juan Bedoya",
-      url: baseUrl,
-      sameAs: [
-        "https://github.com/Jotadebeese",
-        "https://www.linkedin.com/in/jotadebeese/",
-      ],
-    },
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        headline: blog.title,
+        description: blog.shortDescription,
+        image: image?.url ? [image.url] : undefined,
+        datePublished: blog.publishedAt,
+        dateModified: blog.updatedAt || blog.publishedAt,
+        mainEntityOfPage: {
+          "@type": "WebPage",
+          "@id": postUrl,
+        },
+        author: {
+          "@type": "Person",
+          name: "Juan Bedoya",
+          url: baseUrl,
+          sameAs: [
+            "https://github.com/Jotadebeese",
+            "https://www.linkedin.com/in/jotadebeese/",
+          ],
+        },
+        publisher: {
+          "@type": "Person",
+          name: "Juan Bedoya",
+          url: baseUrl,
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: baseUrl,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Notes",
+            item: `${baseUrl}/notes`,
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: blog.title,
+            item: postUrl,
+          },
+        ],
+      },
+    ],
   };
 
   const headings = extractHeadingsFromBlocks(blog.content);
