@@ -1,17 +1,26 @@
 import BlockContent from "@/components/common/block-content";
 import Hero from "@/components/common/hero";
 import { getAboutPage } from "@/lib/payload/actions";
+import { extractTextFromRichText } from "@/lib/payload/utils/extract-text";
 import { Media } from "@/payload-types";
 import { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
   const aboutPage = await getAboutPage();
   const metaImage = aboutPage.metaImage as Media;
+  const featuredImage = aboutPage.featuredImage as Media;
 
   const title = aboutPage.metaTitle || "About";
-  const description =
-    aboutPage.metaDescription || "Just a bit about my background.";
-  const imageUrl = metaImage?.url || "/assets/bowser.jpeg";
+  const fallbackDescription =
+    extractTextFromRichText(aboutPage.shortDescription) ||
+    "Just a bit about my background.";
+  const description = aboutPage.metaDescription || fallbackDescription;
+  const imageUrl =
+    metaImage?.url || featuredImage?.url || "/assets/bowser.jpeg";
+  const imageAlt =
+    metaImage?.alt ||
+    featuredImage?.alt ||
+    "Lego set of Bowser from Mario.";
 
   return {
     title,
@@ -22,11 +31,12 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [
         {
           url: imageUrl,
-          alt: metaImage?.alt || "Lego set of Bowser from Mario.",
+          alt: imageAlt,
         },
       ],
     },
     twitter: {
+      card: "summary_large_image",
       title,
       description,
       images: [imageUrl],

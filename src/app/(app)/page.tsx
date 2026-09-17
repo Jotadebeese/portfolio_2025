@@ -1,6 +1,7 @@
 import ProjectsSection from "@/components/projects/layouts/projects-section";
 import { ProjectsSkeleton } from "@/components/projects/layouts/projects-section-skeleton";
 import { getHomePage } from "@/lib/payload/actions";
+import { extractTextFromRichText } from "@/lib/payload/utils/extract-text";
 import { Media } from "@/payload-types";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import { Metadata } from "next";
@@ -11,9 +12,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const metaImage = homePage.metaImage as Media;
 
   const title = homePage.metaTitle || "Start";
-  const description =
-    homePage.metaDescription ||
+  const fallbackDescription =
+    extractTextFromRichText(homePage.shortDescription) ||
     "Full Stack Product Engineer with a background in electronics engineering and a passion for AI.";
+  const description = homePage.metaDescription || fallbackDescription;
   const imageUrl = metaImage?.url || "/assets/bowser.jpeg";
 
   return {
@@ -30,6 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
       ],
     },
     twitter: {
+      card: "summary_large_image",
       title,
       description,
       images: [imageUrl],

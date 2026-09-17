@@ -5,6 +5,7 @@ import BlockContent from "@/components/common/block-content";
 import { Metadata } from "next";
 import { Media } from "@/payload-types";
 import { extractHeadingsFromBlocks } from "@/lib/payload/utils/extract-headings";
+import { extractTextFromRichText } from "@/lib/payload/utils/extract-text";
 import TableOfContents from "@/components/blogs/components/table-of-contents";
 import clsx from "clsx";
 
@@ -29,10 +30,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const metaImage = note.metaImage as Media;
+  const featuredImage = note.featuredImage as Media;
 
   const title = note.metaTitle || note.title;
-  const description = note.metaDescription || "Read this note on my portfolio.";
-  const imageUrl = metaImage?.url || "/assets/bowser.jpeg";
+  const fallbackDescription =
+    extractTextFromRichText(note.shortDescription) ||
+    "Read this note on my portfolio.";
+  const description = note.metaDescription || fallbackDescription;
+  const imageUrl =
+    metaImage?.url || featuredImage?.url || "/assets/bowser.jpeg";
+  const imageAlt =
+    metaImage?.alt ||
+    featuredImage?.alt ||
+    "Lego set of Bowser from Mario.";
 
   return {
     title,
@@ -46,7 +56,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [
         {
           url: imageUrl,
-          alt: metaImage?.alt || "Lego set of Bowser from Mario.",
+          alt: imageAlt,
         },
       ],
     },
@@ -67,9 +77,12 @@ export default async function BlogsPage({ params }: Props) {
     return notFound();
   }
 
-  const image = blog.featuredImage as Media;
+  const image = (blog.featuredImage || blog.metaImage) as Media;
   const baseUrl = process.env.NEXT_WEB_APP_PUBLIC_URL || "http://localhost:3000";
 
+  const fallbackDescription =
+    extractTextFromRichText(blog.shortDescription) ||
+    "Read this note on my portfolio.";
   const postUrl = `${baseUrl}/notes/${blog.slug}`;
   const jsonLd = {
     "@context": "https://schema.org",
@@ -77,7 +90,7 @@ export default async function BlogsPage({ params }: Props) {
       {
         "@type": "BlogPosting",
         headline: blog.title,
-        description: blog.metaDescription || "Read this note on my portfolio.",
+        description: blog.metaDescription || fallbackDescription,
         image: image?.url ? [image.url] : undefined,
         datePublished: blog.publishedAt,
         dateModified: blog.updatedAt || blog.publishedAt,

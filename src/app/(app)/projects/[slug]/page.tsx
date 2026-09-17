@@ -2,6 +2,7 @@ import TableOfContents from "@/components/blogs/components/table-of-contents";
 import BlockContent from "@/components/common/block-content";
 import { getProjectBySlug, getProjectSlugs } from "@/lib/payload/actions";
 import { extractHeadingsFromBlocks } from "@/lib/payload/utils/extract-headings";
+import { extractTextFromRichText } from "@/lib/payload/utils/extract-text";
 import { Media } from "@/payload-types";
 import clsx from "clsx";
 import { Metadata } from "next";
@@ -25,12 +26,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     notFound();
   }
   const metaImage = project.metaImage as Media;
+  const icon = project.icon as Media;
 
   const title = project.metaTitle || project.title;
-  const description =
-    project.metaDescription ||
+  const fallbackDescription =
+    extractTextFromRichText(project.shortDescription) ||
     "One of my side projects where i explore ideas and concepts.";
-  const imageUrl = metaImage?.url || "/assets/bowser.jpeg";
+  const description = project.metaDescription || fallbackDescription;
+  const imageUrl =
+    metaImage?.url || icon?.url || "/assets/bowser.jpeg";
+  const imageAlt =
+    metaImage?.alt ||
+    icon?.alt ||
+    "Lego set of Bowser from Mario.";
 
   return {
     title,
@@ -44,11 +52,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [
         {
           url: imageUrl,
-          alt: metaImage?.alt || "Lego set of Bowser from Mario.",
+          alt: imageAlt,
         },
       ],
     },
     twitter: {
+      card: "summary_large_image",
       title,
       description,
       images: [imageUrl],
@@ -74,7 +83,10 @@ export default async function ProjectsPage({ params }: Props) {
   }).format(publishedAt);
 
   const baseUrl = process.env.NEXT_WEB_APP_PUBLIC_URL || "http://localhost:3000";
-  const image = project.metaImage as Media;
+  const image = (project.metaImage || project.icon) as Media;
+  const fallbackDescription =
+    extractTextFromRichText(project.shortDescription) ||
+    "Project by Juan Bedoya.";
 
   const projectUrl = `${baseUrl}/projects/${project.slug}`;
   const jsonLd = {
@@ -83,7 +95,7 @@ export default async function ProjectsPage({ params }: Props) {
       {
         "@type": "CreativeWork",
         headline: project.title,
-        description: project.metaDescription || "Project by Juan Bedoya.",
+        description: project.metaDescription || fallbackDescription,
         image: image?.url,
         datePublished: project.publishedAt,
         author: {
