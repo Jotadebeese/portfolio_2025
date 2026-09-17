@@ -47,6 +47,10 @@ export default async function Home() {
     name: "Juan Bedoya",
     url: baseUrl,
     jobTitle: "Software Developer",
+    sameAs: [
+      "https://github.com/Jotadebeese",
+      "https://www.linkedin.com/in/jotadebeese/",
+    ],
   };
 
   return (

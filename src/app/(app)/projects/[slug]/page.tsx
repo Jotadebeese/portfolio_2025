@@ -87,6 +87,10 @@ export default async function ProjectsPage({ params }: Props) {
       "@type": "Person",
       name: "Juan Bedoya",
       url: baseUrl,
+      sameAs: [
+        "https://github.com/Jotadebeese",
+        "https://www.linkedin.com/in/jotadebeese/",
+      ],
     },
   };
 

@@ -77,10 +77,15 @@ export default async function BlogsPage({ params }: Props) {
     description: blog.shortDescription,
     image: image?.url,
     datePublished: blog.publishedAt,
+    dateModified: blog.updatedAt || blog.publishedAt,
     author: {
       "@type": "Person",
       name: "Juan Bedoya",
       url: baseUrl,
+      sameAs: [
+        "https://github.com/Jotadebeese",
+        "https://www.linkedin.com/in/jotadebeese/",
+      ],
     },
   };
 
