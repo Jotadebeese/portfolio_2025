@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = homePage.metaTitle || "Start";
   const description =
     homePage.metaDescription ||
-    "A Software Developer, with background in electronics engineering and a big passion in AI.";
+    "Full Stack Product Engineer with a background in electronics engineering and a passion for AI.";
   const imageUrl = metaImage?.url || "/assets/bowser.jpeg";
 
   return {

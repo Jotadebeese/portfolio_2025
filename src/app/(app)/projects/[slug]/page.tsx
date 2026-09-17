@@ -83,7 +83,7 @@ export default async function ProjectsPage({ params }: Props) {
       {
         "@type": "CreativeWork",
         headline: project.title,
-        description: project.shortDescription || project.metaDescription,
+        description: project.metaDescription || "Project by Juan Bedoya.",
         image: image?.url,
         datePublished: project.publishedAt,
         author: {

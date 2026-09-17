@@ -16,11 +16,11 @@ export const metadata: Metadata = {
     default: "There is not title yet for this page | Juan Bedoya",
   },
   description:
-    "A Software Developer, with background in electronics engineering and a big passion in AI.",
+    "Full Stack Product Engineer with a background in electronics engineering and a passion for AI.",
   openGraph: {
     title: "Juan Bedoya",
     description:
-      "A Software Developer, with background in electronics engineering and a big passion in AI.",
+      "Full Stack Product Engineer with a background in electronics engineering and a passion for AI.",
     siteName: "Juan Bedoya",
     locale: "en_US",
     type: "website",

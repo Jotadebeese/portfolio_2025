@@ -56,8 +56,8 @@ export default async function About() {
             "Software Developer",
           ],
           description:
-            aboutPage.shortDescription ||
-            "Software Developer with background in electronics engineering and AI.",
+            aboutPage.metaDescription ||
+            "Full Stack Product Engineer with a background in electronics engineering and a passion for AI.",
           image: featuredImage?.url || undefined,
           sameAs: [
             "https://github.com/Jotadebeese",

@@ -77,7 +77,7 @@ export default async function BlogsPage({ params }: Props) {
       {
         "@type": "BlogPosting",
         headline: blog.title,
-        description: blog.shortDescription,
+        description: blog.metaDescription || "Read this note on my portfolio.",
         image: image?.url ? [image.url] : undefined,
         datePublished: blog.publishedAt,
         dateModified: blog.updatedAt || blog.publishedAt,

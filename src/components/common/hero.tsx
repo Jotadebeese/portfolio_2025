@@ -30,7 +30,7 @@ export default function Hero({
           className="text-background border-background hover:border-background absolute top-2 left-2 z-50 flex cursor-pointer items-center gap-1 border-b transition-all ease-in-out sm:border-transparent"
         >
           <ChevronLeft size={14} />
-          <small>Back to Blogs</small>
+          <small>Back to Notes</small>
         </Link>
       )}
       {showImage && (
