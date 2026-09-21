@@ -23,10 +23,16 @@ export default function Footer() {
 
     if (open) {
       document.addEventListener("keydown", handleKeyDown);
+      if (window.innerWidth < 640) {
+        document.body.style.overflow = "hidden";
+      }
+    } else {
+      document.body.style.overflow = "";
     }
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
     };
   }, [open]);
 
@@ -48,12 +54,24 @@ export default function Footer() {
             <div
               ref={cardRef}
               className={clsx(
-                "border-border-color absolute right-0 bottom-full z-50 mb-3 flex max-h-[80vh] w-full max-w-md origin-bottom-right flex-col overflow-y-auto rounded-2xl border bg-white p-2 shadow-lg transition-all duration-300 ease-out",
+                "border-border-color fixed inset-x-2 bottom-2 z-50 flex max-h-[85dvh] flex-col overflow-y-auto rounded-2xl border bg-white p-2 shadow-2xl transition-all duration-300 ease-out origin-bottom",
+                "sm:absolute sm:inset-x-auto sm:right-0 sm:bottom-full sm:mb-3 sm:max-h-[80vh] sm:w-full sm:max-w-md sm:origin-bottom-right sm:p-2.5 sm:shadow-lg",
                 open
                   ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
                   : "pointer-events-none translate-y-4 scale-98 opacity-0",
               )}
             >
+              {/* Mobile top close bar */}
+              <div className="flex items-center justify-between px-2 pt-1 pb-1 sm:hidden">
+                <span className="text-xs font-medium opacity-60">Contact</span>
+                <button
+                  onClick={() => setOpen(false)}
+                  aria-label="Close"
+                  className="text-foreground/70 hover:text-foreground flex h-6 w-6 cursor-pointer items-center justify-center rounded-md transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              </div>
               <ContactForm />
             </div>
 

@@ -40,16 +40,18 @@ export default function ContactForm() {
           className="flex w-full max-w-md flex-col divide-dashed rounded-[18px]"
           noValidate
         >
-          <h4 className="px-5 py-2.5">Send me a message if you feel like:</h4>
+          <h4 className="px-3 py-1.5 text-xs sm:px-5 sm:py-2.5 sm:text-sm">
+            Send me a message if you feel like:
+          </h4>
           {state?.result === "error" && state.message && (
-            <div className="mb-4 rounded-xl bg-red-100 px-5 py-2.5 text-xs text-red-600">
+            <div className="mb-3 rounded-xl bg-red-100 px-3 py-2 text-xs text-red-600 sm:mb-4 sm:px-5 sm:py-2.5">
               {state.message}
               {state.errors?.server && (
                 <p className="mt-1">({state.errors.server})</p>
               )}
             </div>
           )}
-          <div className="contact-form text-foreground bg-background flex w-full max-w-md flex-col gap-2.5 divide-dashed rounded-2xl p-5 text-sm">
+          <div className="contact-form text-foreground bg-background flex w-full max-w-md flex-col gap-2 divide-dashed rounded-2xl p-3 text-xs sm:gap-2.5 sm:p-5 sm:text-sm">
             <label htmlFor="name">Name</label>
             <input
               type="text"
@@ -92,7 +94,7 @@ export default function ContactForm() {
               defaultValue={state?.submittedData?.message ?? ""}
               aria-invalid={!!state?.errors?.message}
               aria-describedby="message-error"
-              className="min-h-24 text-base"
+              className="min-h-16 text-base sm:min-h-24"
             ></textarea>
             {state?.errors?.message && (
               <p id="message-error" className="mt-1 text-xs text-red-600">
@@ -101,7 +103,7 @@ export default function ContactForm() {
             )}
             <button
               type="submit"
-              className="bg-foreground cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-emerald-600 active:bg-emerald-800"
+              className="bg-foreground cursor-pointer rounded-lg px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-emerald-600 active:bg-emerald-800 sm:text-sm"
             >
               Send
             </button>
