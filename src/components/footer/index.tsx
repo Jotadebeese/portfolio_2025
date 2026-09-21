@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Mail, MessageCircle, X, ChevronsUp, ChevronsDown } from "lucide-react";
 import linkedIn from "@/assets/linkedin.svg";
 import github from "@/assets/github.svg";
@@ -7,27 +8,25 @@ import Image from "next/image";
 import Link from "next/link";
 import ContactForm from "../forms/components/contact-form";
 import clsx from "clsx";
-import { useEffect, useRef, useState } from "react";
 
 export default function Footer() {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
         setOpen(false);
       }
     };
 
     if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [open]);
 
@@ -36,88 +35,90 @@ export default function Footer() {
       <div
         onClick={() => setOpen(false)}
         className={clsx(
-          "fixed inset-0 bg-foreground transition-all duration-300 ease-in-out",
-          {
-            "z-40 opacity-40 pointer-events-auto": open,
-            "z-[-1] opacity-0 pointer-events-none": !open,
-          },
+          "bg-foreground/25 fixed inset-0 z-40 backdrop-blur-[1px] transition-opacity duration-300 ease-in-out",
+          open
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0",
         )}
-      ></div>
-      <footer className="pointer-events-none fixed bottom-0 left-0 right-0 z-50 flex w-full flex-col items-center justify-center px-2 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.5rem))] sm:pb-4 transform-gpu will-change-transform">
-        <div
-          ref={ref}
-          className="border-border-color pointer-events-auto relative z-10 flex w-full max-w-md flex-col items-center justify-center rounded-2xl border bg-white p-2 shadow-sm transition-all duration-300 ease-in-out"
-        >
-          <div className="flex w-full items-center justify-between">
-            <div className="flex flex-1 items-center justify-start pl-1 text-xs font-medium opacity-60">
-              © {new Date().getFullYear()}
+      />
+
+      <footer className="relative z-50 flex w-full justify-center">
+        <div className="flex w-full max-w-6xl justify-center px-2.5 sm:px-5">
+          <div className="border-border-color relative grid w-full grid-cols-3 items-center border-t border-dashed py-4">
+            <div
+              ref={cardRef}
+              className={clsx(
+                "border-border-color absolute right-0 bottom-full z-50 mb-3 flex max-h-[80vh] w-full max-w-md origin-bottom-right flex-col overflow-y-auto rounded-2xl border bg-white p-2 shadow-lg transition-all duration-300 ease-out",
+                open
+                  ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+                  : "pointer-events-none translate-y-4 scale-98 opacity-0",
+              )}
+            >
+              <ContactForm />
             </div>
 
-            <div className="flex flex-1 items-center justify-center gap-4">
-              <Link
-                className="transition-opacity hover:opacity-80"
-                href={"https://www.linkedin.com/in/jotadebeese/"}
-                target="_blank"
-                aria-label="Juan Bedoya on LinkedIn"
-              >
-                <Image src={linkedIn} alt="LinkedIn" width={18} height={18} />
-              </Link>
-              <Link
-                className="transition-opacity hover:opacity-80"
-                href={"mailto:jotadebeese@gmail.com"}
-                aria-label="Send Juan an email"
-              >
-                <Mail size={18} />
-              </Link>
-              <Link
-                className="transition-opacity hover:opacity-80"
-                href={"https://github.com/Jotadebeese"}
-                target="_blank"
-                aria-label="Juan Bedoya on GitHub"
-              >
-                <Image src={github} alt="GitHub" width={18} height={18} />
-              </Link>
+            <div className="flex justify-start">
+              <span className="text-xs">© {new Date().getFullYear()}</span>
             </div>
 
-            <div className="flex flex-1 items-center justify-end">
+            <div className="flex justify-center">
+              <div className="flex items-center gap-4">
+                <Link
+                  className="transition-opacity hover:opacity-80"
+                  href="https://www.linkedin.com/in/jotadebeese/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Juan Bedoya on LinkedIn"
+                >
+                  <Image src={linkedIn} alt="LinkedIn" width={16} height={16} />
+                </Link>
+                <Link
+                  className="transition-opacity hover:opacity-80"
+                  href="mailto:jotadebeese@gmail.com"
+                  aria-label="Send Juan an email"
+                >
+                  <Mail size={16} />
+                </Link>
+                <Link
+                  className="transition-opacity hover:opacity-80"
+                  href="https://github.com/Jotadebeese"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Juan Bedoya on GitHub"
+                >
+                  <Image src={github} alt="GitHub" width={16} height={16} />
+                </Link>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <span className="hidden text-sm sm:inline">send message</span>
               <button
-                onMouseDown={() => setOpen(!open)}
+                ref={buttonRef}
+                onClick={() => setOpen(!open)}
                 aria-label={open ? "Close contact form" : "Open contact form"}
-                className="bg-foreground text-background group relative z-10 flex h-9 w-9 cursor-pointer items-center justify-center overflow-hidden rounded-lg transition-all duration-300 ease-in-out hover:bg-utils-scent-orange"
+                className="bg-foreground text-background group hover:bg-utils-scent-orange relative z-10 flex h-7 w-7 cursor-pointer items-center justify-center overflow-hidden rounded-lg transition-all duration-300 ease-in-out"
               >
                 {!open ? (
                   <>
                     <span className="absolute flex h-full w-full items-center justify-center transition-transform duration-300 ease-in-out group-hover:-translate-y-full">
-                      <MessageCircle size={18} />
+                      <MessageCircle size={16} />
                     </span>
                     <span className="absolute flex h-full w-full translate-y-full items-center justify-center transition-transform duration-300 ease-in-out group-hover:translate-y-0">
-                      <ChevronsUp size={18} />
+                      <ChevronsUp size={16} />
                     </span>
                   </>
                 ) : (
                   <>
                     <span className="absolute flex h-full w-full items-center justify-center transition-transform duration-300 ease-in-out group-hover:-translate-y-full">
-                      <X size={18} />
+                      <X size={16} />
                     </span>
                     <span className="absolute flex h-full w-full translate-y-full items-center justify-center transition-transform duration-300 ease-in-out group-hover:translate-y-0">
-                      <ChevronsDown size={18} />
+                      <ChevronsDown size={16} />
                     </span>
                   </>
                 )}
               </button>
-            </div>
-          </div>
-
-          <div
-            className={clsx(
-              "grid w-full transition-opacity duration-300 ease-in-out",
-              open
-                ? "grid-rows-[1fr] opacity-100"
-                : "grid-rows-[0fr] opacity-0",
-            )}
-          >
-            <div className="flex w-full justify-center overflow-hidden">
-              <ContactForm />
             </div>
           </div>
         </div>

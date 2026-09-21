@@ -62,7 +62,7 @@ export default function RootLayout({
         <PostHogProvider>
           <div className="flex min-h-dvh flex-col justify-between">
             <Navbar />
-            <main className="flex w-full flex-grow flex-col items-center pb-32 sm:pb-28">
+            <main className="flex w-full flex-grow flex-col items-center pb-16 sm:pb-20">
               <div className="w-full max-w-6xl">{children}</div>
             </main>
             <Analytics />
