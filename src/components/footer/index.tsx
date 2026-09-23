@@ -41,7 +41,7 @@ export default function Footer() {
       <div
         onClick={() => setOpen(false)}
         className={clsx(
-          "bg-foreground/25 fixed inset-0 z-95 backdrop-blur-[1px] transition-opacity duration-300 ease-in-out",
+          "bg-foreground/25 fixed inset-0 z-80 backdrop-blur-[1px] transition-opacity duration-300 ease-in-out",
           open
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0",
@@ -51,7 +51,7 @@ export default function Footer() {
       <footer
         className={clsx(
           "relative flex w-full justify-center",
-          open ? "z-100" : "z-30",
+          open ? "z-90" : "z-30",
         )}
       >
         <div className="flex w-full max-w-6xl justify-center px-2.5 sm:px-5">
@@ -59,7 +59,7 @@ export default function Footer() {
             <div
               ref={cardRef}
               className={clsx(
-                "fixed inset-0 z-[100] flex flex-col overflow-hidden bg-white transition-all duration-300 ease-out",
+                "fixed inset-0 z-90 flex flex-col overflow-hidden bg-white transition-all duration-300 ease-out",
                 "sm:border-border-color sm:absolute sm:top-auto sm:right-0 sm:bottom-full sm:left-auto sm:z-50 sm:mb-3 sm:flex sm:h-auto sm:max-h-[80vh] sm:w-full sm:max-w-md sm:origin-bottom-right sm:flex-col sm:overflow-y-auto sm:rounded-2xl sm:border sm:bg-white sm:p-2.5 sm:shadow-lg",
                 open
                   ? "pointer-events-auto translate-y-0 opacity-100 sm:scale-100"

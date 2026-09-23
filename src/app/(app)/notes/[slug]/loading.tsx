@@ -2,7 +2,7 @@ export default function Loading() {
   return (
     <>
       <div className="w-full max-w-3xl sm:border-border-color bg-foreground/5 animate-pulse relative flex h-80 items-end overflow-hidden p-2.5 sm:rounded-lg sm:border sm:p-5 sm:shadow-sm">
-        <div className="absolute top-2 left-2 z-50 flex items-center gap-2 opacity-50">
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-2 opacity-50">
           <div className="h-4 w-4 bg-foreground/20 rounded-full" />
           <div className="h-3 w-20 bg-foreground/20 rounded" />
         </div>

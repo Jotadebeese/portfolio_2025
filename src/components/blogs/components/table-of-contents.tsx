@@ -168,14 +168,14 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
         </button>
         {isOpen && (
           <div
-            className="fixed inset-0 z-[60] bg-black/40 transition-opacity"
+            className="fixed inset-0 z-60 bg-black/40 transition-opacity"
             onClick={() => setIsOpen(false)}
           />
         )}
 
         <div
           className={clsx(
-            "fixed right-0 bottom-0 left-0 z-[70] rounded-t-3xl bg-white p-2 shadow-2xl transition-transform duration-300 ease-in-out",
+            "fixed right-0 bottom-0 left-0 z-70 rounded-t-3xl bg-white p-2 shadow-2xl transition-transform duration-300 ease-in-out",
             isOpen ? "translate-y-0" : "translate-y-full",
           )}
         >

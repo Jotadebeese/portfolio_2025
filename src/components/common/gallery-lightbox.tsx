@@ -79,7 +79,7 @@ export default function GalleryLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-background/50 backdrop-blur-sm px-2 sm:px-4 focus:outline-none"
+      className="fixed inset-0 z-100 flex items-center justify-center bg-background/50 backdrop-blur-sm px-2 sm:px-4 focus:outline-none"
       onClick={onClose}
       onTouchStart={images.length > 1 ? handleTouchStart : undefined}
       onTouchEnd={images.length > 1 ? handleTouchEnd : undefined}
