@@ -41,38 +41,47 @@ export default function Footer() {
       <div
         onClick={() => setOpen(false)}
         className={clsx(
-          "bg-foreground/25 fixed inset-0 z-40 backdrop-blur-[1px] transition-opacity duration-300 ease-in-out",
+          "bg-foreground/25 fixed inset-0 z-95 backdrop-blur-[1px] transition-opacity duration-300 ease-in-out",
           open
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0",
         )}
       />
 
-      <footer className="relative z-50 flex w-full justify-center">
+      <footer
+        className={clsx(
+          "relative flex w-full justify-center",
+          open ? "z-100" : "z-30",
+        )}
+      >
         <div className="flex w-full max-w-6xl justify-center px-2.5 sm:px-5">
           <div className="border-border-color relative grid w-full grid-cols-3 items-center border-t border-dashed py-4">
             <div
               ref={cardRef}
               className={clsx(
-                "border-border-color fixed inset-x-2 bottom-2 z-50 flex max-h-[85dvh] flex-col overflow-y-auto rounded-2xl border bg-white p-2 shadow-2xl transition-all duration-300 ease-out origin-bottom",
-                "sm:absolute sm:inset-x-auto sm:right-0 sm:bottom-full sm:mb-3 sm:max-h-[80vh] sm:w-full sm:max-w-md sm:origin-bottom-right sm:p-2.5 sm:shadow-lg",
+                "fixed inset-0 z-[100] flex flex-col overflow-hidden bg-white transition-all duration-300 ease-out",
+                "sm:border-border-color sm:absolute sm:top-auto sm:right-0 sm:bottom-full sm:left-auto sm:z-50 sm:mb-3 sm:flex sm:h-auto sm:max-h-[80vh] sm:w-full sm:max-w-md sm:origin-bottom-right sm:flex-col sm:overflow-y-auto sm:rounded-2xl sm:border sm:bg-white sm:p-2.5 sm:shadow-lg",
                 open
-                  ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-                  : "pointer-events-none translate-y-4 scale-98 opacity-0",
+                  ? "pointer-events-auto translate-y-0 opacity-100 sm:scale-100"
+                  : "pointer-events-none translate-y-full opacity-0 sm:translate-y-4 sm:scale-98",
               )}
             >
-              {/* Mobile top close bar */}
-              <div className="flex items-center justify-between px-2 pt-1 pb-1 sm:hidden">
-                <span className="text-xs font-medium opacity-60">Contact</span>
+              <div className="border-border-color flex items-center justify-between border-b border-dashed bg-white px-5 py-3.5 pt-[max(1rem,calc(env(safe-area-inset-top)+0.5rem))] sm:hidden">
+                <span className="text-sm font-semibold">send a message</span>
                 <button
                   onClick={() => setOpen(false)}
-                  aria-label="Close"
-                  className="text-foreground/70 hover:text-foreground flex h-6 w-6 cursor-pointer items-center justify-center rounded-md transition-colors"
+                  aria-label="Close contact form"
+                  className="text-foreground flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-black/5"
                 >
-                  <X size={14} />
+                  <X size={18} />
                 </button>
               </div>
-              <ContactForm />
+
+              <div className="flex flex-1 flex-col items-center overflow-y-auto px-4 py-6 sm:p-0">
+                <div className="w-full max-w-md">
+                  <ContactForm />
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-start">
