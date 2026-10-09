@@ -5,9 +5,15 @@ import Script from "next/script";
 
 const CLOUDFLARE_TEST_SITE_KEY = "1x00000000000000000000AA";
 
-interface TurnstileProps {
+export type TurnstileTheme = "auto" | "light" | "dark";
+export type TurnstileSize = "normal" | "compact" | "flexible";
+export type TurnstileAppearance = "always" | "execute" | "interaction-only";
+
+export interface TurnstileProps {
   siteKey?: string;
-  theme?: "auto" | "light" | "dark";
+  theme?: TurnstileTheme;
+  size?: TurnstileSize;
+  appearance?: TurnstileAppearance;
   onSuccess?: (token: string) => void;
   onError?: (error?: unknown) => void;
   onExpire?: () => void;
@@ -26,9 +32,9 @@ declare global {
           callback?: (token: string) => void;
           "error-callback"?: (error?: unknown) => void;
           "expired-callback"?: () => void;
-          theme?: "auto" | "light" | "dark";
-          size?: "normal" | "compact" | "flexible";
-          appearance?: "always" | "execute" | "interaction-only";
+          theme?: TurnstileTheme;
+          size?: TurnstileSize;
+          appearance?: TurnstileAppearance;
         },
       ) => string;
       reset: (widgetId?: string) => void;
@@ -41,7 +47,9 @@ declare global {
 export default function Turnstile({
   siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ||
     CLOUDFLARE_TEST_SITE_KEY,
-  theme = "auto",
+  theme = "light",
+  size = "flexible",
+  appearance = "interaction-only",
   onSuccess,
   onError,
   onExpire,
@@ -60,8 +68,9 @@ export default function Turnstile({
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey: siteKey,
         theme,
+        size,
+        appearance,
         action: "contact_form",
-        size: "flexible",
         callback: (receivedToken: string) => {
           setToken(receivedToken);
           onSuccess?.(receivedToken);
@@ -92,7 +101,7 @@ export default function Turnstile({
         widgetIdRef.current = null;
       }
     };
-  }, [siteKey, theme]);
+  }, [siteKey, theme, size, appearance]);
 
   useEffect(() => {
     if (widgetIdRef.current && window.turnstile) {
@@ -102,14 +111,17 @@ export default function Turnstile({
   }, [resetTrigger]);
 
   return (
-    <div className="w-full">
+    <div className="w-full rounded-lg bg-[#f8f8f8] shadow-xs">
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
         strategy="afterInteractive"
         onLoad={renderWidget}
       />
       <input type="hidden" name="cf-turnstile-response" value={token} />
-      <div ref={containerRef} className="my-1 min-h-[65px] w-full" />
+      <div
+        ref={containerRef}
+        className="h-[65px] w-full [clip-path:inset(2px_1px_6px_2px)] [&_iframe]:!w-full"
+      />
     </div>
   );
 }

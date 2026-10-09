@@ -118,7 +118,7 @@ export default function ContactForm() {
               </p>
             )}
 
-            <Turnstile resetTrigger={state} />
+            <Turnstile resetTrigger={state} theme="light" appearance="always" />
 
             <button
               type="submit"
