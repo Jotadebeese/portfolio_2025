@@ -1,7 +1,7 @@
 "use server";
 
 import { ContactFormSchema } from "./schema";
-
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export interface ActionResult {
   result: "success" | "error";
@@ -19,8 +19,6 @@ export interface ActionResult {
   };
 }
 
-
-
 export default async function sendMessage(
   prevState: ActionResult | null,
   formData: FormData,
@@ -30,6 +28,32 @@ export default async function sendMessage(
     email: (formData.get("email") as string) ?? "",
     message: (formData.get("message") as string) ?? "",
   };
+
+  const honeypot = formData.get("hp_company");
+  if (honeypot) {
+    console.warn(
+      "Spam bot trapped by honeypot field. Silently dropping submission.",
+    );
+    return {
+      result: "success",
+      message: "Your message has been sent successfully.",
+    };
+  }
+
+  const turnstileToken = (formData.get("cf-turnstile-response") ||
+    formData.get("turnstile_token")) as string;
+
+  const turnstileCheck = await verifyTurnstileToken(turnstileToken);
+  if (!turnstileCheck.success) {
+    return {
+      result: "error",
+      message:
+        turnstileCheck.error ||
+        "Security verification failed. Please try again.",
+      errors: { server: turnstileCheck.error },
+      submittedData: rawFormData,
+    };
+  }
 
   const validatedFields = ContactFormSchema.safeParse(rawFormData);
 

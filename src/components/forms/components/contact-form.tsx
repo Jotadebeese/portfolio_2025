@@ -2,6 +2,7 @@ import { useActionState } from "react";
 import sendMessage, { ActionResult } from "../actions";
 import Image from "next/image";
 import bowserGif from "../../../../public/assets/temp.gif";
+import Turnstile from "./turnstile";
 
 export default function ContactForm() {
   const initialState: ActionResult | null = null;
@@ -52,6 +53,21 @@ export default function ContactForm() {
             </div>
           )}
           <div className="contact-form text-foreground bg-background flex w-full max-w-md flex-col gap-2 divide-dashed rounded-2xl p-3 text-xs sm:gap-2.5 sm:p-5 sm:text-sm">
+            <div
+              className="pointer-events-none absolute -top-[9999px] -left-[9999px] opacity-0 select-none"
+              aria-hidden="true"
+              tabIndex={-1}
+            >
+              <label htmlFor="hp_company">Do not fill this field</label>
+              <input
+                type="text"
+                id="hp_company"
+                name="hp_company"
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
+
             <label htmlFor="name">Name</label>
             <input
               type="text"
@@ -101,6 +117,9 @@ export default function ContactForm() {
                 {state.errors.message.join(", ")}
               </p>
             )}
+
+            <Turnstile resetTrigger={state} />
+
             <button
               type="submit"
               className="bg-foreground cursor-pointer rounded-lg px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-emerald-600 active:bg-emerald-800 sm:text-sm"
