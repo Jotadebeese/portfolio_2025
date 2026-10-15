@@ -102,12 +102,36 @@ export default function ToolSkeleton({ toolId }: { toolId?: ToolId }) {
   if (toolId === "image-optimizer") {
     return (
       <div className="flex w-full animate-pulse flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="bg-utils-scent-gray-01/70 h-4 w-48 rounded-md" />
-          <div className="bg-background h-7 w-24 rounded-md" />
+        <div className="border-border-color flex flex-col gap-3 border-b border-dashed pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="bg-foreground/20 h-7 w-28 rounded-md" />
+              <div className="bg-background h-7 w-24 rounded-md" />
+            </div>
+            <div className="bg-utils-scent-gray-01/60 h-5 w-32 rounded-md" />
+          </div>
+          <div className="border-border-color bg-background/50 h-10 w-full rounded-md border border-dashed" />
         </div>
-        <div className="border-border-color bg-background/40 h-36 w-full rounded-md border border-dashed" />
-        <div className="border-border-color bg-background/50 h-10 w-full rounded-md border" />
+
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <div className="flex flex-col gap-2 lg:col-span-7">
+            <div className="border-border-color bg-white flex flex-col rounded-md border p-2">
+              <div className="border-border-color h-6 border-b border-dashed" />
+              <div className="border-border-color/40 h-12 border-b border-dashed" />
+              <div className="border-border-color/40 h-12 border-b border-dashed" />
+              <div className="h-12" />
+            </div>
+            <div className="border-border-color bg-background/30 h-10 rounded-md border border-dashed" />
+          </div>
+          <div className="lg:col-span-5">
+            <div className="border-border-color bg-white flex flex-col gap-3 rounded-md border p-3.5">
+              <div className="bg-background aspect-[16/10] w-full rounded-md" />
+              <div className="bg-utils-scent-gray-01/50 h-4 w-3/4 rounded" />
+              <div className="bg-utils-scent-gray-01/30 h-20 w-full rounded" />
+              <div className="bg-foreground/20 h-8 w-full rounded" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

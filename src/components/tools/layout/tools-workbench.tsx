@@ -15,6 +15,7 @@ import ToolSkeleton from "./tool-skeleton";
 import { AVAILABLE_TOOLS, ToolId } from "../types";
 
 const SecretGenerator = lazy(() => import("../components/secret-generator"));
+const ImageOptimizer = lazy(() => import("../components/image-optimizer"));
 
 type Props = {
   heading?: string | null;
@@ -231,18 +232,7 @@ export default function ToolsWorkbench({
                     </div>
                   )}
 
-                  {toolId === "image-optimizer" && (
-                    <div className="border-border-color flex flex-col items-center justify-center gap-1 rounded-md border border-dashed py-8 text-center">
-                      <span className="text-utils-scent-orange font-mono text-xs uppercase">
-                        Coming in Stage 2
-                      </span>
-                      <h4>HTML5 Canvas Image Compressor</h4>
-                      <p className="text-foreground/70 max-w-sm text-xs">
-                        Batch compress images to WebP, downsample dimensions,
-                        and calculate real-time byte savings locally.
-                      </p>
-                    </div>
-                  )}
+                  {toolId === "image-optimizer" && <ImageOptimizer />}
                 </Suspense>
               </ToolCard>
             );

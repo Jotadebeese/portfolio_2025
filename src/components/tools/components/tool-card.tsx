@@ -93,7 +93,7 @@ export default function ToolCard({
         </div>
       </header>
 
-      {!isCollapsed && <div className="p-4">{children}</div>}
+      <div className={clsx("p-4", isCollapsed && "hidden")}>{children}</div>
     </article>
   );
 }
