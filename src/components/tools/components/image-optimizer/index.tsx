@@ -5,7 +5,11 @@ import JSZip from "jszip";
 import { ImageFileItem, OptimizerSettings } from "./types";
 import { compressImage } from "./utils/compress-image";
 import { getFilenameWithExtension } from "./utils/format";
-import { getDeviceLimits, DeviceLimits } from "./utils/device";
+import {
+  getDeviceLimits,
+  DeviceLimits,
+  checkWebPEncodingSupport,
+} from "./utils/device";
 import { X } from "lucide-react";
 import Toolbar from "./components/toolbar";
 import FileRow from "./components/file-row";
@@ -25,6 +29,7 @@ export default function ImageOptimizer() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(null);
   const [settings, setSettings] = useState<OptimizerSettings>(DEFAULT_SETTINGS);
+  const [supportsWebP, setSupportsWebP] = useState<boolean>(true);
   const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
   const [isDownloadingZip, setIsDownloadingZip] = useState<boolean>(false);
   const [comparingItem, setComparingItem] = useState<ImageFileItem | null>(
@@ -32,6 +37,17 @@ export default function ImageOptimizer() {
   );
   const [deviceLimits] = useState<DeviceLimits>(() => getDeviceLimits());
   const [warningNotice, setWarningNotice] = useState<string | null>(null);
+
+  // Detect if the browser canvas genuinely supports WebP encoding (fails silently on iOS WebKit)
+  useEffect(() => {
+    const hasWebp = checkWebPEncodingSupport();
+    setSupportsWebP(hasWebp);
+    if (!hasWebp) {
+      setSettings((prev) =>
+        prev.format === "image/webp" ? { ...prev, format: "image/jpeg" } : prev,
+      );
+    }
+  }, []);
 
   const settingsRef = useRef(settings);
   useEffect(() => {
@@ -100,7 +116,7 @@ export default function ImageOptimizer() {
               optimizedDimensions: result.dimensions,
               originalDimensions:
                 result.originalDimensions || i.originalDimensions,
-              optimizedFormat: currentSettings.format,
+              optimizedFormat: result.format,
             };
           }),
         );
@@ -376,6 +392,7 @@ export default function ImageOptimizer() {
         totalOriginalBytes={totalOriginalBytes}
         totalOptimizedBytes={totalOptimizedBytes}
         maxFiles={deviceLimits.maxFiles}
+        supportsWebP={supportsWebP}
       />
 
       {warningNotice && (

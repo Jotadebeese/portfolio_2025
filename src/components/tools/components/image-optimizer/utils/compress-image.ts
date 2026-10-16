@@ -1,4 +1,5 @@
-import { OptimizerSettings, ResizePreset } from "../types";
+import { OptimizerSettings, OutputFormat, ResizePreset } from "../types";
+import { checkWebPEncodingSupport } from "./device";
 
 export interface CompressionResult {
   blob: Blob;
@@ -6,6 +7,7 @@ export interface CompressionResult {
   dimensions: { width: number; height: number };
   originalDimensions: { width: number; height: number };
   size: number;
+  format: OutputFormat;
 }
 
 function calculateTargetDimensions(
@@ -113,6 +115,13 @@ export async function compressImage(
         settings.customMaxDimension,
       );
 
+      // Determine effective format: if user requests WebP but browser lacks native WebP canvas encoding
+      // (iOS Safari / Chrome iOS WebKit), fallback to JPEG so lossy quality compression works.
+      let effectiveFormat: OutputFormat = settings.format;
+      if (effectiveFormat === "image/webp" && !checkWebPEncodingSupport()) {
+        effectiveFormat = "image/jpeg";
+      }
+
       const canvas = document.createElement("canvas");
       canvas.width = targetW;
       canvas.height = targetH;
@@ -125,7 +134,7 @@ export async function compressImage(
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
 
-      if (settings.format === "image/jpeg") {
+      if (effectiveFormat === "image/jpeg") {
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, targetW, targetH);
       } else {
@@ -146,6 +155,32 @@ export async function compressImage(
             return;
           }
 
+          // Safety net: if WebP was requested but the browser silently exported PNG (HTML5 spec silent fallback),
+          // re-encode to JPEG so the user never gets hit by a 15MB uncompressed PNG masquerading as WebP.
+          if (effectiveFormat === "image/webp" && blob.type === "image/png") {
+            canvas.toBlob(
+              (jpegBlob) => {
+                if (!jpegBlob) {
+                  reject(new Error("Canvas JPEG fallback encoding returned null"));
+                  return;
+                }
+                const fallbackUrl = URL.createObjectURL(jpegBlob);
+                onProgress?.(100);
+                resolve({
+                  blob: jpegBlob,
+                  url: fallbackUrl,
+                  dimensions: { width: targetW, height: targetH },
+                  originalDimensions: { width: origW, height: origH },
+                  size: jpegBlob.size,
+                  format: "image/jpeg",
+                });
+              },
+              "image/jpeg",
+              qualityParam,
+            );
+            return;
+          }
+
           const optimizedUrl = URL.createObjectURL(blob);
           onProgress?.(100);
 
@@ -155,9 +190,10 @@ export async function compressImage(
             dimensions: { width: targetW, height: targetH },
             originalDimensions: { width: origW, height: origH },
             size: blob.size,
+            format: effectiveFormat,
           });
         },
-        settings.format,
+        effectiveFormat,
         qualityParam,
       );
     } catch (err) {

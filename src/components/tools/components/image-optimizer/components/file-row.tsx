@@ -15,8 +15,8 @@ import { formatBytes, calculateSavings } from "../utils/format";
 
 type Props = {
   item: ImageFileItem;
-  isSelected: boolean; // For batch checkbox selection
-  isActive: boolean; // For Explorer-style right sidebar inspection
+  isSelected: boolean;
+  isActive: boolean;
   onToggleSelect: () => void;
   onActivate: () => void;
   onDownload: () => void;
@@ -79,7 +79,7 @@ export default function FileRow({
         <div className="flex min-w-0 flex-1 flex-col justify-center">
           <div className="flex items-center gap-1.5">
             <span
-              className="truncate text-xs text-foreground"
+              className="text-foreground truncate text-xs"
               title={item.name}
             >
               {item.name}
@@ -126,6 +126,23 @@ export default function FileRow({
                   -{savings.percentSaved}%
                 </span>
               )}
+
+              {savings &&
+                !savings.isReduced &&
+                item.optimizedSize > item.originalSize && (
+                  <span
+                    className="text-foreground/60 bg-utils-scent-gray-01/60 rounded px-1 font-mono text-[10px]"
+                    title="File size increased. Try downscaling (e.g. 1920px) or lowering quality."
+                  >
+                    +
+                    {Math.round(
+                      ((item.optimizedSize - item.originalSize) /
+                        item.originalSize) *
+                        100,
+                    )}
+                    %
+                  </span>
+                )}
             </div>
           )}
         </div>

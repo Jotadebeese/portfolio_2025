@@ -30,6 +30,7 @@ type Props = {
   totalOriginalBytes: number;
   totalOptimizedBytes: number;
   maxFiles?: number;
+  supportsWebP?: boolean;
 };
 
 const FORMATS: { label: string; value: OutputFormat }[] = [
@@ -60,6 +61,7 @@ export default function Toolbar({
   totalOriginalBytes,
   totalOptimizedBytes,
   maxFiles = 50,
+  supportsWebP = true,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const customInputRef = useRef<HTMLInputElement>(null);
@@ -187,23 +189,48 @@ export default function Toolbar({
           <div className="flex shrink-0 items-center gap-2">
             <span className="text-foreground shrink-0">Format:</span>
             <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
-              {FORMATS.map((f) => (
-                <button
-                  key={f.value}
-                  onClick={() =>
-                    onSettingsChange({ ...settings, format: f.value })
-                  }
-                  className={clsx(
-                    "cursor-pointer rounded px-2.5 py-0.5 text-xs transition-all",
-                    settings.format === f.value
-                      ? "bg-foreground text-background font-medium"
-                      : "text-foreground/70 hover:text-foreground",
-                  )}
-                >
-                  {f.label}
-                </button>
-              ))}
+              {FORMATS.map((f) => {
+                const isWebpUnsupported =
+                  f.value === "image/webp" && !supportsWebP;
+                return (
+                  <button
+                    key={f.value}
+                    disabled={isWebpUnsupported}
+                    onClick={() => {
+                      if (!isWebpUnsupported) {
+                        onSettingsChange({ ...settings, format: f.value });
+                      }
+                    }}
+                    title={
+                      isWebpUnsupported
+                        ? "WebP canvas encoding is not supported on iOS WebKit browsers. Use JPEG for small sizes."
+                        : undefined
+                    }
+                    className={clsx(
+                      "rounded px-2.5 py-0.5 text-xs transition-all",
+                      isWebpUnsupported
+                        ? "cursor-not-allowed opacity-35 line-through hover:opacity-35"
+                        : "cursor-pointer",
+                      settings.format === f.value
+                        ? "bg-foreground text-background font-medium"
+                        : "text-foreground/70 hover:text-foreground",
+                    )}
+                  >
+                    {f.label}
+                    {isWebpUnsupported && (
+                      <span className="ml-1 font-mono text-[9px] no-underline">
+                        (N/A)
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
+            {!supportsWebP && (
+              <span className="text-foreground/50 hidden font-mono text-[10px] sm:inline">
+                (iOS: JPEG recommended)
+              </span>
+            )}
           </div>
 
           <div className="flex min-w-0 items-center gap-2">

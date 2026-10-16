@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import clsx from "clsx";
 import {
   Download,
   Trash2,
@@ -95,6 +96,20 @@ export default function DetailsSidebar({
             -{savings.percentSaved}%
           </span>
         )}
+        {savings &&
+          !savings.isReduced &&
+          item.optimizedSize !== undefined &&
+          item.optimizedSize > item.originalSize && (
+            <span className="text-foreground/60 bg-utils-scent-gray-01/60 rounded px-1.5 py-0.5 font-mono text-[11px] font-semibold shrink-0">
+              +
+              {Math.round(
+                ((item.optimizedSize - item.originalSize) /
+                  item.originalSize) *
+                  100,
+              )}
+              %
+            </span>
+          )}
       </div>
 
       {/* Details Table (Finder / File Explorer Inspection Style) */}
@@ -124,11 +139,28 @@ export default function DetailsSidebar({
 
           {savings && (
             <>
-              <span className="text-foreground/60">Space Saved:</span>
-              <span className="text-code-green font-mono text-right font-semibold">
+              <span className="text-foreground/60">
+                {savings.bytesSaved >= 0 ? "Space Saved:" : "Size Change:"}
+              </span>
+              <span
+                className={clsx(
+                  "font-mono text-right font-semibold",
+                  savings.bytesSaved > 0
+                    ? "text-code-green"
+                    : savings.bytesSaved < 0
+                      ? "text-foreground/70"
+                      : "text-foreground/50",
+                )}
+              >
                 {savings.bytesSaved > 0
-                  ? `${formatBytes(savings.bytesSaved)} (${savings.percentSaved}%)`
-                  : "0 B (0%)"}
+                  ? `${formatBytes(savings.bytesSaved)} (-${savings.percentSaved}%)`
+                  : savings.bytesSaved < 0
+                    ? `+${formatBytes(Math.abs(savings.bytesSaved))} (+${Math.round(
+                        ((item.optimizedSize! - item.originalSize) /
+                          item.originalSize) *
+                          100,
+                      )}%)`
+                    : "0 B (0%)"}
               </span>
             </>
           )}
@@ -167,6 +199,12 @@ export default function DetailsSidebar({
             )}
           </span>
         </div>
+
+        {savings && savings.bytesSaved < 0 && (
+          <div className="border-border-color bg-background/50 text-foreground/70 mt-1 rounded border border-dashed p-2 text-[10px] leading-relaxed">
+            💡 <strong>Tip:</strong> Image grew larger than original. Camera photos have fine sensor noise; select a resize preset like <strong>1920px</strong> or lower the quality slider to compress.
+          </div>
+        )}
       </div>
 
       {/* Action Buttons */}

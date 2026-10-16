@@ -64,3 +64,22 @@ export function getDeviceLimits(): DeviceLimits {
     label: "High-spec Desktop",
   };
 }
+
+/**
+ * Detects whether the current browser canvas genuinely supports WebP encoding.
+ * All iOS browsers (Safari, Chrome iOS, Firefox iOS via WebKit) do not support
+ * WebP encoding on canvas and silently fall back to uncompressed PNG, causing
+ * 5x to 10x file size bloat.
+ */
+export function checkWebPEncodingSupport(): boolean {
+  if (typeof document === "undefined") return true;
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    const dataUrl = canvas.toDataURL("image/webp");
+    return dataUrl.startsWith("data:image/webp");
+  } catch {
+    return false;
+  }
+}
