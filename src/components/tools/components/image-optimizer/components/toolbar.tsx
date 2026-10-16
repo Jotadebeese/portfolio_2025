@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
   ImagePlus,
   Download,
@@ -12,6 +12,8 @@ import {
   Minus,
   Plus,
   X,
+  HelpCircle,
+  Info,
 } from "lucide-react";
 import { OptimizerSettings, OutputFormat, ResizePreset } from "../types";
 import { formatBytes } from "../utils/format";
@@ -68,6 +70,7 @@ export default function Toolbar({
 
   const isCustom = settings.resizePreset === "custom";
   const isQueueFull = totalCount >= maxFiles;
+  const [showWebpExplainer, setShowWebpExplainer] = useState(false);
 
   useEffect(() => {
     if (isCustom) {
@@ -186,7 +189,7 @@ export default function Toolbar({
 
       <div className="border-border-color bg-background/50 flex flex-col justify-between gap-3 rounded-md border border-dashed p-2 text-xs md:flex-row md:items-stretch">
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
             <span className="text-foreground shrink-0">Format:</span>
             <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
               {FORMATS.map((f) => {
@@ -195,30 +198,33 @@ export default function Toolbar({
                 return (
                   <button
                     key={f.value}
-                    disabled={isWebpUnsupported}
+                    type="button"
                     onClick={() => {
-                      if (!isWebpUnsupported) {
+                      if (isWebpUnsupported) {
+                        setShowWebpExplainer((prev) => !prev);
+                      } else {
                         onSettingsChange({ ...settings, format: f.value });
                       }
                     }}
                     title={
                       isWebpUnsupported
-                        ? "WebP canvas encoding is not supported on iOS WebKit browsers. Use JPEG for small sizes."
+                        ? "WebP canvas encoding is not supported on iOS WebKit browsers. Tap to learn why."
                         : undefined
                     }
                     className={clsx(
-                      "rounded px-2.5 py-0.5 text-xs transition-all",
+                      "cursor-pointer rounded px-2.5 py-0.5 text-xs transition-all",
                       isWebpUnsupported
-                        ? "cursor-not-allowed opacity-35 line-through hover:opacity-35"
-                        : "cursor-pointer",
-                      settings.format === f.value
-                        ? "bg-foreground text-background font-medium"
-                        : "text-foreground/70 hover:text-foreground",
+                        ? "text-foreground/45 hover:text-foreground/75"
+                        : settings.format === f.value
+                          ? "bg-foreground text-background font-medium"
+                          : "text-foreground/70 hover:text-foreground",
                     )}
                   >
-                    {f.label}
+                    <span className={clsx(isWebpUnsupported && "line-through")}>
+                      {f.label}
+                    </span>
                     {isWebpUnsupported && (
-                      <span className="ml-1 font-mono text-[9px] no-underline">
+                      <span className="ml-1 font-mono text-[9px] no-underline opacity-80">
                         (N/A)
                       </span>
                     )}
@@ -227,11 +233,44 @@ export default function Toolbar({
               })}
             </div>
             {!supportsWebP && (
-              <span className="text-foreground/50 hidden font-mono text-[10px] sm:inline">
-                (iOS: JPEG recommended)
-              </span>
+              <button
+                type="button"
+                onClick={() => setShowWebpExplainer((prev) => !prev)}
+                className="text-foreground/60 hover:text-foreground flex cursor-pointer items-center gap-1 font-mono text-[10px] underline underline-offset-2 transition-colors"
+                title="Click to see why WebP is disabled on iOS"
+              >
+                <HelpCircle className="text-utils-scent-orange h-3 w-3 shrink-0" />
+                <span>Why is WebP disabled?</span>
+              </button>
             )}
           </div>
+
+          {showWebpExplainer && (
+            <div className="border-border-color bg-white text-foreground/85 flex items-start justify-between gap-2.5 rounded-md border border-dashed p-2.5 text-xs leading-relaxed">
+              <div className="flex items-start gap-2">
+                <Info className="text-utils-scent-orange mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <div className="flex flex-col gap-0.5 text-[11px]">
+                  <span className="font-semibold text-foreground">
+                    Apple WebKit Engine Limitation
+                  </span>
+                  <span>
+                    iOS (Safari, Chrome iOS, and all iPhone browsers) does not support native WebP canvas encoding. When requested, iOS silently falls back to an uncompressed 15MB PNG.
+                  </span>
+                  <span className="text-foreground/70">
+                    We automatically select <strong>JPEG</strong> so your photos compress properly with full quality control.
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowWebpExplainer(false)}
+                className="text-foreground/50 hover:text-foreground shrink-0 cursor-pointer p-0.5"
+                aria-label="Close explainer"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
 
           <div className="flex min-w-0 items-center gap-2">
             <span className="text-foreground shrink-0">Max Size:</span>

@@ -49,6 +49,9 @@ export default function OptimizationGuide() {
                 <li>
                   <strong className="text-foreground font-mono">WebP (Recommended):</strong>{" "}
                   Universal 97%+ browser support. Replaces both PNG and JPEG with alpha transparency and ~30% smaller file sizes.
+                  <span className="text-foreground/60 mt-0.5 block text-[10px]">
+                    *Note: Apple&apos;s WebKit engine does not support WebP canvas encoding; our tool automatically falls back to JPEG on iPhone/iPad to ensure true compression.
+                  </span>
                 </li>
                 <li>
                   <strong className="text-foreground font-mono">PNG:</strong> Pure lossless. Keep only for UI screenshots with fine typography or graphics that cannot tolerate lossy compression.
