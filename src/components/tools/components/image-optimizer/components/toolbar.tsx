@@ -29,6 +29,7 @@ type Props = {
   isDownloadingZip: boolean;
   totalOriginalBytes: number;
   totalOptimizedBytes: number;
+  maxFiles?: number;
 };
 
 const FORMATS: { label: string; value: OutputFormat }[] = [
@@ -58,11 +59,13 @@ export default function Toolbar({
   isDownloadingZip,
   totalOriginalBytes,
   totalOptimizedBytes,
+  maxFiles = 50,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const customInputRef = useRef<HTMLInputElement>(null);
 
   const isCustom = settings.resizePreset === "custom";
+  const isQueueFull = totalCount >= maxFiles;
 
   useEffect(() => {
     if (isCustom) {
@@ -92,6 +95,7 @@ export default function Toolbar({
         ref={fileInputRef}
         type="file"
         multiple
+        disabled={isQueueFull}
         accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
         onChange={handleFileChange}
         className="hidden"
@@ -99,12 +103,24 @@ export default function Toolbar({
       <div className="flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => fileInputRef.current?.click()}
-            className="bg-foreground border-foreground text-background flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all hover:opacity-90 active:scale-[0.98]"
-            title="Upload images from device"
+            onClick={() => {
+              if (!isQueueFull) fileInputRef.current?.click();
+            }}
+            disabled={isQueueFull}
+            className="bg-foreground border-foreground text-background flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            title={
+              isQueueFull
+                ? `Queue limit reached (${maxFiles} images max)`
+                : "Upload images from device"
+            }
           >
             <ImagePlus className="text-utils-scent-orange h-3.5 w-3.5" />
             <span>Add Images</span>
+            {totalCount > 0 && (
+              <span className="font-mono text-[10px] opacity-75">
+                ({totalCount}/{maxFiles})
+              </span>
+            )}
           </button>
 
           {totalCount > 0 && (
@@ -167,7 +183,7 @@ export default function Toolbar({
       </div>
 
       <div className="border-border-color bg-background/50 flex flex-col justify-between gap-3 rounded-md border border-dashed p-2 text-xs md:flex-row md:items-stretch">
-        <div className="flex min-w-0 flex-1 flex-col justify-center gap-2.5">
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
           <div className="flex shrink-0 items-center gap-2">
             <span className="text-foreground shrink-0">Format:</span>
             <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">

@@ -8,12 +8,18 @@ type Props = {
   onFilesSelected: (files: FileList | File[]) => void;
   isDraggingOver: boolean;
   compact?: boolean;
+  maxFiles?: number;
+  maxFileSizeMb?: number;
+  disabled?: boolean;
 };
 
 export default function Dropzone({
   onFilesSelected,
   isDraggingOver,
   compact = false,
+  maxFiles = 50,
+  maxFileSizeMb = 50,
+  disabled = false,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -25,6 +31,7 @@ export default function Dropzone({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (disabled) return;
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       onFilesSelected(e.dataTransfer.files);
     }
@@ -35,18 +42,23 @@ export default function Dropzone({
       <div
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
+        onClick={() => {
+          if (!disabled) fileInputRef.current?.click();
+        }}
         className={clsx(
-          "border-border-color flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed py-3 px-4 text-xs transition-all",
-          isDraggingOver
-            ? "border-utils-scent-orange bg-utils-scent-orange/5 text-utils-scent-orange"
-            : "bg-background/40 hover:bg-background/70 text-foreground/70 hover:text-foreground",
+          "border-border-color flex items-center justify-center gap-2 rounded-md border border-dashed py-3 px-4 text-xs transition-all",
+          disabled
+            ? "bg-background/20 text-foreground/40 cursor-not-allowed opacity-60"
+            : isDraggingOver
+              ? "border-utils-scent-orange bg-utils-scent-orange/5 text-utils-scent-orange cursor-pointer"
+              : "bg-background/40 hover:bg-background/70 text-foreground/70 hover:text-foreground cursor-pointer",
         )}
       >
         <input
           ref={fileInputRef}
           type="file"
           multiple
+          disabled={disabled}
           accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
           onChange={(e) => {
             if (e.target.files) onFilesSelected(e.target.files);
@@ -55,7 +67,11 @@ export default function Dropzone({
           className="hidden"
         />
         <UploadCloud className="h-4 w-4" />
-        <span>Drop additional images here or click to browse</span>
+        <span>
+          {disabled
+            ? `Batch limit reached (${maxFiles} images max)`
+            : `Drop additional images or click to browse (up to ${maxFiles} images)`}
+        </span>
       </div>
     );
   }
@@ -93,7 +109,7 @@ export default function Dropzone({
           Drop your images here, or browse files
         </h4>
         <p className="text-foreground/60 max-w-sm text-xs">
-          Batch compress, convert to modern WebP / JPEG / PNG, and inspect visual quality in real-time.
+          Batch optimize up to {maxFiles} images (max {maxFileSizeMb}MB each) · 100% locally in your browser.
         </p>
       </div>
 

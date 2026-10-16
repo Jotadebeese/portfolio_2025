@@ -4,6 +4,7 @@ export interface CompressionResult {
   blob: Blob;
   url: string;
   dimensions: { width: number; height: number };
+  originalDimensions: { width: number; height: number };
   size: number;
 }
 
@@ -152,6 +153,7 @@ export async function compressImage(
             blob,
             url: optimizedUrl,
             dimensions: { width: targetW, height: targetH },
+            originalDimensions: { width: origW, height: origH },
             size: blob.size,
           });
         },

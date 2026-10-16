@@ -3,8 +3,10 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import JSZip from "jszip";
 import { ImageFileItem, OptimizerSettings } from "./types";
-import { compressImage, getImageDimensions } from "./utils/compress-image";
+import { compressImage } from "./utils/compress-image";
 import { getFilenameWithExtension } from "./utils/format";
+import { getDeviceLimits, DeviceLimits } from "./utils/device";
+import { X } from "lucide-react";
 import Toolbar from "./components/toolbar";
 import FileRow from "./components/file-row";
 import DetailsSidebar from "./components/details-sidebar";
@@ -28,6 +30,8 @@ export default function ImageOptimizer() {
   const [comparingItem, setComparingItem] = useState<ImageFileItem | null>(
     null,
   );
+  const [deviceLimits] = useState<DeviceLimits>(() => getDeviceLimits());
+  const [warningNotice, setWarningNotice] = useState<string | null>(null);
 
   const settingsRef = useRef(settings);
   useEffect(() => {
@@ -38,6 +42,13 @@ export default function ImageOptimizer() {
   useEffect(() => {
     itemsRef.current = items;
   }, [items]);
+
+  useEffect(() => {
+    if (warningNotice) {
+      const timer = setTimeout(() => setWarningNotice(null), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [warningNotice]);
 
   useEffect(() => {
     return () => {
@@ -87,6 +98,8 @@ export default function ImageOptimizer() {
               optimizedUrl: result.url,
               optimizedSize: result.size,
               optimizedDimensions: result.dimensions,
+              originalDimensions:
+                result.originalDimensions || i.originalDimensions,
               optimizedFormat: currentSettings.format,
             };
           }),
@@ -111,48 +124,80 @@ export default function ImageOptimizer() {
   );
 
   const handleFilesSelected = useCallback(
-    async (fileList: FileList | File[]) => {
+    (fileList: FileList | File[]) => {
       const incoming = Array.from(fileList).filter((f) =>
         f.type.startsWith("image/"),
       );
       if (incoming.length === 0) return;
 
-      const newItems: ImageFileItem[] = [];
+      const currentCount = itemsRef.current.length;
+      const remainingSlots = Math.max(0, deviceLimits.maxFiles - currentCount);
+
+      if (remainingSlots <= 0) {
+        setWarningNotice(
+          `Queue limit reached (${deviceLimits.maxFiles} images max). Download or remove items to add more.`,
+        );
+        return;
+      }
+
+      const maxBytes = deviceLimits.maxFileSizeMb * 1024 * 1024;
+      const validFiles: File[] = [];
+      const oversizedFiles: File[] = [];
 
       for (const file of incoming) {
-        try {
-          const { width, height, url } = await getImageDimensions(file);
-          const newItem: ImageFileItem = {
-            id: crypto.randomUUID(),
-            file,
-            name: file.name,
-            originalSize: file.size,
-            originalType: file.type,
-            originalDimensions: { width, height },
-            originalUrl: url,
-            status: "idle",
-            progress: 0,
-          };
-          newItems.push(newItem);
-        } catch (err) {
-          console.error("Failed to read image dimensions:", err);
+        if (file.size > maxBytes) {
+          oversizedFiles.push(file);
+        } else {
+          validFiles.push(file);
         }
       }
 
-      if (newItems.length === 0) return;
+      const allowedFiles = validFiles.slice(0, remainingSlots);
+      const truncatedCount = validFiles.length - allowedFiles.length;
 
-      setItems((prev) => {
-        const updated = [...prev, ...newItems];
-        return updated;
-      });
+      const notices: string[] = [];
+      if (oversizedFiles.length > 0) {
+        if (oversizedFiles.length === 1) {
+          notices.push(
+            `Skipped "${oversizedFiles[0].name}" (exceeds ${deviceLimits.maxFileSizeMb}MB limit).`,
+          );
+        } else {
+          notices.push(
+            `Skipped ${oversizedFiles.length} files exceeding ${deviceLimits.maxFileSizeMb}MB limit.`,
+          );
+        }
+      }
+      if (truncatedCount > 0) {
+        notices.push(
+          `Added first ${allowedFiles.length} images (queue limit of ${deviceLimits.maxFiles} reached).`,
+        );
+      }
+      if (notices.length > 0) {
+        setWarningNotice(notices.join(" "));
+      }
 
+      if (allowedFiles.length === 0) return;
+
+      const newItems: ImageFileItem[] = allowedFiles.map((file) => ({
+        id: crypto.randomUUID(),
+        file,
+        name: file.name,
+        originalSize: file.size,
+        originalType: file.type,
+        originalDimensions: { width: 0, height: 0 },
+        originalUrl: URL.createObjectURL(file),
+        status: "idle",
+        progress: 0,
+      }));
+
+      setItems((prev) => [...prev, ...newItems]);
       setActiveId((currentActive) => currentActive || newItems[0].id);
 
       newItems.forEach((item) => {
         processImageItem(item, settingsRef.current);
       });
     },
-    [processImageItem],
+    [deviceLimits, processImageItem],
   );
 
   const handleSettingsChange = (newSettings: OptimizerSettings) => {
@@ -330,12 +375,37 @@ export default function ImageOptimizer() {
         isDownloadingZip={isDownloadingZip}
         totalOriginalBytes={totalOriginalBytes}
         totalOptimizedBytes={totalOptimizedBytes}
+        maxFiles={deviceLimits.maxFiles}
       />
+
+      {warningNotice && (
+        <div className="border-border-color bg-utils-scent-orange/10 text-foreground flex items-center justify-between gap-2 rounded-md border border-dashed px-3 py-2 text-xs transition-all">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="text-utils-scent-orange shrink-0 font-semibold">
+              Notice:
+            </span>
+            <span className="truncate sm:whitespace-normal">
+              {warningNotice}
+            </span>
+          </div>
+          <button
+            onClick={() => setWarningNotice(null)}
+            className="text-foreground/60 hover:text-foreground shrink-0 cursor-pointer p-0.5"
+            title="Dismiss"
+            aria-label="Dismiss notice"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
       {items.length === 0 ? (
         <Dropzone
           onFilesSelected={handleFilesSelected}
           isDraggingOver={isDraggingOver}
+          maxFiles={deviceLimits.maxFiles}
+          maxFileSizeMb={deviceLimits.maxFileSizeMb}
+          disabled={items.length >= deviceLimits.maxFiles}
         />
       ) : (
         /* Split Pane: Explorer List on Left, Details & Inspection on Right */
@@ -345,7 +415,9 @@ export default function ImageOptimizer() {
             <div className="border-border-color flex flex-col rounded-md border bg-white shadow-xs">
               {/* Explorer List Header */}
               <div className="border-border-color text-foreground/60 flex items-center justify-between border-b border-dashed px-3 py-2 text-[11px] font-semibold tracking-wider uppercase">
-                <span>Queued Files ({items.length})</span>
+                <span>
+                  Queued Files ({items.length}/{deviceLimits.maxFiles})
+                </span>
                 <span>Original → Optimized</span>
               </div>
 
@@ -372,6 +444,9 @@ export default function ImageOptimizer() {
               onFilesSelected={handleFilesSelected}
               isDraggingOver={isDraggingOver}
               compact
+              maxFiles={deviceLimits.maxFiles}
+              maxFileSizeMb={deviceLimits.maxFileSizeMb}
+              disabled={items.length >= deviceLimits.maxFiles}
             />
           </div>
 
