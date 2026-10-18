@@ -46,12 +46,12 @@ export default function Dropzone({
           if (!disabled) fileInputRef.current?.click();
         }}
         className={clsx(
-          "border-border-color flex items-center justify-center gap-2 rounded-md border border-dashed py-3 px-4 text-xs transition-all",
+          "border-border-color text-foreground/70 flex items-center justify-center gap-2 rounded-md border border-dashed px-4 py-3 text-xs transition-all",
           disabled
             ? "bg-background/20 text-foreground/40 cursor-not-allowed opacity-60"
             : isDraggingOver
-              ? "border-utils-scent-orange bg-utils-scent-orange/5 text-utils-scent-orange cursor-pointer"
-              : "bg-background/40 hover:bg-background/70 text-foreground/70 hover:text-foreground cursor-pointer",
+              ? "border-utils-scent-orange bg-utils-scent-orange/5 cursor-pointer"
+              : "bg-background/30 hover:bg-background/70 hover:text-foreground cursor-pointer",
         )}
       >
         <input
@@ -82,10 +82,10 @@ export default function Dropzone({
       onDrop={handleDrop}
       onClick={() => fileInputRef.current?.click()}
       className={clsx(
-        "border-border-color flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-14 px-6 text-center transition-all",
+        "border-border-color flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-dashed px-6 py-14 text-center transition-all",
         isDraggingOver
           ? "border-utils-scent-orange bg-utils-scent-orange/5"
-          : "bg-background/30 hover:bg-background/60",
+          : "bg-background/30 hover:bg-background/70",
       )}
     >
       <input
@@ -100,16 +100,15 @@ export default function Dropzone({
         className="hidden"
       />
 
-      <div className="border-border-color bg-white flex h-12 w-12 items-center justify-center rounded-full border shadow-xs">
-        <ImagePlus className="text-utils-scent-orange h-6 w-6 stroke-[1.5]" />
+      <div className="border-border-color flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-xs">
+        <ImagePlus className="text-foreground/70 h-6 w-6 stroke-[1]" />
       </div>
 
       <div className="flex flex-col gap-1">
-        <h4 className="text-sm font-semibold text-foreground">
-          Drop your images here, or browse files
-        </h4>
-        <p className="text-foreground/60 max-w-sm text-xs">
-          Batch optimize up to {maxFiles} images (max {maxFileSizeMb}MB each) · 100% locally in your browser.
+        <h4>Drop your images here, or browse files</h4>
+        <p className="text-foreground/70 max-w-sm text-xs">
+          Batch optimize up to {maxFiles} images (max {maxFileSizeMb}MB each) ·
+          100% locally in your browser.
         </p>
       </div>
 
@@ -117,21 +116,22 @@ export default function Dropzone({
         {["PNG", "JPEG", "WebP", "AVIF"].map((ext) => (
           <span
             key={ext}
-            className="border-border-color bg-white text-foreground/70 rounded border px-1.5 py-0.5 font-mono"
+            className="border-border-color text-foreground/70 rounded bg-white px-1.5 py-0.5 font-mono"
           >
             .{ext.toLowerCase()}
           </span>
         ))}
         <span
-          className="border-border-color bg-white text-foreground/70 rounded border px-1.5 py-0.5 font-mono"
+          className="border-border-color text-foreground/70 rounded bg-white px-1.5 py-0.5 font-mono"
           title="GIFs are converted to modern static format (first frame extracted)"
         >
-          .gif <span className="text-[10px] text-foreground/50">(static frame)</span>
+          .gif{" "}
+          <span className="text-foreground/50 text-[10px]">(static frame)</span>
         </span>
       </div>
 
-      <div className="border-border-color mt-2 flex items-center gap-1.5 border-t border-dashed pt-3 text-[11px] text-foreground/60">
-        <ShieldCheck className="text-code-blue h-3.5 w-3.5 shrink-0" />
+      <div className="border-border-color text-foreground/70 flex items-center gap-1.5 border-t border-dashed pt-3 text-[11px]">
+        <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
         <span>100% Client-Side. Images never leave your device.</span>
       </div>
     </div>

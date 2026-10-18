@@ -112,15 +112,15 @@ export default function Toolbar({
               if (!isQueueFull) fileInputRef.current?.click();
             }}
             disabled={isQueueFull}
-            className="bg-foreground border-foreground text-background flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-background border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             title={
               isQueueFull
                 ? `Queue limit reached (${maxFiles} images max)`
                 : "Upload images from device"
             }
           >
-            <ImagePlus className="text-utils-scent-orange h-3.5 w-3.5" />
-            <span>Add Images</span>
+            <ImagePlus className="text-foreground/70 h-3.5 w-3.5" />
+            <span>Add</span>
             {totalCount > 0 && (
               <span className="font-mono text-[10px] opacity-75">
                 ({totalCount}/{maxFiles})
@@ -140,7 +140,7 @@ export default function Toolbar({
                 ) : (
                   <Square className="text-foreground/70 h-3.5 w-3.5" />
                 )}
-                <span>Select All</span>
+                <span>All</span>
                 <span className="text-foreground/70 font-mono text-[11px]">
                   ({selectedCount}/{totalCount})
                 </span>
@@ -155,20 +155,20 @@ export default function Toolbar({
                     title="Download selected images as a ZIP archive"
                   >
                     <Download className="h-3.5 w-3.5" />
-                    <span>
-                      {isDownloadingZip
-                        ? "Zipping..."
-                        : `Download Selected (${selectedCount})`}
+                    <span className="font-mono text-[11px]">
+                      {isDownloadingZip ? "Zipping..." : `(${selectedCount})`}
                     </span>
                   </button>
 
                   <button
                     onClick={onDeleteSelected}
-                    className="border-border-color text-code-rust bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all"
+                    className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1.5 text-xs transition-all"
                     title="Delete selected images from queue"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
-                    <span>Delete ({selectedCount})</span>
+                    <span className="font-mono text-[11px]">
+                      ({selectedCount})
+                    </span>
                   </button>
                 </>
               )}
@@ -178,7 +178,7 @@ export default function Toolbar({
 
         {totalOptimizedBytes > 0 && totalSavedBytes > 0 && (
           <div className="flex items-center gap-1.5 text-xs">
-            <Sparkles className="text-code-green h-3.5 w-3.5" />
+            <Sparkles className="text-foreground/70 h-3.5 w-3.5" />
             <span className="text-foreground/70 hidden sm:inline">Saved:</span>
             <span className="text-code-green bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
               {formatBytes(totalSavedBytes)} (-{totalSavingsPct}%)
@@ -223,11 +223,6 @@ export default function Toolbar({
                     <span className={clsx(isWebpUnsupported && "line-through")}>
                       {f.label}
                     </span>
-                    {isWebpUnsupported && (
-                      <span className="ml-1 font-mono text-[9px] no-underline opacity-80">
-                        (N/A)
-                      </span>
-                    )}
                   </button>
                 );
               })}
@@ -236,28 +231,30 @@ export default function Toolbar({
               <button
                 type="button"
                 onClick={() => setShowWebpExplainer((prev) => !prev)}
-                className="text-foreground/60 hover:text-foreground flex cursor-pointer items-center gap-1 font-mono text-[10px] underline underline-offset-2 transition-colors"
+                className="text-foreground/70 hover:text-foreground flex cursor-pointer items-center gap-1 font-mono text-[10px] underline underline-offset-2 transition-colors"
                 title="Click to see why WebP is disabled on iOS"
               >
-                <HelpCircle className="text-utils-scent-orange h-3 w-3 shrink-0" />
+                <HelpCircle className="h-3 w-3 shrink-0" />
                 <span>Why is WebP disabled?</span>
               </button>
             )}
           </div>
 
           {showWebpExplainer && (
-            <div className="border-border-color bg-white text-foreground/85 flex items-start justify-between gap-2.5 rounded-md border border-dashed p-2.5 text-xs leading-relaxed">
+            <div className="border-border-color text-foreground/85 flex items-start justify-between gap-2.5 rounded-md border-dashed bg-white p-2.5 text-xs leading-relaxed">
               <div className="flex items-start gap-2">
-                <Info className="text-utils-scent-orange mt-0.5 h-3.5 w-3.5 shrink-0" />
                 <div className="flex flex-col gap-0.5 text-[11px]">
-                  <span className="font-semibold text-foreground">
+                  <span className="text-foreground font-semibold">
                     Apple WebKit Engine Limitation
                   </span>
                   <span>
-                    iOS (Safari, Chrome iOS, and all iPhone browsers) does not support native WebP canvas encoding. When requested, iOS silently falls back to an uncompressed 15MB PNG.
+                    iOS (Safari, Chrome iOS, and all iPhone browsers) does not
+                    support native WebP canvas encoding. When requested, iOS
+                    silently falls back to an uncompressed 15MB PNG.
                   </span>
                   <span className="text-foreground/70">
-                    We automatically select <strong>JPEG</strong> so your photos compress properly with full quality control.
+                    We automatically select <strong>JPEG</strong> so your photos
+                    compress properly with full quality control.
                   </span>
                 </div>
               </div>

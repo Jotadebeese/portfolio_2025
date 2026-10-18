@@ -396,18 +396,16 @@ export default function ImageOptimizer() {
       />
 
       {warningNotice && (
-        <div className="border-border-color bg-utils-scent-orange/10 text-foreground flex items-center justify-between gap-2 rounded-md border border-dashed px-3 py-2 text-xs transition-all">
+        <div className="bg-code-rust/10 text-foreground flex items-center justify-between gap-2 rounded-md p-2 text-xs transition-all">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="text-utils-scent-orange shrink-0 font-semibold">
-              Notice:
-            </span>
-            <span className="truncate sm:whitespace-normal">
+            <span className="shrink-0">Notice:</span>
+            <span className="text-foreground/70 truncate sm:whitespace-normal">
               {warningNotice}
             </span>
           </div>
           <button
             onClick={() => setWarningNotice(null)}
-            className="text-foreground/60 hover:text-foreground shrink-0 cursor-pointer p-0.5"
+            className="text-foreground/70 hover:text-foreground shrink-0 cursor-pointer p-0.5"
             title="Dismiss"
             aria-label="Dismiss notice"
           >
@@ -425,20 +423,15 @@ export default function ImageOptimizer() {
           disabled={items.length >= deviceLimits.maxFiles}
         />
       ) : (
-        /* Split Pane: Explorer List on Left, Details & Inspection on Right */
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-          {/* Left Column: Explorer File List */}
           <div className="flex flex-col gap-2 lg:col-span-7">
-            <div className="border-border-color flex flex-col rounded-md border bg-white shadow-xs">
-              {/* Explorer List Header */}
-              <div className="border-border-color text-foreground/60 flex items-center justify-between border-b border-dashed px-3 py-2 text-[11px] font-semibold tracking-wider uppercase">
+            <div className="flex flex-col bg-white">
+              <div className="border-utils-scent-gray-01/40 text-foreground/70 flex items-center border-b p-2 text-[11px] tracking-wider uppercase">
                 <span>
                   Queued Files ({items.length}/{deviceLimits.maxFiles})
                 </span>
-                <span>Original → Optimized</span>
               </div>
 
-              {/* File Rows */}
               <div className="flex max-h-[480px] flex-col overflow-y-auto">
                 {items.map((item) => (
                   <FileRow
@@ -456,7 +449,6 @@ export default function ImageOptimizer() {
               </div>
             </div>
 
-            {/* Compact dropzone for appending more files */}
             <Dropzone
               onFilesSelected={handleFilesSelected}
               isDraggingOver={isDraggingOver}
@@ -467,7 +459,6 @@ export default function ImageOptimizer() {
             />
           </div>
 
-          {/* Right Column: Inspector / Details Pane */}
           <div className="lg:col-span-5">
             <DetailsSidebar
               item={activeItem}
@@ -480,10 +471,8 @@ export default function ImageOptimizer() {
         </div>
       )}
 
-      {/* Educational Optimization Guide */}
       <OptimizationGuide />
 
-      {/* Comparison Modal */}
       {comparingItem && (
         <CompareModal
           item={comparingItem}

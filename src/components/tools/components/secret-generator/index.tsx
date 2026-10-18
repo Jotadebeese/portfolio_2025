@@ -119,7 +119,7 @@ export default function SecretGenerator() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5 text-xs">
-          <ShieldCheck className="text-code-blue h-4 w-4 shrink-0" />
+          <ShieldCheck className="h-4 w-4 shrink-0" />
           <span className="text-foreground/80 hidden sm:inline">
             Calculated locally with native{" "}
           </span>
@@ -153,7 +153,7 @@ export default function SecretGenerator() {
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="border-border-color text-foreground flex-1 overflow-x-auto whitespace-nowrap rounded-md border bg-white px-3 py-2 font-mono text-xs select-all sm:text-sm">
+              <div className="border-border-color text-foreground flex-1 overflow-x-auto rounded-md border bg-white px-3 py-2 font-mono text-xs whitespace-nowrap select-all sm:text-sm">
                 {item.value}
               </div>
 
@@ -190,10 +190,10 @@ export default function SecretGenerator() {
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
-            <KeyRound className="text-status-amber h-3.5 w-3.5" />
+            <KeyRound className="h-3.5 w-3.5" />
             <small>
               Password Generator{" "}
-              <span className="bg-background rounded-md px-1.5 py-1">
+              <span className="bg-background rounded-md px-1.5 py-1 font-mono">
                 {passwordLength} chars
               </span>
             </small>
@@ -233,7 +233,7 @@ export default function SecretGenerator() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="border-border-color text-foreground flex-1 overflow-x-auto whitespace-nowrap rounded-md border bg-white px-3 py-2 font-mono text-xs select-all sm:text-sm">
+          <div className="border-border-color text-foreground flex-1 overflow-x-auto rounded-md border bg-white px-3 py-2 font-mono text-xs whitespace-nowrap select-all sm:text-sm">
             {password}
           </div>
 

@@ -173,17 +173,22 @@ export default function ToolsWorkbench({
                 className={clsx(
                   "flex cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 text-xs transition-all hover:opacity-80",
                   isOpen
-                    ? "bg-foreground border-foreground border-solid text-white"
+                    ? "bg-background border-background border-solid"
                     : "border-border-color border-dashed bg-white",
                 )}
               >
                 {isOpen ? (
-                  <Check className="text-utils-scent-orange h-3.5 w-3.5 stroke-[2]" />
+                  <Check className="text-foreground h-3.5 w-3.5 stroke-[2]" />
                 ) : (
                   <Plus className="text-foreground/70 h-3.5 w-3.5" />
                 )}
                 <span>{tool.name}</span>
-                <span className="text-foreground bg-background hidden rounded-md px-1.5 py-1 text-[10px] md:inline">
+                <span
+                  className={clsx(
+                    "text-foreground bg-background hidden rounded-md px-1.5 py-1 text-[10px] md:inline",
+                    isOpen && "bg-white",
+                  )}
+                >
                   {tool.apiBadge}
                 </span>
               </button>
