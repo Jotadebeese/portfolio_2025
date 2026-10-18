@@ -200,20 +200,39 @@ export default function SecretGenerator() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 text-xs sm:gap-3">
-            <label className="border-border-color flex cursor-pointer items-center gap-1.5 border-r border-dashed pr-2.5 select-none">
-              <input
-                type="checkbox"
-                checked={includeSymbols}
-                onChange={toggleSymbols}
-                className="accent-status-amber rounded-md"
-              />
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={includeSymbols}
+              onClick={toggleSymbols}
+              className="border-border-color flex cursor-pointer items-center gap-1.5 border-r border-dashed pr-2.5 select-none"
+            >
+              <div
+                className={clsx(
+                  "flex h-4 w-4 shrink-0 items-center justify-center rounded-xs border transition-all",
+                  includeSymbols
+                    ? "border-utils-scent-orange bg-utils-scent-orange/60 text-white"
+                    : "border-border-color hover:border-utils-scent-orange bg-white",
+                )}
+              >
+                <Check
+                  size={12}
+                  strokeWidth={4}
+                  className={clsx(
+                    "transition-all duration-100",
+                    includeSymbols
+                      ? "scale-100 opacity-100"
+                      : "scale-50 opacity-0",
+                  )}
+                />
+              </div>
               <span>
                 Symbols{" "}
                 <span className="text-foreground/60 hidden sm:inline">
                   (!@#$)
                 </span>
               </span>
-            </label>
+            </button>
 
             <div className="flex items-center gap-2">
               <span className="text-foreground/80">Length:</span>

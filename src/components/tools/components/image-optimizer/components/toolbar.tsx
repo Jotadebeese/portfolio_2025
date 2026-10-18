@@ -241,7 +241,7 @@ export default function Toolbar({
           </div>
 
           {showWebpExplainer && (
-            <div className="border-border-color text-foreground/85 flex items-start justify-between gap-2.5 rounded-md border-dashed bg-white p-2.5 text-xs leading-relaxed">
+            <div className="text-foreground flex items-start justify-between gap-2.5 rounded-md bg-white p-2 text-xs leading-relaxed">
               <div className="flex items-start gap-2">
                 <div className="flex flex-col gap-0.5 text-[11px]">
                   <span className="text-foreground font-semibold">
