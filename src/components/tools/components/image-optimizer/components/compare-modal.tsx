@@ -35,13 +35,25 @@ export default function CompareModal({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!isOpen) return;
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
   }, [isOpen, onClose]);
 
   const handlePointerMove = useCallback((clientX: number) => {
@@ -60,13 +72,16 @@ export default function CompareModal({
       if (isDragging) handlePointerMove(e.clientX);
     };
     const handleTouchMove = (e: TouchEvent) => {
-      if (isDragging && e.touches[0]) handlePointerMove(e.touches[0].clientX);
+      if (isDragging && e.touches[0]) {
+        e.preventDefault();
+        handlePointerMove(e.touches[0].clientX);
+      }
     };
 
     if (isDragging) {
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
-      window.addEventListener("touchmove", handleTouchMove);
+      window.addEventListener("touchmove", handleTouchMove, { passive: false });
       window.addEventListener("touchend", handleMouseUp);
     }
 
@@ -92,7 +107,7 @@ export default function CompareModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="border-border-color flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-md bg-white shadow-xl"
+        className="border-border-color flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-md bg-white shadow-xl overscroll-contain"
       >
         <div className="border-border-color flex flex-wrap items-center justify-between gap-2 border-b border-dashed p-3">
           <h4>Visual Inspection: {item.name}</h4>
@@ -151,7 +166,7 @@ export default function CompareModal({
                     }
                   : undefined
               }
-              className="relative flex h-full max-h-[60vh] w-full max-w-3xl cursor-ew-resize items-center justify-center overflow-hidden select-none"
+              className="relative flex h-full max-h-[60vh] w-full max-w-3xl cursor-ew-resize items-center justify-center overflow-hidden select-none touch-none"
             >
               <img
                 src={item.optimizedUrl || item.originalUrl}
