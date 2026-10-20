@@ -99,7 +99,7 @@ export default function ToolSkeleton({ toolId }: { toolId?: ToolId }) {
     );
   }
 
-  if (toolId === "image-optimizer") {
+  if (toolId === "image-optimizer" || toolId === "video-optimizer") {
     return (
       <div className="flex w-full animate-pulse flex-col gap-4">
         <div className="border-border-color flex flex-col gap-3 border-b border-dashed pb-4">

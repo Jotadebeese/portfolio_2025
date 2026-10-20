@@ -16,12 +16,13 @@ import { AVAILABLE_TOOLS, ToolId } from "../types";
 
 const SecretGenerator = lazy(() => import("../components/secret-generator"));
 const ImageOptimizer = lazy(() => import("../components/image-optimizer"));
+const VideoOptimizer = lazy(() => import("../components/video-optimizer"));
 
 type Props = {
   heading?: string | null;
   description?: string | null;
   defaultTools?:
-    | ("secret-generator" | "jwt-inspector" | "image-optimizer")[]
+    | ("secret-generator" | "jwt-inspector" | "image-optimizer" | "video-optimizer")[]
     | null;
 };
 
@@ -238,6 +239,7 @@ export default function ToolsWorkbench({
                   )}
 
                   {toolId === "image-optimizer" && <ImageOptimizer />}
+                  {toolId === "video-optimizer" && <VideoOptimizer />}
                 </Suspense>
               </ToolCard>
             );

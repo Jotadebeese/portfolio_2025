@@ -1,4 +1,8 @@
-export type ToolId = "secret-generator" | "jwt-inspector" | "image-optimizer";
+export type ToolId =
+  | "secret-generator"
+  | "jwt-inspector"
+  | "image-optimizer"
+  | "video-optimizer";
 
 export interface ToolDefinition {
   id: ToolId;
@@ -25,5 +29,11 @@ export const AVAILABLE_TOOLS: ToolDefinition[] = [
     name: "Web Image Optimizer",
     shortDesc: "Local image compression and format conversion to WebP.",
     apiBadge: "HTML5 Canvas",
+  },
+  {
+    id: "video-optimizer",
+    name: "Web Video Compressor",
+    shortDesc: "Hardware-accelerated MP4/WebM compression and downscaling.",
+    apiBadge: "WebCodecs API",
   },
 ];

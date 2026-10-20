@@ -122,7 +122,7 @@ export default function Toolbar({
             <ImagePlus className="text-foreground/70 h-3.5 w-3.5" />
             <span>Add</span>
             {totalCount > 0 && (
-              <span className="font-mono text-[10px] opacity-75">
+              <span className="font-mono text-[11px] opacity-75">
                 ({totalCount}/{maxFiles})
               </span>
             )}
