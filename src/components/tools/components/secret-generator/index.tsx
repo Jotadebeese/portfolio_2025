@@ -242,7 +242,7 @@ export default function SecretGenerator() {
                 max="48"
                 value={passwordLength}
                 onChange={handleLengthChange}
-                className="accent-utils-scent-orange w-20 cursor-pointer sm:w-24"
+                className="accent-utils-scent-orange bg-utils-scent-gray-01/50 h-1.5 w-20 cursor-pointer appearance-none rounded-lg sm:w-24"
               />
               <span className="text-foreground w-5 text-right font-mono font-medium">
                 {passwordLength}

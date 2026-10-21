@@ -6,15 +6,15 @@ import {
   Download,
   Trash2,
   CheckSquare,
-  Square,
   Sliders,
-  Sparkles,
   Minus,
   Plus,
   VolumeX,
   Volume2,
-  Loader2,
   Play,
+  Square,
+  Loader,
+  X,
 } from "lucide-react";
 import {
   VideoOptimizerSettings,
@@ -153,83 +153,28 @@ export default function Toolbar({
               </span>
             )}
           </button>
-
-          {totalCount > 0 && (
-            <>
-              <button
-                type="button"
-                onClick={onToggleSelectAll}
-                disabled={isProcessing}
-                className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
-                title={isAllSelected ? "Deselect all" : "Select all"}
-              >
-                {isAllSelected ? (
-                  <CheckSquare className="h-3.5 w-3.5" />
-                ) : (
-                  <Square className="text-foreground/70 h-3.5 w-3.5" />
-                )}
-                <span>All</span>
-                <span className="text-foreground/70 font-mono text-[11px]">
-                  ({selectedCount}/{totalCount})
-                </span>
-              </button>
-
-              {isSomeSelected && (
-                <>
-                  <button
-                    type="button"
-                    onClick={onDownloadSelected}
-                    disabled={isDownloadingZip || isProcessing}
-                    className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
-                    title="Download selected compressed clips"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    <span className="font-mono text-[11px]">
-                      {isDownloadingZip ? "Zipping..." : `(${selectedCount})`}
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={onDeleteSelected}
-                    disabled={isProcessing}
-                    className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1.5 text-xs transition-all disabled:opacity-50"
-                    title="Delete selected videos"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    <span className="font-mono text-[11px]">
-                      ({selectedCount})
-                    </span>
-                  </button>
-                </>
-              )}
-            </>
-          )}
         </div>
         {totalCount > 0 && (
           <div className="flex items-center gap-2">
             {isProcessing ? (
-              <button
-                type="button"
-                onClick={onCancelCompress}
-                className="flex cursor-pointer items-center gap-1.5 rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-600 transition-all hover:bg-rose-500/20"
-              >
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>
-                  Compressing ({processingIndex + 1}/{processingTotal}) &bull;
-                  Stop
-                </span>
-              </button>
+              <>
+                <Loader size={14} className="animate-spin" />
+                <button
+                  type="button"
+                  onClick={onCancelCompress}
+                  className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1.5 text-xs transition-all"
+                >
+                  <span>
+                    ({processingIndex + 1}/{processingTotal})
+                  </span>
+                  <Square className="h-3.5 w-3.5" />
+                </button>
+              </>
             ) : (
               <button
                 type="button"
                 onClick={onStartCompress}
-                className={clsx(
-                  "flex cursor-pointer items-center gap-1.5 rounded-md px-3.5 py-1.5 text-xs font-medium shadow-xs transition-all active:scale-[0.98]",
-                  hasUncompressed || hasPendingChanges
-                    ? "bg-foreground text-background hover:bg-foreground/90 border border-transparent"
-                    : "bg-utils-scent-gray-01/40 border-border-color text-foreground hover:bg-utils-scent-gray-01/60 border",
-                )}
+                className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1.5 text-xs transition-all active:scale-[0.98]"
                 title="Run hardware-accelerated video compression"
               >
                 <Play className="h-3.5 w-3.5 fill-current" />
@@ -245,108 +190,42 @@ export default function Toolbar({
           </div>
         )}
       </div>
-      <div className="flex items-center justify-end gap-3">
-        {totalCompressedBytes > 0 && totalSavedBytes > 0 && !hasUncompressed ? (
-          <div className="flex items-center gap-2 text-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="text-foreground/70 hidden sm:inline">
-                Saved:
-              </span>
-              <span className="text-code-green bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
-                {formatBytes(totalSavedBytes)} (-{totalSavingsPct}%)
-              </span>
-            </div>
-
-            {/* Live re-estimation as user adjusts tools after batch is compressed */}
-            {hasPendingChanges &&
-              totalEstimatedBytes &&
-              totalEstimatedBytes > 0 &&
-              totalOriginalBytes > totalEstimatedBytes && (
-                <div
-                  className="flex items-center gap-1"
-                  title="New estimated total output if re-compressed with current settings"
-                >
-                  <span className="text-foreground/70 hidden sm:inline">
-                    New:
-                  </span>
-                  <span className="text-code-blue bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
-                    ~{formatBytes(totalEstimatedBytes)} (-
-                    {Math.round(
-                      ((totalOriginalBytes - totalEstimatedBytes) /
-                        totalOriginalBytes) *
-                        100,
-                    )}
-                    %)
-                  </span>
-                </div>
-              )}
-          </div>
-        ) : totalEstimatedBytes &&
-          totalEstimatedBytes > 0 &&
-          totalOriginalBytes > totalEstimatedBytes &&
-          hasUncompressed ? (
-          <div
-            className="flex items-center gap-1.5 text-xs"
-            title="Estimated total output file size based on selected bitrate and duration"
-          >
-            <Sparkles className="text-utils-scent-orange h-3.5 w-3.5" />
-            <span className="text-foreground/70 hidden sm:inline">
-              Est. Output:
-            </span>
-            <span className="text-foreground/90 rounded-md border border-[#ff9900]/30 bg-[#ff9900]/10 px-1.5 py-0.5 font-mono text-[11px] font-medium">
-              ~{formatBytes(totalEstimatedBytes)} (-
-              {Math.round(
-                ((totalOriginalBytes - totalEstimatedBytes) /
-                  totalOriginalBytes) *
-                  100,
-              )}
-              %)
-            </span>
-          </div>
-        ) : null}
-      </div>
-      {/* Settings Row (Disabled & dimmed during active compression) */}
       <div
         className={clsx(
-          "border-border-color bg-background/50 flex flex-col justify-between gap-3 rounded-md border border-dashed p-2.5 text-xs transition-opacity md:flex-row md:items-stretch",
+          "border-border-color bg-background/50 flex flex-col justify-between gap-3 rounded-md border border-dashed p-2 text-xs transition-opacity lg:flex-row lg:items-stretch",
           isProcessing &&
             "pointer-events-none cursor-not-allowed opacity-50 select-none",
         )}
       >
-        <div className="flex min-w-0 flex-1 flex-col justify-center gap-2.5">
-          {/* Format & Audio Strip Row */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Format Selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-foreground shrink-0 font-medium">
-                Format:
-              </span>
-              <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
-                {FORMATS.map((f) => (
-                  <button
-                    key={f.value}
-                    type="button"
-                    disabled={isProcessing}
-                    onClick={() =>
-                      onSettingsChange({ ...settings, format: f.value })
-                    }
-                    className={clsx(
-                      "flex cursor-pointer items-center gap-1 rounded px-2.5 py-0.5 text-xs transition-all",
-                      settings.format === f.value
-                        ? "bg-foreground text-background font-medium"
-                        : "text-foreground/70 hover:text-foreground",
-                    )}
-                  >
-                    <span>{f.label}</span>
-                    <span className="font-mono text-[9px] opacity-75">
-                      ({f.badge})
-                    </span>
-                  </button>
-                ))}
-              </div>
+        <div className="flex flex-1 flex-col justify-center gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-foreground shrink-0">Format:</span>
+            <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
+              {FORMATS.map((f) => (
+                <button
+                  key={f.value}
+                  type="button"
+                  disabled={isProcessing}
+                  onClick={() =>
+                    onSettingsChange({ ...settings, format: f.value })
+                  }
+                  className={clsx(
+                    "flex cursor-pointer items-center gap-1 rounded px-2.5 py-0.5 text-xs transition-all",
+                    settings.format === f.value
+                      ? "bg-foreground text-background"
+                      : "text-foreground/70 hover:text-foreground",
+                  )}
+                >
+                  <span>{f.label}</span>
+                  <span className="font-mono text-[9px] opacity-75">
+                    ({f.badge})
+                  </span>
+                </button>
+              ))}
             </div>
-
-            {/* Strip Audio Toggle (ConvertVideos.ps1 -an parity) */}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-foreground shrink-0">Audio:</span>
             <button
               type="button"
               disabled={isProcessing}
@@ -357,10 +236,8 @@ export default function Toolbar({
                 })
               }
               className={clsx(
-                "flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-all",
-                settings.stripAudio
-                  ? "border-utils-scent-orange bg-utils-scent-orange/10 text-utils-scent-orange font-medium"
-                  : "border-border-color text-foreground/70 hover:text-foreground bg-white",
+                "border-border-color flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1 text-xs transition-all",
+                settings.stripAudio ? "text-code-rust" : "text-foreground",
               )}
               title={
                 settings.stripAudio
@@ -371,26 +248,114 @@ export default function Toolbar({
               {settings.stripAudio ? (
                 <>
                   <VolumeX className="h-3.5 w-3.5" />
-                  <span>Mute / Strip Audio (Web Loop)</span>
+                  <span>Mute</span>
                 </>
               ) : (
                 <>
                   <Volume2 className="h-3.5 w-3.5" />
-                  <span>Keep Audio Track</span>
+                  <span>Keep </span>
                 </>
               )}
             </button>
           </div>
 
-          {/* Resolution Preset Pills (ConvertVideos.ps1 parity) */}
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="text-foreground shrink-0 font-medium">
-              Target Size:
-            </span>
+          <div className="flex flex-col gap-2">
+            <div className="flex min-w-96 items-center gap-2">
+              <span className="text-foreground shrink-0">Size:</span>
 
-            {isCustom ? (
-              <div className="flex shrink-0 items-center gap-1.5">
-                <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
+              {isCustom ? (
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
+                    <button
+                      type="button"
+                      disabled={isProcessing}
+                      onClick={() =>
+                        onSettingsChange({
+                          ...settings,
+                          resizePreset: "1080p",
+                        })
+                      }
+                      className="bg-foreground text-background shrink-0 cursor-pointer rounded px-2.5 py-0.5 text-xs font-medium whitespace-nowrap"
+                      title="Click to return to standard presets"
+                    >
+                      Custom
+                    </button>
+                  </div>
+
+                  <div className="border-border-color flex shrink-0 items-center rounded-md border bg-white p-0.5">
+                    <button
+                      type="button"
+                      disabled={isProcessing}
+                      onClick={() =>
+                        onSettingsChange({
+                          ...settings,
+                          customMaxDimension: Math.max(
+                            240,
+                            (settings.customMaxDimension || 1280) - 100,
+                          ),
+                        })
+                      }
+                      className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90"
+                      title="Decrease 100px"
+                      aria-label="Decrease custom size by 100px"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </button>
+
+                    <input
+                      ref={customInputRef}
+                      type="number"
+                      min="240"
+                      max="3840"
+                      step="50"
+                      disabled={isProcessing}
+                      placeholder="1280"
+                      value={settings.customMaxDimension || 1280}
+                      onFocus={(e) => e.target.select()}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          onSettingsChange({
+                            ...settings,
+                            resizePreset: "1080p",
+                          });
+                        }
+                      }}
+                      onChange={(e) =>
+                        onSettingsChange({
+                          ...settings,
+                          customMaxDimension: Math.max(
+                            100,
+                            Number(e.target.value) || 1280,
+                          ),
+                        })
+                      }
+                      className="text-foreground focus:text-foreground w-12 [appearance:textfield] text-center font-mono text-xs focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    />
+
+                    <button
+                      type="button"
+                      disabled={isProcessing}
+                      onClick={() =>
+                        onSettingsChange({
+                          ...settings,
+                          customMaxDimension: Math.min(
+                            3840,
+                            (settings.customMaxDimension || 1280) + 100,
+                          ),
+                        })
+                      }
+                      className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90"
+                      title="Increase 100px"
+                      aria-label="Increase custom size by 100px"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </button>
+                  </div>
+
+                  <span className="text-foreground/70 shrink-0 text-[11px]">
+                    px
+                  </span>
+
                   <button
                     type="button"
                     disabled={isProcessing}
@@ -400,123 +365,57 @@ export default function Toolbar({
                         resizePreset: "1080p",
                       })
                     }
-                    className="bg-foreground text-background shrink-0 cursor-pointer rounded px-2.5 py-0.5 text-xs font-medium"
-                    title="Click to return to standard presets"
+                    className="border-border-color text-foreground/50 hover:text-foreground flex h-6 w-6 cursor-pointer items-center justify-center rounded-md border bg-white transition-colors"
+                    title="Reset to 1080p"
+                    aria-label="Reset to 1080p preset"
                   >
-                    Custom
+                    <X className="h-3 w-3" />
                   </button>
                 </div>
-
-                <div className="border-border-color flex shrink-0 items-center rounded-md border bg-white p-0.5">
-                  <button
-                    type="button"
-                    disabled={isProcessing}
-                    onClick={() =>
-                      onSettingsChange({
-                        ...settings,
-                        customMaxDimension: Math.max(
-                          240,
-                          (settings.customMaxDimension || 1280) - 100,
-                        ),
-                      })
-                    }
-                    className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90"
-                    title="Decrease 100px"
-                  >
-                    <Minus className="h-3 w-3" />
-                  </button>
-
-                  <input
-                    ref={customInputRef}
-                    type="number"
-                    min="240"
-                    max="3840"
-                    step="50"
-                    disabled={isProcessing}
-                    placeholder="1280"
-                    value={settings.customMaxDimension || 1280}
-                    onFocus={(e) => e.target.select()}
-                    onChange={(e) =>
-                      onSettingsChange({
-                        ...settings,
-                        customMaxDimension: Math.max(
-                          100,
-                          Number(e.target.value) || 1280,
-                        ),
-                      })
-                    }
-                    className="text-foreground focus:text-foreground w-12 [appearance:textfield] text-center font-mono text-xs focus:outline-none"
-                  />
-
-                  <button
-                    type="button"
-                    disabled={isProcessing}
-                    onClick={() =>
-                      onSettingsChange({
-                        ...settings,
-                        customMaxDimension: Math.min(
-                          3840,
-                          (settings.customMaxDimension || 1280) + 100,
-                        ),
-                      })
-                    }
-                    className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90"
-                    title="Increase 100px"
-                  >
-                    <Plus className="h-3 w-3" />
-                  </button>
-                  <span className="text-foreground/50 pr-1 font-mono text-[10px]">
-                    px
-                  </span>
+              ) : (
+                <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
+                  {RESIZE_PRESETS.map((p) => (
+                    <button
+                      key={p.value}
+                      type="button"
+                      disabled={isProcessing}
+                      onClick={() =>
+                        onSettingsChange({
+                          ...settings,
+                          resizePreset: p.value,
+                          customMaxDimension:
+                            p.value === "custom"
+                              ? settings.customMaxDimension || 1280
+                              : settings.customMaxDimension,
+                        })
+                      }
+                      className={clsx(
+                        "shrink-0 cursor-pointer rounded px-2.5 py-0.5 text-xs whitespace-nowrap transition-all",
+                        settings.resizePreset === p.value
+                          ? "bg-foreground text-background"
+                          : "text-foreground/70 hover:text-foreground",
+                      )}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
                 </div>
-              </div>
-            ) : (
-              <div className="border-border-color flex flex-wrap items-center rounded-md border bg-white p-0.5">
-                {RESIZE_PRESETS.map((p) => (
-                  <button
-                    key={p.value}
-                    type="button"
-                    disabled={isProcessing}
-                    onClick={() =>
-                      onSettingsChange({
-                        ...settings,
-                        resizePreset: p.value,
-                        customMaxDimension:
-                          p.value === "custom"
-                            ? settings.customMaxDimension || 1280
-                            : settings.customMaxDimension,
-                      })
-                    }
-                    className={clsx(
-                      "shrink-0 cursor-pointer rounded px-2.5 py-0.5 text-xs whitespace-nowrap transition-all",
-                      settings.resizePreset === p.value
-                        ? "bg-foreground text-background font-medium"
-                        : "text-foreground/70 hover:text-foreground",
-                    )}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            )}
-            <span className="text-foreground/50 hidden text-[10px] sm:inline">
+              )}
+            </div>
+            <span className="text-foreground/70 hidden text-[11px] sm:inline">
               (Auto-detects & swaps for 9:16 portrait)
             </span>
           </div>
         </div>
 
-        {/* Compression Quality & Bitrate Tuning */}
-        <div className="border-border-color flex shrink-0 flex-col gap-2 border-t border-dashed pt-2.5 md:border-t-0 md:border-l md:border-dashed md:pt-0 md:pl-4">
-          <div className="flex items-center justify-between gap-2">
+        <div className="border-border-color flex flex-col gap-2 border-t border-dashed pt-2.5 lg:border-t-0 lg:border-l lg:border-dashed lg:pt-0 lg:pl-4">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5">
               <Sliders className="text-foreground/70 h-3.5 w-3.5 shrink-0" />
-              <span className="text-foreground shrink-0 font-medium">
-                Tuning:
-              </span>
+              <span className="text-foreground shrink-0">Tuning:</span>
             </div>
 
-            {/* Mode Toggle: Quality / CRF vs Fit to Size vs Bitrate */}
-            <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
+            <div className="border-border-color flex shrink-0 items-center rounded-md border bg-white p-0.5">
               <button
                 type="button"
                 disabled={isProcessing}
@@ -526,12 +425,12 @@ export default function Toolbar({
                 className={clsx(
                   "cursor-pointer rounded px-2 py-0.5 text-[11px] transition-all",
                   settings.mode === "quality"
-                    ? "bg-foreground text-background font-medium"
+                    ? "bg-foreground text-background"
                     : "text-foreground/70 hover:text-foreground",
                 )}
                 title="Adaptive visual quality (CRF / Quantizer: preserves fine textures like images 80%)"
               >
-                Quality / CRF (%)
+                Quality (%)
               </button>
               <button
                 type="button"
@@ -542,7 +441,7 @@ export default function Toolbar({
                 className={clsx(
                   "cursor-pointer rounded px-2 py-0.5 text-[11px] transition-all",
                   settings.mode === "target-size"
-                    ? "bg-foreground text-background font-medium"
+                    ? "bg-foreground text-background"
                     : "text-foreground/70 hover:text-foreground",
                 )}
                 title="Strict file size cap (e.g. Discord 8MB, Email 10MB, Slack 25MB)"
@@ -558,7 +457,7 @@ export default function Toolbar({
                 className={clsx(
                   "cursor-pointer rounded px-2 py-0.5 text-[11px] transition-all",
                   settings.mode === "bitrate"
-                    ? "bg-foreground text-background font-medium"
+                    ? "bg-foreground text-background"
                     : "text-foreground/70 hover:text-foreground",
                 )}
                 title="Strict manual target bitrate budget in Mbps"
@@ -568,7 +467,6 @@ export default function Toolbar({
             </div>
           </div>
 
-          {/* Conditional Control: Quality % vs Fit to Size MB vs Bitrate Slider */}
           {settings.mode === "quality" ? (
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-1.5">
@@ -628,13 +526,12 @@ export default function Toolbar({
                   <Plus className="h-3 w-3" />
                 </button>
 
-                <span className="text-foreground min-w-[42px] text-right font-mono text-xs font-semibold">
+                <span className="text-foreground min-w-7 text-right font-mono text-xs">
                   {settings.qualityPercent || 80}%
                 </span>
               </div>
 
-              {/* Quick Quality Presets */}
-              <div className="flex items-center gap-1">
+              <div className="flex flex-wrap items-center gap-1">
                 {[
                   { label: "Draft", val: 60 },
                   { label: "Good", val: 75 },
@@ -649,9 +546,9 @@ export default function Toolbar({
                       onSettingsChange({ ...settings, qualityPercent: qp.val })
                     }
                     className={clsx(
-                      "cursor-pointer rounded px-1.5 py-0.5 font-mono text-[10px] transition-all",
+                      "border-border-color cursor-pointer rounded border border-dashed px-1.5 py-1 text-[10px] text-nowrap transition-all",
                       (settings.qualityPercent || 80) === qp.val
-                        ? "bg-foreground/10 text-foreground font-semibold"
+                        ? "bg-foreground/5 text-foreground border-foreground/5 border-solid"
                         : "text-foreground/50 hover:text-foreground",
                     )}
                   >
@@ -663,25 +560,26 @@ export default function Toolbar({
           ) : settings.mode === "target-size" ? (
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  disabled={isProcessing || (settings.targetSizeMB || 8) <= 1}
-                  onClick={() =>
-                    onSettingsChange({
-                      ...settings,
-                      targetSizeMB: Math.max(
-                        1,
-                        (settings.targetSizeMB || 8) - 1,
-                      ),
-                    })
-                  }
-                  className="border-border-color hover:bg-utils-scent-gray-01/30 text-foreground/70 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded border bg-white transition-all active:scale-90 disabled:opacity-30"
-                  title="Decrease target size (-1 MB)"
-                >
-                  <Minus className="h-3 w-3" />
-                </button>
+                <div className="border-border-color flex shrink-0 items-center rounded-md border bg-white p-0.5">
+                  <button
+                    type="button"
+                    disabled={isProcessing || (settings.targetSizeMB || 8) <= 1}
+                    onClick={() =>
+                      onSettingsChange({
+                        ...settings,
+                        targetSizeMB: Math.max(
+                          1,
+                          (settings.targetSizeMB || 8) - 1,
+                        ),
+                      })
+                    }
+                    className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90 disabled:opacity-30"
+                    title="Decrease target size (-1 MB)"
+                    aria-label="Decrease target size by 1 MB"
+                  >
+                    <Minus className="h-3 w-3" />
+                  </button>
 
-                <div className="border-border-color flex items-center rounded-md border bg-white px-1.5 py-0.5">
                   <input
                     type="number"
                     min="1"
@@ -689,6 +587,7 @@ export default function Toolbar({
                     step="1"
                     disabled={isProcessing}
                     value={settings.targetSizeMB || 8}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) =>
                       onSettingsChange({
                         ...settings,
@@ -698,33 +597,36 @@ export default function Toolbar({
                         ),
                       })
                     }
-                    className="text-foreground w-9 [appearance:textfield] text-center font-mono text-xs font-semibold focus:outline-none"
+                    className="text-foreground focus:text-foreground w-10 [appearance:textfield] text-center font-mono text-xs focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
-                  <span className="text-foreground/60 pl-0.5 font-mono text-[10px]">
-                    MB cap
-                  </span>
+
+                  <button
+                    type="button"
+                    disabled={
+                      isProcessing || (settings.targetSizeMB || 8) >= 500
+                    }
+                    onClick={() =>
+                      onSettingsChange({
+                        ...settings,
+                        targetSizeMB: Math.min(
+                          500,
+                          (settings.targetSizeMB || 8) + 1,
+                        ),
+                      })
+                    }
+                    className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90 disabled:opacity-30"
+                    title="Increase target size (+1 MB)"
+                    aria-label="Increase target size by 1 MB"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  disabled={isProcessing || (settings.targetSizeMB || 8) >= 500}
-                  onClick={() =>
-                    onSettingsChange({
-                      ...settings,
-                      targetSizeMB: Math.min(
-                        500,
-                        (settings.targetSizeMB || 8) + 1,
-                      ),
-                    })
-                  }
-                  className="border-border-color hover:bg-utils-scent-gray-01/30 text-foreground/70 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded border bg-white transition-all active:scale-90 disabled:opacity-30"
-                  title="Increase target size (+1 MB)"
-                >
-                  <Plus className="h-3 w-3" />
-                </button>
+                <span className="text-foreground/70 shrink-0 text-[11px]">
+                  MB cap
+                </span>
               </div>
 
-              {/* Quick File Size Presets */}
               <div className="flex flex-wrap items-center gap-1">
                 {[
                   { label: "Mini", val: 1 },
@@ -742,9 +644,9 @@ export default function Toolbar({
                       onSettingsChange({ ...settings, targetSizeMB: sp.val })
                     }
                     className={clsx(
-                      "cursor-pointer rounded px-1.5 py-0.5 font-mono text-[10px] transition-all",
+                      "border-border-color cursor-pointer rounded border border-dashed px-1.5 py-1 text-[10px] text-nowrap transition-all",
                       (settings.targetSizeMB || 8) === sp.val
-                        ? "bg-foreground/10 text-foreground font-semibold"
+                        ? "bg-foreground/5 text-foreground border-foreground/5 border-solid"
                         : "text-foreground/50 hover:text-foreground",
                     )}
                     title={`${sp.label} (${sp.val}MB max limit)`}
@@ -755,7 +657,7 @@ export default function Toolbar({
               </div>
 
               {(settings.targetSizeMB || 8) <= 2 && (
-                <span className="text-foreground/60 font-mono text-[10px]">
+                <span className="text-foreground/70 text-[11px]">
                   Auto-calibrates 64k audio & resolution ceiling to strictly
                   guarantee &le; {settings.targetSizeMB || 8} MB
                 </span>
@@ -816,13 +718,12 @@ export default function Toolbar({
                   <Plus className="h-3 w-3" />
                 </button>
 
-                <span className="text-foreground min-w-[42px] text-right font-mono text-xs font-semibold">
+                <span className="text-foreground min-w-7 text-right font-mono text-xs">
                   {settings.bitrateMbps.toFixed(1)}M
                 </span>
               </div>
 
-              {/* Quick Bitrate Presets */}
-              <div className="flex items-center gap-1">
+              <div className="flex flex-wrap items-center gap-1">
                 {[
                   { label: "Loop", val: 1.0 },
                   { label: "Web", val: 2.5 },
@@ -837,9 +738,9 @@ export default function Toolbar({
                       onSettingsChange({ ...settings, bitrateMbps: bp.val })
                     }
                     className={clsx(
-                      "cursor-pointer rounded px-1.5 py-0.5 font-mono text-[10px] transition-all",
+                      "border-border-color cursor-pointer rounded border border-dashed px-1.5 py-1 text-[10px] text-nowrap transition-all",
                       settings.bitrateMbps === bp.val
-                        ? "bg-foreground/10 text-foreground font-semibold"
+                        ? "bg-foreground/5 text-foreground border-foreground/5 border-solid"
                         : "text-foreground/50 hover:text-foreground",
                     )}
                   >
@@ -850,6 +751,115 @@ export default function Toolbar({
             </div>
           )}
         </div>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        {totalCount > 0 && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onToggleSelectAll}
+              disabled={isProcessing}
+              className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
+              title={isAllSelected ? "Deselect all" : "Select all"}
+            >
+              {isAllSelected ? (
+                <CheckSquare className="h-3.5 w-3.5" />
+              ) : (
+                <Square className="text-foreground/70 h-3.5 w-3.5" />
+              )}
+              <span>All</span>
+              <span className="text-foreground/70 font-mono text-[11px]">
+                ({selectedCount}/{totalCount})
+              </span>
+            </button>
+
+            {isSomeSelected && (
+              <>
+                <button
+                  type="button"
+                  onClick={onDownloadSelected}
+                  disabled={isDownloadingZip || isProcessing}
+                  className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
+                  title="Download selected compressed clips"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span className="font-mono text-[11px]">
+                    {isDownloadingZip ? "Zipping..." : `(${selectedCount})`}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onDeleteSelected}
+                  disabled={isProcessing}
+                  className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1.5 text-xs transition-all disabled:opacity-50"
+                  title="Delete selected videos"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span className="font-mono text-[11px]">
+                    ({selectedCount})
+                  </span>
+                </button>
+              </>
+            )}
+          </div>
+        )}
+        {totalCompressedBytes > 0 && totalSavedBytes > 0 && !hasUncompressed ? (
+          <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="text-foreground/70 hidden sm:inline">
+                Saved:
+              </span>
+              <span className="text-code-green bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
+                {formatBytes(totalSavedBytes)} (-{totalSavingsPct}%)
+              </span>
+            </div>
+
+            {hasPendingChanges &&
+              totalEstimatedBytes &&
+              totalEstimatedBytes > 0 &&
+              totalOriginalBytes > totalEstimatedBytes && (
+                <div
+                  className="flex items-center gap-1"
+                  title="New estimated total output if re-compressed with current settings"
+                >
+                  <span className="text-foreground/70 hidden sm:inline">
+                    New:
+                  </span>
+                  <span className="text-code-blue bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
+                    ~{formatBytes(totalEstimatedBytes)} (-
+                    {Math.round(
+                      ((totalOriginalBytes - totalEstimatedBytes) /
+                        totalOriginalBytes) *
+                        100,
+                    )}
+                    %)
+                  </span>
+                </div>
+              )}
+          </div>
+        ) : totalEstimatedBytes &&
+          totalEstimatedBytes > 0 &&
+          totalOriginalBytes > totalEstimatedBytes &&
+          hasUncompressed ? (
+          <div
+            className="flex items-center gap-1.5 text-xs"
+            title="Estimated total output file size based on selected bitrate and duration"
+          >
+            <span className="text-foreground/70 hidden sm:inline">
+              Est. Output:
+            </span>
+            <span className="text-code-blue bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
+              ~{formatBytes(totalEstimatedBytes)} (-
+              {Math.round(
+                ((totalOriginalBytes - totalEstimatedBytes) /
+                  totalOriginalBytes) *
+                  100,
+              )}
+              %)
+            </span>
+          </div>
+        ) : null}
       </div>
     </div>
   );

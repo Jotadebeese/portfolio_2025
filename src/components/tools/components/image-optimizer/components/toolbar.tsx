@@ -13,7 +13,6 @@ import {
   Plus,
   X,
   HelpCircle,
-  Info,
 } from "lucide-react";
 import { OptimizerSettings, OutputFormat, ResizePreset } from "../types";
 import { formatBytes } from "../utils/format";
@@ -105,88 +104,28 @@ export default function Toolbar({
         onChange={handleFileChange}
         className="hidden"
       />
-      <div className="flex flex-wrap items-center justify-between gap-2.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => {
-              if (!isQueueFull) fileInputRef.current?.click();
-            }}
-            disabled={isQueueFull}
-            className="bg-background border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-            title={
-              isQueueFull
-                ? `Queue limit reached (${maxFiles} images max)`
-                : "Upload images from device"
-            }
-          >
-            <ImagePlus className="text-foreground/70 h-3.5 w-3.5" />
-            <span>Add</span>
-            {totalCount > 0 && (
-              <span className="font-mono text-[11px] opacity-75">
-                ({totalCount}/{maxFiles})
-              </span>
-            )}
-          </button>
-
+      <div>
+        <button
+          onClick={() => {
+            if (!isQueueFull) fileInputRef.current?.click();
+          }}
+          disabled={isQueueFull}
+          className="bg-background border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+          title={
+            isQueueFull
+              ? `Queue limit reached (${maxFiles} images max)`
+              : "Upload images from device"
+          }
+        >
+          <ImagePlus className="text-foreground/70 h-3.5 w-3.5" />
+          <span>Add</span>
           {totalCount > 0 && (
-            <>
-              <button
-                onClick={onToggleSelectAll}
-                className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all select-none"
-                title={isAllSelected ? "Deselect all" : "Select all"}
-              >
-                {isAllSelected ? (
-                  <CheckSquare className="h-3.5 w-3.5" />
-                ) : (
-                  <Square className="text-foreground/70 h-3.5 w-3.5" />
-                )}
-                <span>All</span>
-                <span className="text-foreground/70 font-mono text-[11px]">
-                  ({selectedCount}/{totalCount})
-                </span>
-              </button>
-
-              {isSomeSelected && (
-                <>
-                  <button
-                    onClick={onDownloadSelected}
-                    disabled={isDownloadingZip}
-                    className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
-                    title="Download selected images as a ZIP archive"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    <span className="font-mono text-[11px]">
-                      {isDownloadingZip ? "Zipping..." : `(${selectedCount})`}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={onDeleteSelected}
-                    className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1.5 text-xs transition-all"
-                    title="Delete selected images from queue"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    <span className="font-mono text-[11px]">
-                      ({selectedCount})
-                    </span>
-                  </button>
-                </>
-              )}
-            </>
-          )}
-        </div>
-
-        {totalOptimizedBytes > 0 && totalSavedBytes > 0 && (
-          <div className="flex items-center gap-1.5 text-xs">
-            <Sparkles className="text-foreground/70 h-3.5 w-3.5" />
-            <span className="text-foreground/70 hidden sm:inline">Saved:</span>
-            <span className="text-code-green bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
-              {formatBytes(totalSavedBytes)} (-{totalSavingsPct}%)
+            <span className="font-mono text-[11px] opacity-75">
+              ({totalCount}/{maxFiles})
             </span>
-          </div>
-        )}
+          )}
+        </button>
       </div>
-
       <div className="border-border-color bg-background/50 flex flex-col justify-between gap-3 rounded-md border border-dashed p-2 text-xs md:flex-row md:items-stretch">
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
           <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -438,7 +377,7 @@ export default function Toolbar({
                   quality: Number(e.target.value),
                 })
               }
-              className="accent-utils-scent-orange w-25 cursor-pointer sm:w-20"
+              className="accent-utils-scent-orange bg-utils-scent-gray-01/50 h-1.5 w-24 cursor-pointer appearance-none rounded-lg sm:w-28"
               aria-label="Quality percentage"
             />
 
@@ -463,6 +402,66 @@ export default function Toolbar({
             {settings.quality}%
           </span>
         </div>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          {totalCount > 0 && (
+            <>
+              <button
+                onClick={onToggleSelectAll}
+                className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all select-none"
+                title={isAllSelected ? "Deselect all" : "Select all"}
+              >
+                {isAllSelected ? (
+                  <CheckSquare className="h-3.5 w-3.5" />
+                ) : (
+                  <Square className="text-foreground/70 h-3.5 w-3.5" />
+                )}
+                <span>All</span>
+                <span className="text-foreground/70 font-mono text-[11px]">
+                  ({selectedCount}/{totalCount})
+                </span>
+              </button>
+
+              {isSomeSelected && (
+                <>
+                  <button
+                    onClick={onDownloadSelected}
+                    disabled={isDownloadingZip}
+                    className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
+                    title="Download selected images as a ZIP archive"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    <span className="font-mono text-[11px]">
+                      {isDownloadingZip ? "Zipping..." : `(${selectedCount})`}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={onDeleteSelected}
+                    className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1.5 text-xs transition-all"
+                    title="Delete selected images from queue"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span className="font-mono text-[11px]">
+                      ({selectedCount})
+                    </span>
+                  </button>
+                </>
+              )}
+            </>
+          )}
+        </div>
+
+        {totalOptimizedBytes > 0 && totalSavedBytes > 0 && (
+          <div className="flex items-center gap-1.5 text-xs">
+            <Sparkles className="text-foreground/70 h-3.5 w-3.5" />
+            <span className="text-foreground/70 hidden sm:inline">Saved:</span>
+            <span className="text-code-green bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
+              {formatBytes(totalSavedBytes)} (-{totalSavingsPct}%)
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

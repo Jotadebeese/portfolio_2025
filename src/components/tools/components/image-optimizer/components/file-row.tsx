@@ -6,7 +6,7 @@ import {
   Columns2,
   FileImage,
   AlertCircle,
-  Loader2,
+  Loader,
   Check,
 } from "lucide-react";
 import clsx from "clsx";
@@ -108,7 +108,7 @@ export default function FileRow({
                 />
               </div>
               <span className="text-foreground/70 flex items-center gap-1 font-mono text-[10px]">
-                <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                <Loader className="h-2.5 w-2.5 animate-spin" />
                 {item.progress}%
               </span>
             </div>
