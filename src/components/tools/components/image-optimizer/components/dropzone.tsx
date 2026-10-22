@@ -132,7 +132,10 @@ export default function Dropzone({
 
       <div className="border-border-color text-foreground/70 flex items-center gap-1.5 border-t border-dashed pt-3 text-[11px]">
         <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-        <span>100% Client-Side. Images never leave your device.</span>
+        <span>
+          100% Private. Compressed locally in your browser, images never leave
+          your device.
+        </span>
       </div>
     </div>
   );

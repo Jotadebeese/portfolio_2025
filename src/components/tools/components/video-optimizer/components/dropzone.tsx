@@ -80,7 +80,7 @@ export default function Dropzone({
       onDrop={handleDrop}
       onClick={() => fileInputRef.current?.click()}
       className={clsx(
-        "border-border-color flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-dashed px-6 py-14 text-center transition-all select-none",
+        "border-border-color flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-dashed px-6 py-14 text-center transition-all",
         isDraggingOver
           ? "border-utils-scent-orange bg-utils-scent-orange/5"
           : "bg-background/30 hover:bg-background/70",
@@ -98,23 +98,33 @@ export default function Dropzone({
         className="hidden"
       />
 
-      <div className="bg-foreground/5 text-foreground/80 flex h-12 w-12 items-center justify-center rounded-full">
-        <Film className="h-6 w-6 stroke-[1.5]" />
+      <div className="border-border-color flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-xs">
+        <Film className="text-foreground/70 h-6 w-6 stroke-[1]" />
       </div>
 
       <div className="flex flex-col gap-1">
-        <h4 className="text-foreground text-sm font-semibold">
-          Drag and drop your videos here
-        </h4>
-        <small className="text-foreground/70 text-xs">
-          Supports MP4, MOV, and WebM &bull; Up to {maxFiles} files per batch
-        </small>
+        <h4>Drop your videos here, or browse files</h4>
+        <p className="text-foreground/70 max-w-sm text-xs">
+          Batch optimize up to {maxFiles} videos &bull; 100% locally in your
+          browser.
+        </p>
       </div>
 
-      <div className="border-border-color/60 bg-background/50 text-foreground/80 mt-1 flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px]">
-        <ShieldCheck className="text-utils-scent-orange h-3.5 w-3.5" />
+      <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px]">
+        {["mp4", "mov", "webm", "m4v"].map((ext) => (
+          <span
+            key={ext}
+            className="border-border-color text-foreground/70 rounded bg-white px-1.5 py-0.5 font-mono"
+          >
+            .{ext}
+          </span>
+        ))}
+      </div>
+
+      <div className="border-border-color text-foreground/70 flex items-center gap-1.5 border-t border-dashed pt-3 text-[11px]">
+        <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
         <span>
-          100% Private &bull; Compressed locally in your browser via GPU WebCodecs
+          100% Private. Compressed locally in your browser via GPU WebCodecs
         </span>
       </div>
     </div>
