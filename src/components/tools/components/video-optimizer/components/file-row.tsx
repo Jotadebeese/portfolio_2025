@@ -11,6 +11,8 @@ import {
   VolumeX,
   Scissors,
   Play,
+  Volume2,
+  Loader,
 } from "lucide-react";
 import clsx from "clsx";
 import { VideoFileItem, VideoOptimizerSettings } from "../types";
@@ -128,14 +130,20 @@ export default function FileRow({
             if (!isProcessing) onToggleSelect();
           }}
           className={clsx(
-            "flex h-4 w-4 shrink-0 items-center justify-center rounded-xs border transition-all",
+            "flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-xs border transition-all",
             isProcessing
-              ? "opacity-40 cursor-not-allowed border-border-color bg-utils-scent-gray-01/20"
+              ? "border-border-color bg-utils-scent-gray-01/20 cursor-not-allowed opacity-40"
               : isSelected
-                ? "cursor-pointer border-utils-scent-orange bg-utils-scent-orange/60 text-white"
-                : "cursor-pointer border-border-color hover:border-utils-scent-orange bg-white",
+                ? "border-utils-scent-orange bg-utils-scent-orange/60 cursor-pointer text-white"
+                : "border-border-color hover:border-utils-scent-orange cursor-pointer bg-white",
           )}
-          title={isProcessing ? "Disabled during compression" : isSelected ? "Deselect video" : "Select video"}
+          title={
+            isProcessing
+              ? "Disabled during compression"
+              : isSelected
+                ? "Deselect video"
+                : "Select video"
+          }
           aria-label={isSelected ? "Deselect video" : "Select video"}
         >
           <Check
@@ -148,8 +156,7 @@ export default function FileRow({
           />
         </button>
 
-        {/* Poster Thumbnail (true aspect ratio, un-stretched) */}
-        <div className="border-border-color bg-black/90 relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded p-0.5">
+        <div className="border-border-color bg-background relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded">
           {item.thumbnailUrl ? (
             <img
               src={item.thumbnailUrl}
@@ -157,11 +164,11 @@ export default function FileRow({
               className="max-h-full max-w-full object-contain"
             />
           ) : (
-            <Film className="text-white/40 h-4 w-4" />
+            <Film className="text-foreground/30 h-4 w-4" />
           )}
 
           {item.duration > 0 && (
-            <span className="absolute bottom-0.5 right-0.5 bg-black/80 px-1 py-0.2 rounded text-[8px] font-mono text-white leading-none">
+            <span className="py-0.2 bg-utils-scent-gray-01 border-border-color text-foreground absolute right-0.5 bottom-0.5 rounded-xs border px-0.5 font-mono text-[9px] leading-none">
               {formatDuration(
                 getEffectiveVideoDuration(
                   item.duration,
@@ -173,37 +180,27 @@ export default function FileRow({
           )}
         </div>
 
-        {/* Video Info */}
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex w-full items-center gap-1.5 text-nowrap">
             <span
-              className="text-foreground truncate text-[11px] font-medium"
+              className="text-foreground truncate text-[11px]"
               title={item.name}
             >
               {item.name}
             </span>
 
-            {/* Clear Orientation & Aspect Ratio Badges */}
             {item.originalDimensions.width > 0 && (
               <span
-                className={clsx(
-                  "rounded-xs border px-1 py-0.2 text-[9px] font-mono",
-                  orientation.type === "portrait"
-                    ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400"
-                    : orientation.type === "square"
-                      ? "border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-400"
-                      : orientation.type === "ultrawide"
-                        ? "border-purple-500/40 bg-purple-500/10 text-purple-700 dark:text-purple-400"
-                        : "border-border-color/60 bg-utils-scent-gray-01/30 text-foreground/70",
-                )}
+                className={
+                  "py-0.2 border-border-color bg-utils-scent-gray-01/30 text-foreground/70 rounded-xs border px-1 font-mono text-[9px]"
+                }
               >
                 {orientation.label} ({orientation.ratio})
               </span>
             )}
 
-            {/* Multi-Cut or Trimmed Badge */}
             {isTrimmed && (
-              <span className="border-[#ff9900]/40 bg-[#ff9900]/10 text-utils-scent-orange rounded-xs border px-1 py-0.2 text-[9px] font-mono flex items-center gap-0.5">
+              <span className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-foreground/70 flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]">
                 <Scissors size={9} />
                 <span>
                   {item.sections && item.sections.some((s) => s.isDeleted)
@@ -215,225 +212,222 @@ export default function FileRow({
               </span>
             )}
 
-            {/* Per-Clip Audio Override Badge */}
-            {item.stripAudio !== undefined && (
-              item.stripAudio ? (
-                <span className="border-border-color/60 bg-utils-scent-gray-01/30 text-foreground/60 rounded-xs border px-1 py-0.2 text-[9px] font-mono flex items-center gap-0.5">
+            {item.stripAudio !== undefined &&
+              (item.stripAudio ? (
+                <span className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-code-rust flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]">
                   <VolumeX size={9} />
                   <span>Muted</span>
                 </span>
               ) : (
-                <span className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 rounded-xs border px-1 py-0.2 text-[9px] font-mono">
-                  Audio
+                <span className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-code-green flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]">
+                  <Volume2 size={9} />
+                  <span>Audio</span>
                 </span>
-              )
-            )}
+              ))}
           </div>
+          <div className="flex">
+            <div className="text-foreground/70 flex flex-wrap items-center gap-1.5 text-[10px]">
+              {item.originalDimensions.width > 0 && (
+                <span>
+                  {item.originalDimensions.width}&times;
+                  {item.originalDimensions.height}
+                  {targetDims &&
+                    (targetDims.width !== item.originalDimensions.width ||
+                      targetDims.height !== item.originalDimensions.height) && (
+                      <span className="text-foreground">
+                        {" "}
+                        &rarr; {targetDims.width}&times;{targetDims.height}
+                      </span>
+                    )}
+                </span>
+              )}
 
-          <div className="text-foreground/70 flex flex-wrap items-center gap-1.5 text-[10px]">
-            {/* Dimensions: Native -> Target */}
-            {item.originalDimensions.width > 0 && (
-              <span>
-                {item.originalDimensions.width}&times;
-                {item.originalDimensions.height}
-                {targetDims &&
-                  (targetDims.width !== item.originalDimensions.width ||
-                    targetDims.height !== item.originalDimensions.height) && (
-                    <span className="text-foreground/50">
-                      {" "}
-                      &rarr; {targetDims.width}&times;{targetDims.height}
+              <span className="text-foreground">&bull;</span>
+
+              <span>{formatBytes(item.originalSize)}</span>
+
+              {item.status === "done" && item.compressedSize !== undefined ? (
+                <>
+                  <span className="text-foreground">&rarr;</span>
+                  <span className="text-foreground">
+                    {formatBytes(item.compressedSize)}
+                  </span>
+                  {savings && (
+                    <span
+                      className={clsx(
+                        "bg-border-color/30 rounded-sm px-1 font-mono text-[9px]",
+                        savings.isReduced
+                          ? "text-code-green"
+                          : "text-foreground",
+                      )}
+                    >
+                      {savings.isReduced
+                        ? `-${savings.percentSaved}%`
+                        : `+${Math.abs(savings.percentSaved)}%`}
                     </span>
                   )}
-              </span>
-            )}
-
-            <span className="text-foreground/30">&bull;</span>
-
-            {/* File Size Progression */}
-            <span>{formatBytes(item.originalSize)}</span>
-
-            {item.status === "done" && item.compressedSize !== undefined ? (
-              <>
-                <span className="text-foreground/30">&rarr;</span>
-                <span className="text-foreground font-mono font-medium">
-                  {formatBytes(item.compressedSize)}
-                </span>
-                {savings && (
-                  <span
-                    className={clsx(
-                      "font-mono text-[9px] px-1 py-0.2 rounded-xs",
-                      savings.isReduced
-                        ? "bg-emerald-500/10 text-emerald-600"
-                        : "bg-amber-500/10 text-amber-600",
-                    )}
-                  >
-                    {savings.isReduced
-                      ? `-${savings.percentSaved}%`
-                      : `+${Math.abs(savings.percentSaved)}%`}
-                  </span>
-                )}
-                {itemSettingsChanged && (
-                  <span
-                    className="border-utils-scent-orange/50 text-utils-scent-orange bg-utils-scent-orange/10 rounded-xs border px-1 py-0.2 font-mono text-[9px]"
-                    title="Settings modified since last compression. Re-compress to apply."
-                  >
-                    New Est: ~{formatBytes(estimatedBytes)}
-                  </span>
-                )}
-              </>
-            ) : (
-              item.status !== "processing" &&
-              estimatedBytes > 0 && (
-                <>
-                  <span className="text-foreground/30">&rarr;</span>
-                  <span
-                    className="text-foreground/90 font-mono"
-                    title="Estimated output size"
-                  >
-                    ~{formatBytes(estimatedBytes)}
-                  </span>
-                  {estimatedSavings && estimatedSavings.percentSaved > 0 && (
-                    <span className="text-foreground/60 font-mono text-[9px]">
-                      (Est. -{estimatedSavings.percentSaved}%)
+                  {itemSettingsChanged && (
+                    <span
+                      className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-foreground/70 flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]"
+                      title="Settings modified since last compression. Re-compress to apply."
+                    >
+                      New Est: ~{formatBytes(estimatedBytes)}
                     </span>
                   )}
                 </>
-              )
-            )}
+              ) : (
+                item.status !== "processing" &&
+                estimatedBytes > 0 && (
+                  <>
+                    <span className="text-foreground/30">&rarr;</span>
+                    <span
+                      className="text-foreground/90 font-mono"
+                      title="Estimated output size"
+                    >
+                      ~{formatBytes(estimatedBytes)}
+                    </span>
+                    {estimatedSavings && estimatedSavings.percentSaved > 0 && (
+                      <span className="text-foreground/60 font-mono text-[9px]">
+                        (Est. -{estimatedSavings.percentSaved}%)
+                      </span>
+                    )}
+                  </>
+                )
+              )}
 
-            {item.status === "error" && (
-              <span className="text-code-rust flex items-center gap-1 font-mono">
-                <AlertCircle size={10} />
-                <span className="max-w-[120px] truncate">
-                  {item.errorMessage || "Failed"}
+              {item.status === "error" && (
+                <span className="text-code-rust flex items-center gap-1">
+                  <AlertCircle size={10} />
+                  <span className="max-w-[120px] truncate">
+                    {item.errorMessage || "Failed"}
+                  </span>
                 </span>
-              </span>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* Progress bar during processing */}
           {item.status === "processing" && (
-            <div className="bg-foreground/10 relative h-1 w-full overflow-hidden rounded-full mt-0.5">
-              <div
-                className="bg-utils-scent-orange absolute top-0 bottom-0 left-0 transition-all duration-200"
-                style={{ width: `${item.progress}%` }}
-              />
+            <div className="flex w-full items-center gap-2">
+              <div className="bg-border-color/30 relative mt-0.5 h-1 w-full overflow-hidden rounded-full">
+                <div
+                  className="bg-utils-scent-orange absolute top-0 bottom-0 left-0 transition-all duration-200"
+                  style={{ width: `${item.progress}%` }}
+                />
+              </div>
+              <span className="text-foreground flex items-center gap-1 font-mono text-[10px]">
+                <Loader className="h-2.5 w-2.5 animate-spin" />
+                <span>{item.progress}%</span>
+              </span>
             </div>
           )}
-        </div>
-      </div>
+          <div className="flex shrink-0 items-center gap-1">
+            {onCompressSingle &&
+              (item.status === "idle" ||
+                itemSettingsChanged ||
+                item.status === "error" ||
+                (item.status === "done" && itemSettingsChanged)) && (
+                <button
+                  type="button"
+                  disabled={isProcessing}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isProcessing) onCompressSingle();
+                  }}
+                  className={clsx(
+                    "flex h-6 items-center justify-center gap-1 rounded-xs border px-1.5 font-mono text-[10px] transition-all",
+                    itemSettingsChanged
+                      ? "border-foreground bg-foreground text-white shadow-xs hover:opacity-90"
+                      : "border-border-color hover:bg-foreground text-foreground bg-white hover:text-white",
+                    isProcessing
+                      ? "cursor-not-allowed opacity-40"
+                      : "cursor-pointer",
+                  )}
+                  title="Optimize this single video now"
+                  aria-label="Optimize video"
+                >
+                  <Play size={9} className="fill-current" />
+                  <span className="hidden sm:inline">Optimize</span>
+                </button>
+              )}
 
-      {/* Actions */}
-      <div className="flex shrink-0 items-center gap-1">
-        {item.status === "processing" && (
-          <div className="flex items-center gap-1 text-[10px] text-utils-scent-orange font-mono mr-1">
-            <Loader2 size={12} className="animate-spin" />
-            <span>{item.progress}%</span>
-          </div>
-        )}
+            {onOpenEdit && (
+              <button
+                type="button"
+                disabled={isProcessing}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isProcessing) onOpenEdit();
+                }}
+                className={clsx(
+                  "border-border-color flex h-6 w-6 items-center justify-center rounded-xs border transition-all",
+                  item.trim || item.stripAudio !== undefined
+                    ? "border-border-color text-code-rust hover:bg-utils-scent-gray-01/30"
+                    : "text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground",
+                  isProcessing
+                    ? "cursor-not-allowed opacity-40"
+                    : "cursor-pointer",
+                )}
+                title="Edit Video & Audio (Trim, Mute, Waveform Studio)"
+                aria-label="Edit clip"
+              >
+                <Scissors size={11} />
+              </button>
+            )}
 
-        {/* Single Video Optimize Button */}
-        {onCompressSingle &&
-          (item.status === "idle" ||
-            itemSettingsChanged ||
-            item.status === "error" ||
-            (item.status === "done" && itemSettingsChanged)) && (
+            {item.status === "done" && onOpenCompare && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenCompare();
+                }}
+                className="border-border-color text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-6 w-6 cursor-pointer items-center justify-center rounded-xs border transition-all"
+                title="Compare Original vs Compressed"
+                aria-label="Compare video"
+              >
+                <Columns2 size={12} />
+              </button>
+            )}
+
+            {item.status === "done" && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDownload();
+                }}
+                className="border-border-color text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-6 w-6 cursor-pointer items-center justify-center rounded-xs border transition-all"
+                title="Download compressed video"
+                aria-label="Download video"
+              >
+                <Download size={12} />
+              </button>
+            )}
+
             <button
               type="button"
               disabled={isProcessing}
               onClick={(e) => {
                 e.stopPropagation();
-                if (!isProcessing) onCompressSingle();
+                if (!isProcessing) onDelete();
               }}
               className={clsx(
-                "border flex h-6 px-1.5 items-center gap-1 justify-center rounded-xs transition-all text-[10px] font-mono",
-                itemSettingsChanged
-                  ? "border-utils-scent-orange bg-utils-scent-orange text-white hover:opacity-90 shadow-xs"
-                  : "border-border-color bg-white hover:bg-utils-scent-orange hover:text-white text-foreground/80",
-                isProcessing ? "opacity-40 cursor-not-allowed" : "cursor-pointer",
+                "border-border-color text-foreground/50 flex h-6 w-6 items-center justify-center rounded-xs border transition-all",
+                isProcessing
+                  ? "cursor-not-allowed opacity-40"
+                  : "hover:bg-utils-scent-gray-01/30 hover:text-code-rust cursor-pointer",
               )}
-              title="Optimize this single video now"
-              aria-label="Optimize video"
+              title={
+                isProcessing
+                  ? "Disabled during compression"
+                  : "Remove from queue"
+              }
+              aria-label="Remove video"
             >
-              <Play size={9} className="fill-current" />
-              <span className="hidden sm:inline">Optimize</span>
+              <Trash2 size={12} />
             </button>
-          )}
-
-        {/* Edit Studio Button */}
-        {onOpenEdit && (
-          <button
-            type="button"
-            disabled={isProcessing}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!isProcessing) onOpenEdit();
-            }}
-            className={clsx(
-              "border-border-color flex h-6 w-6 items-center justify-center rounded-xs border transition-all",
-              item.trim || item.stripAudio !== undefined
-                ? "border-utils-scent-orange text-utils-scent-orange bg-[#ff9900]/5 hover:bg-[#ff9900]/15"
-                : "text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground",
-              isProcessing ? "opacity-40 cursor-not-allowed" : "cursor-pointer",
-            )}
-            title="Edit Video & Audio (Trim, Mute, Waveform Studio)"
-            aria-label="Edit clip"
-          >
-            <Scissors size={11} />
-          </button>
-        )}
-
-        {/* Compare Button */}
-        {item.status === "done" && onOpenCompare && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenCompare();
-            }}
-            className="border-border-color text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-6 w-6 cursor-pointer items-center justify-center rounded-xs border transition-all"
-            title="Compare Original vs Compressed"
-            aria-label="Compare video"
-          >
-            <Columns2 size={12} />
-          </button>
-        )}
-
-        {/* Download Button */}
-        {item.status === "done" && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDownload();
-            }}
-            className="border-border-color text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-6 w-6 cursor-pointer items-center justify-center rounded-xs border transition-all"
-            title="Download compressed video"
-            aria-label="Download video"
-          >
-            <Download size={12} />
-          </button>
-        )}
-
-        {/* Delete Button */}
-        <button
-          type="button"
-          disabled={isProcessing}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!isProcessing) onDelete();
-          }}
-          className={clsx(
-            "border-border-color text-foreground/50 flex h-6 w-6 items-center justify-center rounded-xs border transition-all",
-            isProcessing
-              ? "opacity-40 cursor-not-allowed"
-              : "cursor-pointer hover:bg-rose-500/10 hover:text-rose-500",
-          )}
-          title={isProcessing ? "Disabled during compression" : "Remove from queue"}
-          aria-label="Remove video"
-        >
-          <Trash2 size={12} />
-        </button>
+          </div>
+        </div>
       </div>
     </div>
   );

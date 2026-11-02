@@ -473,13 +473,13 @@ export default function Toolbar({
                 <button
                   type="button"
                   disabled={
-                    isProcessing || (settings.qualityPercent || 80) <= 50
+                    isProcessing || (settings.qualityPercent || 80) <= 10
                   }
                   onClick={() =>
                     onSettingsChange({
                       ...settings,
                       qualityPercent: Math.max(
-                        50,
+                        10,
                         (settings.qualityPercent || 80) - 5,
                       ),
                     })
@@ -492,7 +492,7 @@ export default function Toolbar({
 
                 <input
                   type="range"
-                  min="50"
+                  min="10"
                   max="100"
                   step="5"
                   disabled={isProcessing}
@@ -533,6 +533,7 @@ export default function Toolbar({
 
               <div className="flex flex-wrap items-center gap-1">
                 {[
+                  { label: "Low", val: 40 },
                   { label: "Draft", val: 60 },
                   { label: "Good", val: 75 },
                   { label: "Crisp", val: 85 },

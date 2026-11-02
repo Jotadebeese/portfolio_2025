@@ -644,12 +644,13 @@ export default function VideoOptimizer() {
         maxFiles={10}
       />
 
-      {/* Notice Alert */}
       {warningNotice && (
         <div className="bg-code-rust/10 text-foreground flex items-center justify-between gap-2 rounded-md p-2 text-xs transition-all">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="shrink-0 font-medium">Notice:</span>
-            <span className="text-foreground/70 truncate">{warningNotice}</span>
+            <span className="shrink-0">Notice:</span>
+            <span className="text-foreground/70 truncate sm:whitespace-normal">
+              {warningNotice}
+            </span>
           </div>
           <button
             onClick={() => setWarningNotice(null)}
@@ -669,36 +670,14 @@ export default function VideoOptimizer() {
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-          {/* Main Queue (Left) */}
           <div className="flex flex-col gap-2 lg:col-span-7">
             <div className="flex flex-col bg-white">
-              {/* Header Bar */}
-              <div className="border-utils-scent-gray-01/40 text-foreground/70 flex items-center justify-between border-b p-2 text-[11px] tracking-wider uppercase">
-                <div className="flex items-center gap-2">
-                  <span>Queued Videos ({items.length}/10)</span>
-                  <span className="text-foreground/40">&bull;</span>
-                  <span>{formatBytes(totalOriginalBytes)}</span>
-                </div>
-
-                {selectedIds.size > 0 && (
-                  <button
-                    type="button"
-                    disabled={isProcessing}
-                    onClick={handleDeleteSelected}
-                    className="flex cursor-pointer items-center gap-1 text-rose-600 transition-colors hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-40"
-                    title={
-                      isProcessing
-                        ? "Disabled during compression"
-                        : "Delete selected"
-                    }
-                  >
-                    <Trash2 size={12} />
-                    <span>Delete ({selectedIds.size})</span>
-                  </button>
-                )}
+              <div className="border-utils-scent-gray-01/40 text-foreground/70 flex items-center gap-2 border-b p-2 text-[11px] tracking-wider uppercase">
+                <span>Queued Videos ({items.length}/10)</span>
+                <span>&bull;</span>
+                <span>{formatBytes(totalOriginalBytes)}</span>
               </div>
 
-              {/* Items List */}
               <div className="flex max-h-[480px] flex-col overflow-y-auto">
                 {items.map((item) => (
                   <FileRow

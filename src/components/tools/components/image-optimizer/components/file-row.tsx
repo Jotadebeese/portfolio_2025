@@ -107,7 +107,7 @@ export default function FileRow({
                   style={{ width: `${Math.max(10, item.progress)}%` }}
                 />
               </div>
-              <span className="text-foreground/70 flex items-center gap-1 font-mono text-[10px]">
+              <span className="text-foreground flex items-center gap-1 font-mono text-[10px]">
                 <Loader className="h-2.5 w-2.5 animate-spin" />
                 {item.progress}%
               </span>
