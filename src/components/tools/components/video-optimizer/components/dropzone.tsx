@@ -44,7 +44,7 @@ export default function Dropzone({
           if (!disabled) fileInputRef.current?.click();
         }}
         className={clsx(
-          "border-border-color text-foreground/70 flex items-center justify-center gap-2 rounded-md border border-dashed px-4 py-3 text-xs transition-all select-none",
+          "border-border-color text-foreground/70 flex items-center justify-center gap-2 rounded-md border border-dashed px-4 py-3 text-xs transition-all",
           disabled
             ? "bg-background/20 text-foreground/40 cursor-not-allowed opacity-60"
             : isDraggingOver
