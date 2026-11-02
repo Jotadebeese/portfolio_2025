@@ -164,7 +164,17 @@ export function hasEffectiveTrim(
   trim?: { start: number; end: number },
   sections?: VideoSection[],
 ): boolean {
-  if (sections && sections.some((s) => s.isDeleted)) return true;
+  if (sections && sections.length > 0) {
+    if (sections.some((s) => s.isDeleted)) return true;
+    const kept = sections.filter((s) => !s.isDeleted && s.end > s.start);
+    if (kept.length > 1) return true;
+    if (
+      kept.length === 1 &&
+      (kept[0].start > 0.05 || kept[0].end < duration - 0.05)
+    ) {
+      return true;
+    }
+  }
   return normalizeTrim(duration, trim) !== undefined;
 }
 
@@ -176,11 +186,19 @@ export function getKeptRanges(
   trim?: { start: number; end: number },
   sections?: VideoSection[],
 ): { start: number; end: number }[] {
-  if (sections && sections.length > 0 && sections.some((s) => s.isDeleted)) {
+  if (sections && sections.length > 0) {
     const kept = sections
       .filter((s) => !s.isDeleted && s.end > s.start)
       .map((s) => ({ start: s.start, end: s.end }));
-    if (kept.length > 0) return kept;
+    if (
+      kept.length > 0 &&
+      (sections.some((s) => s.isDeleted) ||
+        kept.length > 1 ||
+        kept[0].start > 0.05 ||
+        kept[0].end < duration - 0.05)
+    ) {
+      return kept;
+    }
   }
   const normalized = normalizeTrim(duration, trim);
   if (normalized && normalized.end > normalized.start) {
@@ -253,11 +271,18 @@ export function getEffectiveVideoDuration(
   sections?: VideoSection[],
 ): number {
   if (durationSeconds <= 0) return 0;
-  if (sections && sections.length > 0 && sections.some((s) => s.isDeleted)) {
+  if (sections && sections.length > 0) {
     const kept = sections
       .filter((s) => !s.isDeleted && s.end > s.start)
       .reduce((acc, s) => acc + (s.end - s.start), 0);
-    return Math.max(0, Math.min(durationSeconds, kept));
+    if (
+      sections.some((s) => s.isDeleted) ||
+      sections.length > 1 ||
+      (sections[0] &&
+        (sections[0].start > 0.05 || sections[0].end < durationSeconds - 0.05))
+    ) {
+      return Math.max(0, Math.min(durationSeconds, kept));
+    }
   }
   const normalized = normalizeTrim(durationSeconds, trim);
   if (normalized && normalized.end > normalized.start) {

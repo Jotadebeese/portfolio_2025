@@ -21,6 +21,7 @@ import {
   calculateBitrateForTargetSize,
   getAdaptedPresetForTargetSize,
   getEffectiveVideoDuration,
+  getKeptRanges,
 } from "./format";
 
 export interface VideoCompressionResult {
@@ -249,15 +250,18 @@ export async function compressVideo(
   const duration = await input.computeDuration();
 
   // Determine kept ranges from multi-cut sections or legacy trim
-  const sections = settings.sections;
-  const keptRanges =
-    sections && sections.length > 0
-      ? sections.filter((s) => !s.isDeleted && s.end > s.start)
-      : settings.trim && settings.trim.end > settings.trim.start
-        ? [{ start: settings.trim.start, end: settings.trim.end }]
-        : [{ start: 0, end: duration }];
+  const keptRanges = getKeptRanges(duration, settings.trim, settings.sections);
 
-  const isMultiCut = keptRanges.length > 1;
+  // Video has active edits if multiple ranges exist or single range doesn't cover full duration
+  const hasActiveTrimOrCut =
+    keptRanges.length > 1 ||
+    (keptRanges.length === 1 &&
+      (keptRanges[0].start > 0.05 || keptRanges[0].end < duration - 0.05));
+
+  const trimStart = hasActiveTrimOrCut ? keptRanges[0].start : 0;
+  const trimEnd = hasActiveTrimOrCut
+    ? keptRanges[keptRanges.length - 1].end
+    : duration;
 
   const effectiveDuration = getEffectiveVideoDuration(
     duration,
@@ -298,8 +302,20 @@ export async function compressVideo(
   });
 
   let videoQuality: Quality;
-  let audioConfig: { discard?: boolean; quality?: Quality } | undefined =
-    settings.stripAudio ? { discard: true } : undefined;
+  let audioConfig: {
+    discard?: boolean;
+    quality?: Quality;
+    forceTranscode?: boolean;
+  } | undefined = settings.stripAudio ? { discard: true } : undefined;
+
+  // When cuts or trims are applied, force audio to transcode so that audio samples
+  // can be filtered and retimestamped in exact lockstep with video (preventing packet-copy desync)
+  if (!settings.stripAudio && hasActiveTrimOrCut) {
+    audioConfig = {
+      ...audioConfig,
+      forceTranscode: true,
+    };
+  }
 
   if (settings.mode === "quality") {
     videoQuality = new Quality({
@@ -317,7 +333,10 @@ export async function compressVideo(
     // Audio budget optimization for tight targets (<= 2 MB):
     // Use 64 kbps audio to preserve 200+ KB for video, ensuring transparent sound without file bloating
     if (!settings.stripAudio && targetMB <= 2) {
-      audioConfig = { quality: new Quality({ bitrate: 64_000 }) };
+      audioConfig = {
+        ...audioConfig,
+        quality: new Quality({ bitrate: 64_000 }),
+      };
     }
 
     videoQuality = new Quality({
@@ -331,6 +350,44 @@ export async function compressVideo(
     });
   }
 
+  /**
+   * Sample processor for frame/audio cutting and timestamp normalization.
+   *
+   * NOTE: When `trim.start` is passed to Mediabunny's `Conversion.init()`, Mediabunny
+   * fast-seeks to `trim.start` and shifts decoded samples by `-trimStart`.
+   * Therefore, inside this process callback:
+   *   sample.timestamp === originalSourceTime - trimStart
+   *   true originalSourceTime === sample.timestamp + trimStart
+   */
+  const createSampleProcessor = <T extends VideoSample | AudioSample>() => {
+    return (sample: T): T | null => {
+      const origTime = sample.timestamp + trimStart;
+
+      // Find which kept range this sample falls into
+      const currentRange = keptRanges.find(
+        (r) => origTime >= r.start - 0.005 && origTime < r.end + 0.005,
+      );
+      if (!currentRange) {
+        return null; // frame/audio in cut region or out of bounds is dropped!
+      }
+
+      // Calculate cumulative duration of all preceding kept ranges
+      let cumulative = 0;
+      for (const r of keptRanges) {
+        if (r === currentRange) break;
+        cumulative += r.end - r.start;
+      }
+
+      // Clamp origTime within currentRange bounds so timestamps remain monotonically sound
+      const boundedTime = Math.max(
+        currentRange.start,
+        Math.min(currentRange.end, origTime),
+      );
+      sample.setTimestamp(cumulative + (boundedTime - currentRange.start));
+      return sample;
+    };
+  };
+
   const conversion = await Conversion.init({
     input,
     output,
@@ -341,61 +398,25 @@ export async function compressVideo(
       codec: isMp4 ? "avc" : "vp9",
       quality: videoQuality,
       forceTranscode: true,
-      process: isMultiCut
-        ? (sample: VideoSample) => {
-            const t = sample.timestamp;
-            const currentRange = keptRanges.find(
-              (r) => t >= r.start && t < r.end,
-            );
-            if (!currentRange) {
-              return null; // frame in cut region is excised!
-            }
-            let cumulative = 0;
-            for (const r of keptRanges) {
-              if (r === currentRange) break;
-              cumulative += r.end - r.start;
-            }
-            sample.setTimestamp(cumulative + (t - currentRange.start));
-            return sample;
-          }
+      process: hasActiveTrimOrCut
+        ? createSampleProcessor<VideoSample>()
         : undefined,
     },
     audio:
       audioConfig && !audioConfig.discard
         ? {
             ...audioConfig,
-            process: isMultiCut
-              ? (sample: AudioSample) => {
-                  const t = sample.timestamp;
-                  const currentRange = keptRanges.find(
-                    (r) => t >= r.start && t < r.end,
-                  );
-                  if (!currentRange) {
-                    return null; // audio in cut region is excised!
-                  }
-                  let cumulative = 0;
-                  for (const r of keptRanges) {
-                    if (r === currentRange) break;
-                    cumulative += r.end - r.start;
-                  }
-                  sample.setTimestamp(cumulative + (t - currentRange.start));
-                  return sample;
-                }
+            process: hasActiveTrimOrCut
+              ? createSampleProcessor<AudioSample>()
               : undefined,
           }
         : audioConfig,
-    trim: isMultiCut
+    trim: hasActiveTrimOrCut
       ? {
-          start: keptRanges[0].start,
-          end: keptRanges[keptRanges.length - 1].end,
+          start: trimStart,
+          end: trimEnd,
         }
-      : keptRanges.length === 1 &&
-          (keptRanges[0].start > 0 || keptRanges[0].end < duration)
-        ? {
-            start: keptRanges[0].start,
-            end: keptRanges[0].end,
-          }
-        : undefined,
+      : undefined,
   });
 
   conversion.onProgress = (pct) => {
