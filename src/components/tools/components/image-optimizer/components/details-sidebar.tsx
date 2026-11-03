@@ -76,9 +76,14 @@ export default function DetailsSidebar({
 
       <div className="border-border-color flex items-start justify-between gap-2 border-b border-dashed pb-2.5">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1">
-            <FileCheck strokeWidth={1.5} className="h-3.5 w-3.5 shrink-0" />
-            <h4 title={targetName}>{targetName}</h4>
+          <div className="flex min-w-0 items-center gap-1">
+            <FileCheck
+              strokeWidth={1.5}
+              className="text-foreground/70 h-3.5 w-3.5 shrink-0"
+            />
+            <h4 title={targetName} className="truncate">
+              {targetName}
+            </h4>
           </div>
           <span className="text-foreground/70 block truncate text-[10px]">
             Original: {item.name}
@@ -207,26 +212,22 @@ export default function DetailsSidebar({
           <Columns2 className="h-3.5 w-3.5" />
           <span>Compare</span>
         </button>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onDownload}
-            disabled={item.status !== "done"}
-            className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:opacity-50"
-          >
-            <Download className="h-3.5 w-3.5" />
-            <span>Download</span>
-          </button>
-
-          <button
-            onClick={onDelete}
-            className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-white transition-all"
-            title="Delete from list"
-            aria-label="Delete image"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        <button
+          onClick={onDownload}
+          disabled={item.status !== "done"}
+          className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:opacity-50"
+        >
+          <Download className="h-3.5 w-3.5" />
+          <span>Download</span>
+        </button>
+        <button
+          onClick={onDelete}
+          className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-white transition-all"
+          title="Delete from list"
+          aria-label="Delete image"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
       </div>
     </div>
   );

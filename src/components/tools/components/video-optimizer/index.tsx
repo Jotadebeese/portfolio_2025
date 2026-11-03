@@ -3,38 +3,20 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import JSZip from "jszip";
 import { VideoFileItem, VideoOptimizerSettings, VideoSection } from "./types";
-import {
-  getVideoMetadata,
-  compressVideo,
-  calculateTargetVideoDimensions,
-} from "./utils/compress-video";
+import { getVideoMetadata, compressVideo } from "./utils/compress-video";
 import {
   formatBytes,
-  formatDuration,
-  calculateSavings,
   estimateVideoSize,
-  getVideoOrientation,
   getVideoFilenameWithExtension,
   hasSettingsChanged,
-  getAdaptedPresetForTargetSize,
-  getEffectiveVideoDuration,
-  hasEffectiveTrim,
 } from "./utils/format";
 import Dropzone from "./components/dropzone";
 import FileRow from "./components/file-row";
 import Toolbar from "./components/toolbar";
 import CompareModal from "./components/compare-modal";
 import EditModal from "./components/edit-modal";
-import {
-  Film,
-  Trash2,
-  X,
-  Volume2,
-  VolumeX,
-  Download,
-  Columns2,
-  Scissors,
-} from "lucide-react";
+import DetailsSidebar from "./components/details-sidebar";
+import { X } from "lucide-react";
 
 const DEFAULT_SETTINGS: VideoOptimizerSettings = {
   format: "video/mp4",
@@ -521,98 +503,6 @@ export default function VideoOptimizer() {
       ),
   );
 
-  const activeOrientation = activeItem
-    ? getVideoOrientation(
-        activeItem.originalDimensions.width,
-        activeItem.originalDimensions.height,
-      )
-    : null;
-
-  const activeEffectiveDuration = activeItem
-    ? getEffectiveVideoDuration(
-        activeItem.duration,
-        activeItem.trim,
-        activeItem.sections,
-      )
-    : 0;
-
-  const activeItemIsTrimmed = activeItem
-    ? hasEffectiveTrim(
-        activeItem.duration,
-        activeItem.trim,
-        activeItem.sections,
-      )
-    : false;
-
-  const activeEffectiveStripAudio = activeItem
-    ? activeItem.stripAudio !== undefined
-      ? activeItem.stripAudio
-      : Boolean(settings.stripAudio)
-    : Boolean(settings.stripAudio);
-
-  const activeEffectivePreset =
-    activeItem && settings.mode === "target-size"
-      ? getAdaptedPresetForTargetSize(
-          settings.targetSizeMB ?? 8,
-          activeEffectiveDuration,
-          activeEffectiveStripAudio,
-          settings.resizePreset,
-          settings.format,
-        )
-      : settings.resizePreset;
-
-  const activeTargetDims =
-    activeItem && activeItem.originalDimensions.width > 0
-      ? calculateTargetVideoDimensions(
-          activeItem.originalDimensions.width,
-          activeItem.originalDimensions.height,
-          activeEffectivePreset,
-          settings.customMaxDimension,
-        )
-      : null;
-
-  const activeEffectiveSettings = activeItem
-    ? {
-        ...settings,
-        stripAudio: activeEffectiveStripAudio,
-        sections: activeItem.sections,
-      }
-    : settings;
-
-  const activeEstimatedBytes = activeItem
-    ? estimateVideoSize(
-        activeItem.duration,
-        activeEffectiveSettings,
-        activeItem.trim,
-        activeItem.originalDimensions.width,
-        activeItem.originalDimensions.height,
-        activeItem.originalSize,
-        activeItem.sections,
-      )
-    : 0;
-
-  const activeItemHasChanged =
-    activeItem && activeItem.status === "done"
-      ? hasSettingsChanged(
-          settings,
-          activeItem.lastCompressedSettings,
-          activeItem.trim,
-          activeItem.stripAudio,
-          activeItem.sections,
-          activeItem.duration,
-        )
-      : false;
-
-  const activeEstimatedSavings =
-    activeItem && activeEstimatedBytes > 0
-      ? calculateSavings(activeItem.originalSize, activeEstimatedBytes)
-      : null;
-
-  const activeRealSavings =
-    activeItem && activeItem.compressedSize !== undefined
-      ? calculateSavings(activeItem.originalSize, activeItem.compressedSize)
-      : null;
-
   return (
     <div
       onDragEnter={handleDragEnter}
@@ -703,7 +593,6 @@ export default function VideoOptimizer() {
               </div>
             </div>
 
-            {/* Compact Dropzone for adding more clips */}
             {items.length < 10 && (
               <Dropzone
                 compact
@@ -715,297 +604,15 @@ export default function VideoOptimizer() {
             )}
           </div>
 
-          {/* Inspector / Preview Pane (Right) */}
-          <div className="flex flex-col gap-3 lg:col-span-5">
-            <div className="border-border-color/40 flex flex-col gap-3 border bg-white p-3">
-              <div className="border-utils-scent-gray-01/40 text-foreground/70 flex items-center justify-between border-b pb-2 text-[11px] tracking-wider uppercase">
-                <span>Clip Inspector</span>
-                {activeOrientation && (
-                  <span className="text-foreground/70 font-mono text-[10px]">
-                    {activeOrientation.label} ({activeOrientation.ratio})
-                  </span>
-                )}
-              </div>
-
-              {activeItem && activeOrientation ? (
-                <div className="flex flex-col gap-3">
-                  {/* Aspect-Ratio-Preserving Preview Container */}
-                  <div className="border-border-color relative flex max-h-[300px] min-h-[200px] w-full items-center justify-center overflow-hidden rounded border bg-black/95 p-1.5">
-                    {activeItem.compressedUrl ? (
-                      <video
-                        src={activeItem.compressedUrl}
-                        controls
-                        playsInline
-                        className="max-h-[285px] w-auto max-w-full rounded object-contain"
-                      />
-                    ) : activeItem.thumbnailUrl ? (
-                      <img
-                        src={activeItem.thumbnailUrl}
-                        alt={activeItem.name}
-                        className="max-h-[285px] w-auto max-w-full rounded object-contain"
-                      />
-                    ) : (
-                      <Film className="h-8 w-8 text-white/30" />
-                    )}
-
-                    {/* Orientation Badge Overlaid */}
-                    <span className="absolute top-2 left-2 rounded border border-white/20 bg-black/80 px-2 py-0.5 font-mono text-[10px] text-white/90 backdrop-blur-xs">
-                      {activeOrientation.label} &bull; {activeOrientation.ratio}
-                    </span>
-
-                    {/* Duration Badge Overlaid */}
-                    {!activeItem.compressedUrl && activeItem.duration > 0 && (
-                      <span className="absolute right-2 bottom-2 rounded bg-black/80 px-1.5 py-0.5 font-mono text-[10px] text-white backdrop-blur-xs">
-                        {formatDuration(activeEffectiveDuration)}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Comprehensive Specs Grid: Native -> Proposed/Target -> Final */}
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {/* Resolution Card */}
-                    <div className="bg-foreground/5 flex flex-col justify-between rounded p-2">
-                      <span className="text-foreground/60 block text-[10px] tracking-wider uppercase">
-                        Resolution
-                      </span>
-                      <div className="mt-1">
-                        <span className="text-foreground block text-xs font-medium">
-                          {activeItem.originalDimensions.width > 0
-                            ? `${activeItem.originalDimensions.width} × ${activeItem.originalDimensions.height}`
-                            : "Probing..."}
-                        </span>
-
-                        {activeItem.status === "done" &&
-                        activeItem.compressedDimensions ? (
-                          <div className="flex flex-col gap-0.5">
-                            <span className="block font-mono text-[10px] font-medium text-emerald-600">
-                              &rarr; {activeItem.compressedDimensions.width}{" "}
-                              &times; {activeItem.compressedDimensions.height}{" "}
-                              (Done)
-                            </span>
-                            {activeTargetDims &&
-                              (activeTargetDims.width !==
-                                activeItem.compressedDimensions.width ||
-                                activeTargetDims.height !==
-                                  activeItem.compressedDimensions.height) && (
-                                <span className="text-utils-scent-orange block font-mono text-[9px]">
-                                  New Target: {activeTargetDims.width} &times;{" "}
-                                  {activeTargetDims.height}
-                                  {activeEffectivePreset !==
-                                  settings.resizePreset
-                                    ? ` (Auto-adapted to ${activeEffectivePreset})`
-                                    : ` (${settings.resizePreset})`}
-                                </span>
-                              )}
-                          </div>
-                        ) : activeTargetDims ? (
-                          <span className="text-foreground/60 block font-mono text-[10px]">
-                            &rarr; {activeTargetDims.width} &times;{" "}
-                            {activeTargetDims.height}
-                            {activeEffectivePreset !== settings.resizePreset
-                              ? ` (Auto-adapted to ${activeEffectivePreset})`
-                              : ` (${settings.resizePreset})`}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    {/* File Size Card (Original -> Estimated -> Real) */}
-                    <div className="bg-foreground/5 flex flex-col justify-between rounded p-2">
-                      <span className="text-foreground/60 block text-[10px] tracking-wider uppercase">
-                        File Size
-                      </span>
-                      <div className="mt-1">
-                        <span className="text-foreground block text-xs font-medium">
-                          {formatBytes(activeItem.originalSize)}
-                        </span>
-
-                        {activeItem.status === "done" &&
-                        activeItem.compressedSize !== undefined ? (
-                          <div className="flex flex-col gap-0.5">
-                            <span className="block font-mono text-[10px] font-semibold text-emerald-600">
-                              &rarr; {formatBytes(activeItem.compressedSize)} (
-                              {activeRealSavings?.isReduced
-                                ? `-${activeRealSavings.percentSaved}%`
-                                : `+${Math.abs(activeRealSavings?.percentSaved || 0)}%`}
-                              )
-                            </span>
-                            {activeItemHasChanged && activeEstimatedSavings && (
-                              <span className="text-utils-scent-orange block font-mono text-[10px] font-medium">
-                                New Est: ~{formatBytes(activeEstimatedBytes)} (
-                                {activeEstimatedSavings.isReduced
-                                  ? `-${activeEstimatedSavings.percentSaved}%`
-                                  : `+${Math.abs(activeEstimatedSavings.percentSaved)}%`}
-                                )
-                              </span>
-                            )}
-                          </div>
-                        ) : activeEstimatedSavings ? (
-                          <span className="text-utils-scent-orange block font-mono text-[10px]">
-                            &rarr; ~{formatBytes(activeEstimatedBytes)} (Est. -
-                            {activeEstimatedSavings.percentSaved}%)
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    {/* Duration Card (Native -> Trimmed) */}
-                    <div className="bg-foreground/5 flex flex-col justify-between rounded p-2">
-                      <span className="text-foreground/60 block text-[10px] tracking-wider uppercase">
-                        Duration
-                      </span>
-                      <div className="mt-1">
-                        <span className="text-foreground block text-xs font-medium">
-                          {activeItem.duration > 0
-                            ? `${formatDuration(activeItem.duration)} (${activeItem.duration.toFixed(1)}s)`
-                            : "Probing..."}
-                        </span>
-
-                        {activeItemIsTrimmed && (
-                          <span className="text-utils-scent-orange block font-mono text-[10px]">
-                            &rarr; {formatDuration(activeEffectiveDuration)} (
-                            {activeEffectiveDuration.toFixed(1)}s trimmed)
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Audio Track Card */}
-                    <div className="bg-foreground/5 flex flex-col justify-between rounded p-2">
-                      <span className="text-foreground/60 block text-[10px] tracking-wider uppercase">
-                        Audio Track
-                      </span>
-                      <div className="mt-1">
-                        <span className="text-foreground flex items-center gap-1 text-xs font-medium">
-                          {activeItem.hasAudio ? (
-                            <>
-                              <Volume2 size={12} className="text-emerald-500" />
-                              <span>Present</span>
-                            </>
-                          ) : (
-                            <>
-                              <VolumeX
-                                size={12}
-                                className="text-foreground/40"
-                              />
-                              <span>Muted</span>
-                            </>
-                          )}
-                        </span>
-
-                        <span className="text-foreground/60 block font-mono text-[10px]">
-                          &rarr;{" "}
-                          {(
-                            activeItem.stripAudio !== undefined
-                              ? activeItem.stripAudio
-                              : settings.stripAudio
-                          )
-                            ? "Strip (Muted Loop)"
-                            : "Preserve Audio"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Edit Studio & Waveform Action Card */}
-                  <div className="border-border-color/60 bg-foreground/5 flex flex-col gap-2 rounded border p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-foreground/60 text-[10px] font-semibold tracking-wider uppercase">
-                          Edit Studio & Waveform
-                        </span>
-                        <span className="text-foreground mt-0.5 flex items-center gap-1.5 text-xs font-medium">
-                          {activeItem.sections &&
-                          activeItem.sections.some((s) => s.isDeleted) ? (
-                            <span className="text-utils-scent-orange font-mono">
-                              {
-                                activeItem.sections.filter((s) => s.isDeleted)
-                                  .length
-                              }{" "}
-                              cuts ({formatDuration(activeEffectiveDuration)}{" "}
-                              kept)
-                            </span>
-                          ) : activeItemIsTrimmed && activeItem.trim ? (
-                            <span className="text-utils-scent-orange font-mono">
-                              Trim: {formatDuration(activeItem.trim.start)}{" "}
-                              &rarr; {formatDuration(activeItem.trim.end)}
-                            </span>
-                          ) : (
-                            <span className="text-foreground/70">
-                              Full clip ({formatDuration(activeItem.duration)})
-                            </span>
-                          )}
-                          <span className="text-foreground/30">&bull;</span>
-                          <span className="text-foreground/70 font-mono">
-                            {(
-                              activeItem.stripAudio !== undefined
-                                ? activeItem.stripAudio
-                                : settings.stripAudio
-                            )
-                              ? "Audio Stripped"
-                              : "Audio Kept"}
-                          </span>
-                        </span>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => setEditingItem(activeItem)}
-                        className="bg-foreground text-background hover:bg-utils-scent-orange flex cursor-pointer items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium shadow-xs transition-colors hover:text-white"
-                      >
-                        <Scissors size={13} />
-                        <span>Open Studio</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Compressed Summary & Compare Button if Done */}
-                  {activeItem.status === "done" &&
-                    activeItem.compressedSize !== undefined && (
-                      <div className="flex flex-col gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2.5">
-                        <div className="flex items-center justify-between">
-                          <div className="flex flex-col">
-                            <span className="text-[10px] font-semibold tracking-wider text-emerald-600 uppercase">
-                              Final Output
-                            </span>
-                            <span className="text-foreground text-xs font-medium">
-                              {formatBytes(activeItem.compressedSize)} &bull;{" "}
-                              {activeItem.compressedDimensions?.width} &times;{" "}
-                              {activeItem.compressedDimensions?.height}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => setComparingItem(activeItem)}
-                              className="border-border-color hover:bg-utils-scent-gray-01/30 text-foreground flex cursor-pointer items-center gap-1 rounded border bg-white px-2 py-1 text-xs font-medium transition-colors"
-                              title="Compare original vs compressed video side-by-side"
-                            >
-                              <Columns2 size={12} />
-                              <span className="hidden sm:inline">Compare</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => handleDownloadSingle(activeItem)}
-                              className="flex cursor-pointer items-center gap-1 rounded bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-emerald-700"
-                              title="Download compressed video"
-                            >
-                              <Download size={12} />
-                              <span>Download</span>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                </div>
-              ) : (
-                <div className="text-foreground/50 py-12 text-center text-xs">
-                  Select a video from the queue to inspect details
-                </div>
-              )}
-            </div>
+          <div className="lg:col-span-5">
+            <DetailsSidebar
+              item={activeItem}
+              settings={settings}
+              onDownload={() => activeItem && handleDownloadSingle(activeItem)}
+              onDelete={() => activeItem && handleDeleteItem(activeItem.id)}
+              onOpenCompare={() => activeItem && setComparingItem(activeItem)}
+              onOpenEdit={() => activeItem && setEditingItem(activeItem)}
+            />
           </div>
         </div>
       )}
