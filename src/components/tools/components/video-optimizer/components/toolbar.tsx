@@ -197,7 +197,7 @@ export default function Toolbar({
             "pointer-events-none cursor-not-allowed opacity-50 select-none",
         )}
       >
-        <div className="flex flex-1 flex-col justify-center gap-2">
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
           <div className="flex items-center gap-2">
             <span className="text-foreground shrink-0">Format:</span>
             <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
@@ -259,12 +259,12 @@ export default function Toolbar({
             </button>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="flex min-w-96 items-center gap-2">
+          <div className="flex min-w-0 flex-col gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <span className="text-foreground shrink-0">Size:</span>
 
               {isCustom ? (
-                <div className="flex shrink-0 items-center gap-1.5">
+                <div className="flex max-w-full shrink-0 items-center gap-1.5 overflow-x-auto">
                   <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
                     <button
                       type="button"
@@ -373,7 +373,7 @@ export default function Toolbar({
                   </button>
                 </div>
               ) : (
-                <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
+                <div className="border-border-color flex max-w-full items-center overflow-x-auto rounded-md border bg-white p-0.5">
                   {RESIZE_PRESETS.map((p) => (
                     <button
                       key={p.value}
@@ -392,7 +392,7 @@ export default function Toolbar({
                       className={clsx(
                         "shrink-0 cursor-pointer rounded px-2.5 py-0.5 text-xs whitespace-nowrap transition-all",
                         settings.resizePreset === p.value
-                          ? "bg-foreground text-background"
+                          ? "bg-foreground text-background font-medium"
                           : "text-foreground/70 hover:text-foreground",
                       )}
                     >
