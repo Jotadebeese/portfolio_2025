@@ -101,51 +101,6 @@ export default function CompareModal({
     if (origVideoRef.current) origVideoRef.current.currentTime = startOrig;
   }, [isOpen, item.id, isTrimmedOrCut, keptRanges]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === " ") {
-        e.preventDefault();
-        togglePlayPause();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [isOpen, onClose]);
-
-  const handleOrigLoadedMetadata = () => {
-    if (origVideoRef.current && origVideoRef.current.duration > 0) {
-      setOrigDuration(origVideoRef.current.duration);
-      if (origCurrentTime > 0) {
-        origVideoRef.current.currentTime = origCurrentTime;
-      }
-      if (isPlaying) {
-        origVideoRef.current.play().catch(() => {});
-      }
-    }
-  };
-
-  const handleCompLoadedMetadata = () => {
-    if (compVideoRef.current && compVideoRef.current.duration > 0) {
-      setCompDuration(compVideoRef.current.duration);
-      if (compCurrentTime > 0) {
-        compVideoRef.current.currentTime = compCurrentTime;
-      }
-      if (isPlaying) {
-        compVideoRef.current.play().catch(() => {});
-      }
-    }
-  };
-
   const isCutSync = isTrimmedOrCut && syncMode === "cut-range";
   const masterDuration = isCutSync ? compDuration : origDuration || 1;
   const masterCurrentTime = isCutSync ? compCurrentTime : origCurrentTime;
@@ -155,7 +110,7 @@ export default function CompareModal({
     [origCurrentTime, keptRanges],
   );
 
-  const togglePlayPause = () => {
+  const togglePlayPause = useCallback(() => {
     const v1 = origVideoRef.current;
     const v2 = compVideoRef.current;
     if (!v1 || !v2) return;
@@ -184,6 +139,58 @@ export default function CompareModal({
         }
       }
       setIsPlaying(true);
+    }
+  }, [isPlaying, isCutSync, keptRanges]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === " ") {
+        e.preventDefault();
+        togglePlayPause();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose, togglePlayPause]);
+
+  const handleOrigLoadedMetadata = () => {
+    if (origVideoRef.current && origVideoRef.current.duration > 0) {
+      setOrigDuration(origVideoRef.current.duration);
+      if (origCurrentTime > 0) {
+        origVideoRef.current.currentTime = origCurrentTime;
+      }
+      if (isPlaying) {
+        origVideoRef.current.play().catch(() => {});
+      }
+    }
+  };
+
+  const handleCompLoadedMetadata = () => {
+    if (compVideoRef.current && compVideoRef.current.duration > 0) {
+      setCompDuration(compVideoRef.current.duration);
+      if (compCurrentTime > 0) {
+        compVideoRef.current.currentTime = compCurrentTime;
+      }
+      if (isPlaying) {
+        compVideoRef.current.play().catch(() => {});
+      }
     }
   };
 

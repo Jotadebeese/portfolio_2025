@@ -119,7 +119,7 @@ export default function EditModal({
   const [isDraggingPlayhead, setIsDraggingPlayhead] = useState<boolean>(false);
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [draggingBoundary, setDraggingBoundary] = useState<{
-    sectionIndex: number;
+    sectionId: string;
     boundary: "start" | "end";
   } | null>(null);
 
@@ -468,59 +468,125 @@ export default function EditModal({
       }
     } else if (draggingBoundary) {
       const newT = Number(getTimeFromX(e.clientX).toFixed(2));
-      const idx = draggingBoundary.sectionIndex;
+      const idx = sections.findIndex((s) => s.id === draggingBoundary.sectionId);
+      if (idx === -1) return;
       const sec = sections[idx];
-      const prevSec = sections[idx - 1];
-      const nextSec = sections[idx + 1];
+      const minSectionDuration = Math.max(
+        0.5,
+        Math.min(duration * 0.25, Number((duration * 0.03).toFixed(2))),
+      );
 
-      if (draggingBoundary.boundary === "start") {
-        const minBound = idx > 0 ? sections[idx - 1].start + 0.15 : 0;
-        const maxBound = sec.end - 0.2;
-        const clamped = Math.max(minBound, Math.min(newT, maxBound));
+      // If handles are close together at a timeline wall, auto-switch boundary to match drag direction
+      let activeBoundary = draggingBoundary.boundary;
+      if (
+        activeBoundary === "end" &&
+        sec.end >= duration - 0.05 &&
+        newT < sec.start
+      ) {
+        activeBoundary = "start";
+        setDraggingBoundary({ sectionId: sec.id, boundary: "start" });
+      } else if (
+        activeBoundary === "start" &&
+        sec.start <= 0.05 &&
+        newT > sec.end
+      ) {
+        activeBoundary = "end";
+        setDraggingBoundary({ sectionId: sec.id, boundary: "end" });
+      }
+
+      if (activeBoundary === "start") {
+        const isLeadingCut = idx === 1 && Boolean(sections[0]?.isDeleted);
+        const minBound =
+          idx === 0 || isLeadingCut ? 0 : sections[idx - 1].start + 0.15;
+        const maxBound = Math.max(minBound, sec.end - minSectionDuration);
+        const rawClamped = Math.max(minBound, Math.min(newT, maxBound));
+        const clamped =
+          (idx === 0 || isLeadingCut) && rawClamped <= 0.05 ? 0 : rawClamped;
 
         setSections((prev) => {
+          const curIdx = prev.findIndex(
+            (s) => s.id === draggingBoundary.sectionId,
+          );
+          if (curIdx === -1) return prev;
           const updated = [...prev];
-          if (idx > 0 && updated[idx - 1].isDeleted) {
-            updated[idx - 1] = { ...updated[idx - 1], end: clamped };
-          } else if (idx > 0 && !updated[idx - 1].isDeleted) {
-            updated[idx - 1] = { ...updated[idx - 1], end: clamped };
-          } else if (idx === 0 && clamped > 0.15) {
+
+          if (curIdx === 1 && updated[0]?.isDeleted && clamped === 0) {
+            updated.shift();
+            updated[0] = { ...updated[0], start: 0 };
+            return updated;
+          }
+
+          if (curIdx === 0 && clamped > 0) {
+            updated[0] = { ...updated[0], start: clamped };
             updated.unshift({
-              id: `cut-pre-${Date.now()}`,
+              id: "sec-pre-cut",
               start: 0,
               end: clamped,
               isDeleted: true,
             });
-            setDraggingBoundary({ sectionIndex: 1, boundary: "start" });
             return updated;
           }
-          updated[idx] = { ...updated[idx], start: clamped };
+
+          if (curIdx > 0) {
+            updated[curIdx - 1] = { ...updated[curIdx - 1], end: clamped };
+          }
+          updated[curIdx] = { ...updated[curIdx], start: clamped };
           return updated;
         });
+
         if (videoRef.current) videoRef.current.currentTime = clamped;
         setCurrentTime(clamped);
-      } else if (draggingBoundary.boundary === "end") {
-        const minBound = sec.start + 0.2;
-        const maxBound = idx < sections.length - 1 ? sections[idx + 1].end : duration;
-        const clamped = Math.max(minBound, Math.min(newT, maxBound));
+      } else if (activeBoundary === "end") {
+        const isTrailingCut =
+          idx === sections.length - 2 &&
+          Boolean(sections[sections.length - 1]?.isDeleted);
+        const maxBound =
+          idx === sections.length - 1 || isTrailingCut
+            ? duration
+            : sections[idx + 1].end - 0.15;
+        const minBound = Math.min(maxBound, sec.start + minSectionDuration);
+        const rawClamped = Math.max(minBound, Math.min(newT, maxBound));
+        const clamped =
+          (idx === sections.length - 1 || isTrailingCut) &&
+          rawClamped >= duration - 0.05
+            ? duration
+            : rawClamped;
 
         setSections((prev) => {
+          const curIdx = prev.findIndex(
+            (s) => s.id === draggingBoundary.sectionId,
+          );
+          if (curIdx === -1) return prev;
           const updated = [...prev];
-          if (idx < updated.length - 1 && updated[idx + 1].isDeleted) {
-            updated[idx + 1] = { ...updated[idx + 1], start: clamped };
-          } else if (idx < updated.length - 1 && !updated[idx + 1].isDeleted) {
-            updated[idx + 1] = { ...updated[idx + 1], start: clamped };
-          } else if (idx === updated.length - 1 && clamped < duration - 0.15) {
+
+          if (
+            curIdx === updated.length - 2 &&
+            updated[updated.length - 1]?.isDeleted &&
+            clamped === duration
+          ) {
+            updated.pop();
+            updated[curIdx] = { ...updated[curIdx], end: duration };
+            return updated;
+          }
+
+          if (curIdx === updated.length - 1 && clamped < duration) {
+            updated[curIdx] = { ...updated[curIdx], end: clamped };
             updated.push({
-              id: `cut-post-${Date.now()}`,
+              id: "sec-post-cut",
               start: clamped,
               end: duration,
               isDeleted: true,
             });
+            return updated;
           }
-          updated[idx] = { ...updated[idx], end: clamped };
+
+          if (curIdx < updated.length - 1) {
+            updated[curIdx + 1] = { ...updated[curIdx + 1], start: clamped };
+          }
+          updated[curIdx] = { ...updated[curIdx], end: clamped };
           return updated;
         });
+
         if (videoRef.current) videoRef.current.currentTime = clamped;
         setCurrentTime(clamped);
       }
@@ -528,10 +594,12 @@ export default function EditModal({
   };
 
   const handleTrackPointerUp = (e: React.PointerEvent) => {
-    if (isDraggingPlayhead) {
+    if (isDraggingPlayhead || draggingBoundary) {
       try {
         e.currentTarget.releasePointerCapture(e.pointerId);
       } catch {}
+    }
+    if (isDraggingPlayhead) {
       setIsDraggingPlayhead(false);
     }
     if (draggingBoundary) {
@@ -576,9 +644,24 @@ export default function EditModal({
 
   // Toggle delete / kept on a section
   const handleToggleDeleteSection = (sectionId: string) => {
-    setSections((prev) =>
-      prev.map((s) => (s.id === sectionId ? { ...s, isDeleted: !s.isDeleted } : s)),
-    );
+    setSections((prev) => {
+      const target = prev.find((s) => s.id === sectionId);
+      if (!target) return prev;
+
+      // Prevent deleting the last remaining kept section
+      if (!target.isDeleted) {
+        const currentKeptCount = prev.filter(
+          (s) => !s.isDeleted && s.end > s.start,
+        ).length;
+        if (currentKeptCount <= 1) {
+          return prev;
+        }
+      }
+
+      return prev.map((s) =>
+        s.id === sectionId ? { ...s, isDeleted: !s.isDeleted } : s,
+      );
+    });
   };
 
   // Merge section with adjacent
@@ -587,11 +670,26 @@ export default function EditModal({
     const current = sections[index];
     const next = sections[index + 1];
 
+    // If only 2 sections exist, merging them restores a single kept section;
+    // otherwise preserve the selected section's kept state (defaulting to kept if either is kept).
+    const willBeSingleSection = sections.length === 2;
+    const keptCountAfterMerge =
+      sections.filter(
+        (s, i) => i !== index && i !== index + 1 && !s.isDeleted,
+      ).length;
+
+    const selectedIsDeleted =
+      selectedSectionId === next.id ? next.isDeleted : current.isDeleted;
+    const mergedIsDeleted =
+      willBeSingleSection || keptCountAfterMerge === 0
+        ? false
+        : Boolean(selectedIsDeleted);
+
     const merged: VideoSection = {
       id: `sec-${Date.now()}`,
       start: current.start,
       end: next.end,
-      isDeleted: current.isDeleted,
+      isDeleted: mergedIsDeleted,
     };
 
     const nextSections = [
@@ -947,9 +1045,19 @@ export default function EditModal({
             {selectedSection && !selectedSection.isDeleted && (
               <button
                 type="button"
+                disabled={keptSections.length <= 1}
                 onClick={() => handleToggleDeleteSection(selectedSection.id)}
-                className="border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium px-2.5 py-1.5 rounded-md text-xs cursor-pointer flex items-center gap-1 transition-colors"
-                title="Cut / delete selected section (Shortcut: Delete/Backspace)"
+                className={clsx(
+                  "border border-rose-200 bg-rose-50 text-rose-700 font-medium px-2.5 py-1.5 rounded-md text-xs flex items-center gap-1 transition-colors",
+                  keptSections.length <= 1
+                    ? "opacity-40 cursor-not-allowed"
+                    : "hover:bg-rose-100 cursor-pointer",
+                )}
+                title={
+                  keptSections.length <= 1
+                    ? "Split the clip first [S] to delete a section — at least one section must remain"
+                    : "Cut / delete selected section (Shortcut: Delete/Backspace)"
+                }
               >
                 <Trash2 size={12} />
                 <span>Delete selection</span>
@@ -1025,6 +1133,7 @@ export default function EditModal({
             }}
             onPointerLeave={() => setHoverTime(null)}
             onPointerUp={handleTrackPointerUp}
+            onPointerCancel={handleTrackPointerUp}
             className="relative w-full cursor-pointer select-none rounded-xl border border-neutral-200/90 bg-white shadow-xs overflow-hidden"
           >
             {/* Top Time Ruler with Loom-style tick marks */}
@@ -1116,7 +1225,8 @@ export default function EditModal({
                       setSelectedSectionId(sec.id);
                     }}
                     className={clsx(
-                      "absolute top-1 bottom-1 rounded-2xl transition-all z-20 cursor-pointer pointer-events-auto",
+                      "absolute top-1 bottom-1 rounded-2xl z-20 cursor-pointer pointer-events-auto",
+                      !draggingBoundary && "transition-all",
                       isSelected
                         ? "border-2 border-utils-scent-orange bg-utils-scent-orange/5 shadow-xs"
                         : "border-2 border-utils-scent-orange/60 hover:border-utils-scent-orange bg-transparent",
@@ -1130,13 +1240,20 @@ export default function EditModal({
                     {isSelected && (
                       <div
                         onPointerDown={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
+                          try {
+                            trackRef.current?.setPointerCapture(e.pointerId);
+                          } catch {}
                           setDraggingBoundary({
-                            sectionIndex: idx,
+                            sectionId: sec.id,
                             boundary: "start",
                           });
                         }}
-                        className="group absolute -left-2 top-1/2 -translate-y-1/2 h-8 w-3.5 rounded-l-md rounded-r-xs bg-utils-scent-orange cursor-ew-resize pointer-events-auto z-30 flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-transform"
+                        className={clsx(
+                          "group absolute -left-2 top-1/2 -translate-y-1/2 h-8 w-3.5 rounded-l-md rounded-r-xs bg-utils-scent-orange cursor-ew-resize pointer-events-auto flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-transform",
+                          sec.end >= duration - 0.1 ? "z-40" : "z-30",
+                        )}
                         title="Drag to trim start"
                       >
                         <div className="w-[1.5px] h-3 bg-white rounded-full pointer-events-none" />
@@ -1147,13 +1264,20 @@ export default function EditModal({
                     {isSelected && (
                       <div
                         onPointerDown={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
+                          try {
+                            trackRef.current?.setPointerCapture(e.pointerId);
+                          } catch {}
                           setDraggingBoundary({
-                            sectionIndex: idx,
+                            sectionId: sec.id,
                             boundary: "end",
                           });
                         }}
-                        className="group absolute -right-2 top-1/2 -translate-y-1/2 h-8 w-3.5 rounded-r-md rounded-l-xs bg-utils-scent-orange cursor-ew-resize pointer-events-auto z-30 flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-transform"
+                        className={clsx(
+                          "group absolute -right-2 top-1/2 -translate-y-1/2 h-8 w-3.5 rounded-r-md rounded-l-xs bg-utils-scent-orange cursor-ew-resize pointer-events-auto flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-transform",
+                          sec.start <= 0.1 ? "z-40" : "z-30",
+                        )}
                         title="Drag to trim end"
                       >
                         <div className="w-[1.5px] h-3 bg-white rounded-full pointer-events-none" />
