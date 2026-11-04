@@ -36,6 +36,7 @@ import { calculateTargetVideoDimensions } from "../utils/compress-video";
 type Props = {
   item: VideoFileItem | null;
   settings: VideoOptimizerSettings;
+  isProcessing?: boolean;
   onDownload: () => void;
   onDelete: () => void;
   onOpenCompare: () => void;
@@ -57,6 +58,7 @@ function getOriginalFormatLabel(name: string, file?: File): string {
 export default function DetailsSidebar({
   item,
   settings,
+  isProcessing = false,
   onDownload,
   onDelete,
   onOpenCompare,
@@ -69,7 +71,7 @@ export default function DetailsSidebar({
 
   useEffect(() => {
     setIsEditingName(false);
-  }, [item?.id]);
+  }, [item?.id, isProcessing]);
 
   useEffect(() => {
     if (isEditingName) {
@@ -158,7 +160,7 @@ export default function DetailsSidebar({
   );
 
   const startEditingName = () => {
-    if (!onRename) return;
+    if (!onRename || isProcessing) return;
     setDraftName(item.customName || getDefaultOutputBaseName(item.name));
     setIsEditingName(true);
   };
@@ -293,6 +295,7 @@ export default function DetailsSidebar({
                 className={clsx(
                   "truncate leading-none",
                   onRename &&
+                    !isProcessing &&
                     "hover:text-utils-scent-orange cursor-pointer transition-colors",
                 )}
               >
@@ -301,8 +304,9 @@ export default function DetailsSidebar({
               {onRename && (
                 <button
                   type="button"
+                  disabled={isProcessing}
                   onClick={startEditingName}
-                  className="text-foreground/50 hover:text-foreground hover:bg-utils-scent-gray-01/30 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded transition-colors"
+                  className="text-foreground/50 hover:text-foreground hover:bg-utils-scent-gray-01/30 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                   title="Rename output file"
                   aria-label="Rename output file"
                 >
@@ -464,7 +468,8 @@ export default function DetailsSidebar({
         <button
           type="button"
           onClick={onOpenEdit}
-          className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:opacity-50"
+          disabled={isProcessing}
+          className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Scissors className="h-3.5 w-3.5" />
           <span>Edit Studio</span>
@@ -475,7 +480,7 @@ export default function DetailsSidebar({
             type="button"
             onClick={onOpenCompare}
             disabled={item.status !== "done"}
-            className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:opacity-50"
+            className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Columns2 className="h-3.5 w-3.5" />
             <span>Compare</span>
@@ -484,7 +489,7 @@ export default function DetailsSidebar({
             type="button"
             onClick={onDownload}
             disabled={item.status !== "done"}
-            className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:opacity-50"
+            className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Download className="h-3.5 w-3.5" />
             <span>Download</span>
@@ -493,7 +498,8 @@ export default function DetailsSidebar({
           <button
             type="button"
             onClick={onDelete}
-            className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-white transition-all"
+            disabled={isProcessing}
+            className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-white transition-all disabled:cursor-not-allowed disabled:opacity-50"
             title="Delete from list"
             aria-label="Delete video"
           >

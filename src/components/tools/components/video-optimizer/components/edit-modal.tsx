@@ -123,49 +123,70 @@ export default function EditModal({
     boundary: "start" | "end";
   } | null>(null);
 
-  // Generate Loom-style dynamic ruler marks (major timestamps + delicate minor tick marks)
+  // Generate dynamic ruler marks (major timestamps + minor tick marks) without label collisions
   const rulerMarks = useMemo<{ time: number; isMajor: boolean }[]>(() => {
-    const marks: { time: number; isMajor: boolean }[] = [];
-    let majorStep = 5;
-    let minorDiv = 5;
-    if (duration <= 10) {
-      majorStep = 2;
-      minorDiv = 4;
-    } else if (duration <= 30) {
-      majorStep = 5;
-      minorDiv = 5;
-    } else if (duration <= 90) {
-      majorStep = 15;
-      minorDiv = 3;
-    } else if (duration <= 300) {
-      majorStep = 30;
-      minorDiv = 3;
-    } else {
-      majorStep = 60;
-      minorDiv = 4;
-    }
+    const STEP_CONFIGS = [
+      { majorStep: 1, minorDiv: 4 },
+      { majorStep: 2, minorDiv: 4 },
+      { majorStep: 5, minorDiv: 5 },
+      { majorStep: 10, minorDiv: 5 },
+      { majorStep: 15, minorDiv: 3 },
+      { majorStep: 30, minorDiv: 3 },
+      { majorStep: 60, minorDiv: 4 },
+      { majorStep: 120, minorDiv: 4 },
+      { majorStep: 300, minorDiv: 5 },
+      { majorStep: 600, minorDiv: 5 },
+      { majorStep: 900, minorDiv: 3 },
+      { majorStep: 1800, minorDiv: 3 },
+      { majorStep: 3600, minorDiv: 4 },
+    ];
+    const chosen =
+      STEP_CONFIGS.find((cfg) => duration / cfg.majorStep <= 5.5) ||
+      STEP_CONFIGS[STEP_CONFIGS.length - 1];
 
+    const { majorStep, minorDiv } = chosen;
     const minorStep = majorStep / minorDiv;
     const totalSteps = Math.floor(duration / minorStep);
+    const minEndGap = duration * 0.14;
+    const marks: { time: number; isMajor: boolean }[] = [];
 
     for (let i = 0; i <= totalSteps; i++) {
       const t = i * minorStep;
       if (t > duration) break;
-      const isMajor =
+      const isAtEnd = Math.abs(t - duration) < 0.05;
+      const isMultipleOfMajor =
         Math.abs(t % majorStep) < 0.001 ||
         Math.abs((t % majorStep) - majorStep) < 0.001;
-      marks.push({ time: t, isMajor });
+      const tooCloseToEnd = !isAtEnd && t > 0 && duration - t < minEndGap;
+
+      marks.push({
+        time: isAtEnd ? duration : t,
+        isMajor: isAtEnd || (isMultipleOfMajor && !tooCloseToEnd),
+      });
     }
+
     if (!marks.some((m) => Math.abs(m.time - duration) < 0.05)) {
       marks.push({ time: duration, isMajor: true });
     }
     return marks;
   }, [duration]);
 
+  const formatStatDuration = (secs: number) =>
+    secs >= 60 ? formatDuration(secs) : `${secs.toFixed(1)}s`;
+
   const orientation = getVideoOrientation(
     item.originalDimensions.width,
     item.originalDimensions.height,
   );
+
+  // Lock background page scroll while modal is open
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
 
   // Extract audio waveform peaks
   useEffect(() => {
@@ -277,124 +298,141 @@ export default function EditModal({
     const canvas = canvasRef.current;
     if (!canvas || !waveformPeaks || waveformPeaks.length === 0) return;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const drawWaveform = () => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
 
-    const w = rect.width;
-    const h = rect.height;
-    ctx.clearRect(0, 0, w, h);
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
 
-    if (waveformStyle === "bars") {
-      const barCount = waveformPeaks.length;
-      const barWidth = Math.max(1.8, (w / barCount) * 0.65);
-      const gap = (w - barCount * barWidth) / (barCount - 1);
+      const w = rect.width;
+      const h = rect.height;
+      ctx.clearRect(0, 0, w, h);
 
-      for (let i = 0; i < barCount; i++) {
-        const peak = waveformPeaks[i];
-        const barHeight = Math.max(3, peak * (h - 14));
-        const x = i * (barWidth + gap);
-        const y = (h - barHeight) / 2;
+      if (waveformStyle === "bars") {
+        const barCount = waveformPeaks.length;
+        const barWidth = Math.max(1.8, (w / barCount) * 0.65);
+        const gap = (w - barCount * barWidth) / (barCount - 1);
 
-        const barTime = (i / barCount) * duration;
-        const isCut = sections.some(
-          (s) => s.isDeleted && barTime >= s.start && barTime < s.end,
-        );
+        for (let i = 0; i < barCount; i++) {
+          const peak = waveformPeaks[i];
+          const barHeight = Math.max(3, peak * (h - 14));
+          const x = i * (barWidth + gap);
+          const y = (h - barHeight) / 2;
 
-        if (isCut) {
-          ctx.fillStyle = "#d1d5db"; // Soft Loom muted gray
-        } else if (isMuted) {
-          ctx.fillStyle = "#8a8177"; // Slate gray when audio is stripped
-        } else {
-          ctx.fillStyle = "#ff9900"; // Signature brand warm orange
-        }
+          const barTime = (i / barCount) * duration;
+          const isCut = sections.some(
+            (s) => s.isDeleted && barTime >= s.start && barTime < s.end,
+          );
 
-        ctx.beginPath();
-        ctx.roundRect(x, y, barWidth, barHeight, 1);
-        ctx.fill();
-      }
-    } else {
-      // Smooth continuous fluid silhouette envelope
-      const N = waveformPeaks.length;
-      const yCenter = h / 2;
-      const maxAmp = h / 2 - 4; // leave 4px padding top and bottom
-
-      // Build smoothed point envelope
-      const points: { x: number; topY: number; botY: number }[] = [];
-      for (let i = 0; i < N; i++) {
-        const pPrev = waveformPeaks[Math.max(0, i - 1)];
-        const pCurr = waveformPeaks[i];
-        const pNext = waveformPeaks[Math.min(N - 1, i + 1)];
-        const smoothed = (pPrev + pCurr * 2 + pNext) / 4;
-        const amp = Math.max(3, smoothed * maxAmp);
-        const x = (i / (N - 1)) * w;
-        points.push({
-          x,
-          topY: yCenter - amp,
-          botY: yCenter + amp,
-        });
-      }
-
-      const drawWaveformEnvelope = () => {
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].topY);
-
-        for (let i = 0; i < points.length - 1; i++) {
-          const p0 = points[i];
-          const p1 = points[i + 1];
-          const midX = (p0.x + p1.x) / 2;
-          const midY = (p0.topY + p1.topY) / 2;
-          ctx.quadraticCurveTo(p0.x, p0.topY, midX, midY);
-        }
-        const last = points[points.length - 1];
-        ctx.lineTo(last.x, last.topY);
-
-        ctx.lineTo(last.x, last.botY);
-        for (let i = points.length - 1; i > 0; i--) {
-          const p0 = points[i];
-          const p1 = points[i - 1];
-          const midX = (p0.x + p1.x) / 2;
-          const midY = (p0.botY + p1.botY) / 2;
-          ctx.quadraticCurveTo(p0.x, p0.botY, midX, midY);
-        }
-        ctx.lineTo(points[0].x, points[0].botY);
-        ctx.closePath();
-      };
-
-      // 1. Draw entire waveform in soft Loom muted gray (#d1d5db)
-      drawWaveformEnvelope();
-      ctx.fillStyle = "#d1d5db";
-      ctx.fill();
-
-      // 2. Draw vibrant waveform over kept sections using clipping masks
-      const keptSections = sections.filter((s) => !s.isDeleted && s.end > s.start);
-      for (const sec of keptSections) {
-        const startX = (sec.start / duration) * w;
-        const endX = (sec.end / duration) * w;
-        const secW = endX - startX;
-
-        if (secW > 0) {
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(startX, 0, secW, h);
-          ctx.clip();
-
-          drawWaveformEnvelope();
-          if (isMuted) {
-            ctx.fillStyle = "#8a8177";
+          if (isCut) {
+            ctx.fillStyle = "#cecece"; // Signature neutral border gray
+          } else if (isMuted) {
+            ctx.fillStyle = "#8a8177"; // Muted slate gray when audio is stripped
           } else {
-            ctx.fillStyle = "#ff9900"; // Signature brand warm orange
+            ctx.fillStyle = "#181411"; // Signature foreground charcoal
           }
+
+          ctx.beginPath();
+          ctx.roundRect(x, y, barWidth, barHeight, 1);
           ctx.fill();
-          ctx.restore();
+        }
+      } else {
+        // Smooth continuous fluid silhouette envelope
+        const N = waveformPeaks.length;
+        const yCenter = h / 2;
+        const maxAmp = h / 2 - 4; // leave 4px padding top and bottom
+
+        // Build smoothed point envelope
+        const points: { x: number; topY: number; botY: number }[] = [];
+        for (let i = 0; i < N; i++) {
+          const pPrev = waveformPeaks[Math.max(0, i - 1)];
+          const pCurr = waveformPeaks[i];
+          const pNext = waveformPeaks[Math.min(N - 1, i + 1)];
+          const smoothed = (pPrev + pCurr * 2 + pNext) / 4;
+          const amp = Math.max(3, smoothed * maxAmp);
+          const x = (i / (N - 1)) * w;
+          points.push({
+            x,
+            topY: yCenter - amp,
+            botY: yCenter + amp,
+          });
+        }
+
+        const drawWaveformEnvelope = () => {
+          ctx.beginPath();
+          ctx.moveTo(points[0].x, points[0].topY);
+
+          for (let i = 0; i < points.length - 1; i++) {
+            const p0 = points[i];
+            const p1 = points[i + 1];
+            const midX = (p0.x + p1.x) / 2;
+            const midY = (p0.topY + p1.topY) / 2;
+            ctx.quadraticCurveTo(p0.x, p0.topY, midX, midY);
+          }
+          const last = points[points.length - 1];
+          ctx.lineTo(last.x, last.topY);
+
+          ctx.lineTo(last.x, last.botY);
+          for (let i = points.length - 1; i > 0; i--) {
+            const p0 = points[i];
+            const p1 = points[i - 1];
+            const midX = (p0.x + p1.x) / 2;
+            const midY = (p0.botY + p1.botY) / 2;
+            ctx.quadraticCurveTo(p0.x, p0.botY, midX, midY);
+          }
+          ctx.lineTo(points[0].x, points[0].botY);
+          ctx.closePath();
+        };
+
+        // 1. Draw entire waveform in signature neutral gray (#cecece)
+        drawWaveformEnvelope();
+        ctx.fillStyle = "#cecece";
+        ctx.fill();
+
+        // 2. Draw vibrant waveform over kept sections using clipping masks
+        const keptSections = sections.filter(
+          (s) => !s.isDeleted && s.end > s.start,
+        );
+        for (const sec of keptSections) {
+          const startX = (sec.start / duration) * w;
+          const endX = (sec.end / duration) * w;
+          const secW = endX - startX;
+
+          if (secW > 0) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(startX, 0, secW, h);
+            ctx.clip();
+
+            drawWaveformEnvelope();
+            if (isMuted) {
+              ctx.fillStyle = "#8a8177";
+            } else {
+              ctx.fillStyle = "#181411"; // Signature foreground charcoal
+            }
+            ctx.fill();
+            ctx.restore();
+          }
         }
       }
-    }
+    };
+
+    drawWaveform();
+
+    const resizeObserver = new ResizeObserver(() => {
+      drawWaveform();
+    });
+    resizeObserver.observe(canvas);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, [waveformPeaks, sections, isMuted, duration, waveformStyle]);
 
   // Play / Pause toggle
@@ -808,38 +846,40 @@ export default function EditModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-studio-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3 backdrop-blur-xs select-none sm:p-5"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-2.5 backdrop-blur-xs select-none sm:p-5"
     >
-      <div className="border-border-color flex max-h-[96vh] w-full max-w-4xl flex-col overflow-hidden rounded-md bg-white shadow-2xl overscroll-contain">
+      <div className="border-border-color flex max-h-[96vh] w-full max-w-4xl flex-col overflow-hidden rounded-md border bg-white shadow-2xl overscroll-contain">
         {/* Header Bar */}
-        <div className="border-border-color bg-white flex flex-wrap items-center justify-between gap-2 border-b border-dashed p-3 text-foreground">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="bg-[#ff9900]/10 border border-[#ff9900]/30 text-utils-scent-orange flex h-7 w-7 shrink-0 items-center justify-center rounded">
+        <div className="border-border-color text-foreground flex items-center justify-between gap-2 border-b border-dashed bg-white px-3 py-2.5 sm:p-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5">
+            <div className="border-border-color bg-utils-scent-gray-01/30 text-foreground flex h-7 w-7 shrink-0 items-center justify-center rounded border">
               <Scissors size={14} />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <h3
                   id="edit-studio-title"
-                  className="text-foreground text-sm font-semibold truncate max-w-xs sm:max-w-md"
+                  className="text-foreground truncate text-xs font-semibold sm:text-sm"
                 >
-                  Edit Studio &bull; {item.name}
+                  <span className="hidden sm:inline">Edit Studio &bull; </span>
+                  {item.customName || item.name}
                 </h3>
-                <span className="border-border-color/60 bg-utils-scent-gray-01/30 text-foreground/70 rounded-xs border px-1.5 py-0.5 text-[9px] font-mono">
+                <span className="border-border-color bg-utils-scent-gray-01/30 text-foreground/70 hidden shrink-0 rounded border px-1.5 py-0.5 font-mono text-[9px] sm:inline-block">
                   {orientation.label} ({orientation.ratio})
                 </span>
               </div>
-              <p className="text-foreground/50 text-[11px] font-mono">
-                Source: {formatDuration(duration)} ({duration.toFixed(1)}s) &bull; {formatBytes(item.originalSize)}
+              <p className="text-foreground/50 truncate font-mono text-[10px] sm:text-[11px]">
+                Source: {formatDuration(duration)} ({duration.toFixed(1)}s)
+                &bull; {formatBytes(item.originalSize)}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={handleReset}
-              className="border-border-color text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1 rounded border px-2.5 py-1 text-xs transition-all"
+              className="border-border-color text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1 rounded border px-2 py-1 text-xs transition-all sm:px-2.5"
               title="Reset all splits and cuts back to original video"
             >
               <RotateCcw size={11} />
@@ -858,7 +898,7 @@ export default function EditModal({
         </div>
 
         {/* Video Stage (Cinema Canvas) */}
-        <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-black/95 p-3 min-h-[220px] max-h-[42vh] border-b border-border-color">
+        <div className="border-border-color relative flex max-h-[34vh] min-h-[180px] flex-1 items-center justify-center overflow-hidden border-b bg-black/95 p-2.5 sm:max-h-[42vh] sm:min-h-[220px] sm:p-3">
           <video
             ref={videoRef}
             src={item.originalUrl}
@@ -867,7 +907,7 @@ export default function EditModal({
             onTimeUpdate={handleTimeUpdate}
             onEnded={handleEnded}
             onClick={togglePlay}
-            className="max-h-[38vh] w-auto max-w-full cursor-pointer rounded object-contain shadow-lg"
+            className="max-h-[30vh] w-auto max-w-full cursor-pointer rounded object-contain shadow-lg sm:max-h-[38vh]"
           />
 
           {/* Big Play Overlay */}
@@ -875,7 +915,7 @@ export default function EditModal({
             <button
               type="button"
               onClick={togglePlay}
-              className="bg-black/60 hover:bg-[#ff9900] text-white border border-white/20 absolute flex h-12 w-12 cursor-pointer items-center justify-center rounded-full backdrop-blur-xs transition-all active:scale-95 shadow-lg"
+              className="bg-foreground/80 hover:bg-foreground absolute flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-white/20 text-white shadow-lg backdrop-blur-xs transition-all active:scale-95 sm:h-12 sm:w-12"
               aria-label="Play video"
             >
               <Play size={20} className="ml-0.5" />
@@ -883,45 +923,49 @@ export default function EditModal({
           )}
 
           {/* Top Left: Timecode Overlay */}
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/80 px-2 py-0.5 rounded border border-white/15 backdrop-blur-xs font-mono text-xs text-white">
-            <span className="text-[#ff9900] font-semibold">
+          <div className="bg-foreground/75 absolute top-2 left-2 flex items-center gap-1 rounded border border-white/20 px-1.5 py-0.5 font-mono text-[10px] text-white backdrop-blur-xs sm:top-3 sm:left-3 sm:gap-1.5 sm:px-2 sm:text-xs">
+            <span className="font-semibold text-white">
               {formatDuration(currentTime)}
             </span>
             <span className="text-white/40">/</span>
-            <span className="text-white/80">{formatDuration(duration)}</span>
+            <span className="text-white/75">{formatDuration(duration)}</span>
           </div>
 
           {/* Top Right: Audio Status Overlay */}
-          <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/80 px-2 py-0.5 rounded border border-white/15 backdrop-blur-xs font-mono text-xs">
+          <div className="bg-foreground/75 absolute top-2 right-2 flex items-center gap-1 rounded border border-white/20 px-1.5 py-0.5 font-mono text-[10px] text-white backdrop-blur-xs sm:top-3 sm:right-3 sm:gap-1.5 sm:px-2 sm:text-xs">
             {isMuted ? (
-              <span className="text-rose-400 flex items-center gap-1">
-                <VolumeX size={13} /> Muted
+              <span className="flex items-center gap-1 text-white/70">
+                <VolumeX size={12} /> Muted
               </span>
             ) : (
-              <span className="text-emerald-400 flex items-center gap-1">
-                <Volume2 size={13} /> Audio On
+              <span className="flex items-center gap-1 text-white">
+                <Volume2 size={12} /> Audio On
               </span>
             )}
           </div>
         </div>
 
-        {/* Loom-Style Video Player Control Bar (Directly Under Video) */}
-        <div className="border-border-color bg-white flex flex-wrap items-center justify-between border-b px-4 py-2 text-xs text-foreground">
+        {/* Video Player Control Bar (Directly Under Video) */}
+        <div className="border-border-color text-foreground flex flex-wrap items-center justify-between gap-1.5 border-b bg-white px-2.5 py-1.5 text-xs sm:px-4 sm:py-2">
           {/* Playback Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <button
               type="button"
               onClick={togglePlay}
-              className="bg-foreground text-background hover:bg-utils-scent-orange hover:text-white flex h-7 w-7 items-center justify-center rounded transition-all cursor-pointer shadow-xs"
+              className="bg-foreground text-background hover:bg-foreground/90 flex h-7 w-7 cursor-pointer items-center justify-center rounded shadow-xs transition-all"
               title={isPlaying ? "Pause (Space)" : "Play (Space)"}
             >
-              {isPlaying ? <Pause size={13} /> : <Play size={13} className="ml-0.5" />}
+              {isPlaying ? (
+                <Pause size={13} />
+              ) : (
+                <Play size={13} className="ml-0.5" />
+              )}
             </button>
 
             <button
               type="button"
               onClick={() => jumpTime(-5)}
-              className="text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/50 flex h-7 items-center gap-0.5 rounded px-1.5 font-mono text-[11px] transition-all cursor-pointer"
+              className="text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/40 flex h-7 cursor-pointer items-center gap-0.5 rounded px-1 font-mono text-[10px] transition-all sm:px-1.5 sm:text-[11px]"
               title="Jump back 5s"
             >
               <RotateCcw size={12} />
@@ -931,24 +975,26 @@ export default function EditModal({
             <button
               type="button"
               onClick={() => jumpTime(5)}
-              className="text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/50 flex h-7 items-center gap-0.5 rounded px-1.5 font-mono text-[11px] transition-all cursor-pointer"
+              className="text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/40 flex h-7 cursor-pointer items-center gap-0.5 rounded px-1 font-mono text-[10px] transition-all sm:px-1.5 sm:text-[11px]"
               title="Jump forward 5s"
             >
               <RotateCw size={12} />
               <span>5s</span>
             </button>
 
-            <span className="font-mono text-xs font-medium text-foreground ml-1">
+            <span className="text-foreground ml-1 hidden font-mono text-xs font-medium sm:inline">
               {formatDuration(currentTime)}{" "}
-              <span className="text-foreground/40 font-normal">/ {formatDuration(duration)}</span>
+              <span className="text-foreground/40 font-normal">
+                / {formatDuration(duration)}
+              </span>
             </span>
           </div>
 
           {/* Right Controls: Playback Speed, Mute & Loop Toggle */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* Playback speed toggle */}
             <div
-              className="flex items-center border border-border-color rounded overflow-hidden text-[11px] font-mono bg-white"
+              className="border-border-color flex items-center overflow-hidden rounded border bg-white font-mono text-[10px] sm:text-[11px]"
               title="Preview playback speed (for scrubbing/review only — does not affect exported video)"
             >
               {[0.5, 1, 1.25, 1.5, 2].map((rate) => (
@@ -957,7 +1003,8 @@ export default function EditModal({
                   type="button"
                   onClick={() => handleSetPlaybackRate(rate)}
                   className={clsx(
-                    "px-1.5 py-0.5 transition-colors cursor-pointer",
+                    "cursor-pointer px-1 py-0.5 transition-colors sm:px-1.5",
+                    rate === 1.25 && "hidden sm:inline-block",
                     playbackRate === rate
                       ? "bg-foreground text-background font-semibold"
                       : "text-foreground/70 hover:bg-utils-scent-gray-01/40",
@@ -974,15 +1021,21 @@ export default function EditModal({
               type="button"
               onClick={() => setIsMuted(!isMuted)}
               className={clsx(
-                "border flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono transition-colors cursor-pointer",
+                "flex cursor-pointer items-center gap-1 rounded border px-1.5 py-1 font-mono text-[11px] transition-colors sm:px-2 sm:py-0.5",
                 isMuted
-                  ? "border-rose-400 bg-rose-50 text-rose-700 font-medium"
+                  ? "border-foreground bg-foreground text-background font-medium"
                   : "border-border-color text-foreground/70 hover:text-foreground bg-white",
               )}
-              title={isMuted ? "Audio is stripped/muted" : "Audio track is preserved"}
+              title={
+                isMuted
+                  ? "Audio is stripped/muted"
+                  : "Audio track is preserved"
+              }
             >
               {isMuted ? <VolumeX size={12} /> : <Volume2 size={12} />}
-              <span>{isMuted ? "Muted" : "Audio"}</span>
+              <span className="hidden sm:inline">
+                {isMuted ? "Muted" : "Audio"}
+              </span>
             </button>
 
             {/* Loop Toggle */}
@@ -990,24 +1043,24 @@ export default function EditModal({
               type="button"
               onClick={() => setLoopPlayback(!loopPlayback)}
               className={clsx(
-                "border flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono transition-colors cursor-pointer",
+                "flex cursor-pointer items-center gap-1 rounded border px-1.5 py-1 font-mono text-[11px] transition-colors sm:px-2 sm:py-0.5",
                 loopPlayback
-                  ? "border-utils-scent-orange bg-utils-scent-orange/15 text-utils-scent-orange font-semibold shadow-2xs"
+                  ? "border-foreground bg-foreground text-background font-medium"
                   : "border-border-color text-foreground/70 hover:text-foreground bg-white",
               )}
               title="Loop preview playback (cycles continuously without stopping)"
             >
               <Repeat size={12} />
-              <span>Loop: {loopPlayback ? "On" : "Off"}</span>
+              <span className="hidden sm:inline">Loop</span>
             </button>
 
             {/* Waveform Style Toggle: Bars vs Smooth */}
-            <div className="flex items-center border border-border-color rounded overflow-hidden text-[11px] font-mono bg-white">
+            <div className="border-border-color flex items-center overflow-hidden rounded border bg-white font-mono text-[10px] sm:text-[11px]">
               <button
                 type="button"
                 onClick={() => setWaveformStyle("bars")}
                 className={clsx(
-                  "px-2 py-0.5 transition-colors cursor-pointer",
+                  "cursor-pointer px-1.5 py-0.5 transition-colors sm:px-2",
                   waveformStyle === "bars"
                     ? "bg-foreground text-background font-semibold"
                     : "text-foreground/60 hover:text-foreground",
@@ -1020,7 +1073,7 @@ export default function EditModal({
                 type="button"
                 onClick={() => setWaveformStyle("smooth")}
                 className={clsx(
-                  "px-2 py-0.5 transition-colors cursor-pointer",
+                  "cursor-pointer px-1.5 py-0.5 transition-colors sm:px-2",
                   waveformStyle === "smooth"
                     ? "bg-foreground text-background font-semibold"
                     : "text-foreground/60 hover:text-foreground",
@@ -1033,18 +1086,24 @@ export default function EditModal({
           </div>
         </div>
 
-        {/* Loom-Style Action Toolbar Above Timeline */}
-        <div className="border-border-color bg-utils-scent-gray-01/20 flex flex-wrap items-center justify-between border-b px-4 py-2 text-xs text-foreground">
-          <div className="flex items-center gap-2">
-            {/* Split at Playhead Button (Exact Loom style with live timestamp) */}
+        {/* Action Toolbar Above Timeline */}
+        <div className="border-border-color bg-utils-scent-gray-01/15 text-foreground flex flex-wrap items-center justify-between gap-1.5 border-b px-2.5 py-1.5 text-xs sm:px-4 sm:py-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            {/* Split at Playhead Button */}
             <button
               type="button"
               onClick={handleSplitAtPlayhead}
-              className="bg-neutral-900 hover:bg-neutral-800 text-white font-medium px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="bg-foreground text-background hover:bg-foreground/90 flex cursor-pointer items-center gap-1.5 rounded px-2.5 py-1 text-[11px] font-medium shadow-xs transition-colors sm:px-3 sm:py-1.5 sm:text-xs"
               title="Split clip at current playhead position (Shortcut: S)"
             >
-              <Scissors size={13} className="text-utils-scent-orange" />
-              <span>Split at {formatDuration(currentTime)} [S]</span>
+              <Scissors size={12} />
+              <span>
+                Split
+                <span className="hidden sm:inline">
+                  {" "}
+                  at {formatDuration(currentTime)} [S]
+                </span>
+              </span>
             </button>
 
             {/* Delete / Cut Selection */}
@@ -1054,10 +1113,10 @@ export default function EditModal({
                 disabled={keptSections.length <= 1}
                 onClick={() => handleToggleDeleteSection(selectedSection.id)}
                 className={clsx(
-                  "border border-rose-200 bg-rose-50 text-rose-700 font-medium px-2.5 py-1.5 rounded-md text-xs flex items-center gap-1 transition-colors",
+                  "border-border-color text-foreground/80 flex items-center gap-1 rounded border bg-white px-2 py-1 text-[11px] font-medium transition-colors sm:px-2.5 sm:py-1.5 sm:text-xs",
                   keptSections.length <= 1
-                    ? "opacity-40 cursor-not-allowed"
-                    : "hover:bg-rose-100 cursor-pointer",
+                    ? "cursor-not-allowed opacity-40"
+                    : "hover:text-foreground hover:bg-utils-scent-gray-01/30 cursor-pointer",
                 )}
                 title={
                   keptSections.length <= 1
@@ -1066,7 +1125,9 @@ export default function EditModal({
                 }
               >
                 <Trash2 size={12} />
-                <span>Delete selection</span>
+                <span>
+                  Delete<span className="hidden sm:inline"> selection</span>
+                </span>
               </button>
             )}
 
@@ -1075,11 +1136,13 @@ export default function EditModal({
               <button
                 type="button"
                 onClick={() => handleToggleDeleteSection(selectedSection.id)}
-                className="border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-medium px-2.5 py-1.5 rounded-md text-xs cursor-pointer flex items-center gap-1 transition-colors"
+                className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1 rounded border bg-white px-2 py-1 text-[11px] font-medium transition-colors sm:px-2.5 sm:py-1.5 sm:text-xs"
                 title="Restore this cut section back into the video"
               >
                 <Undo2 size={12} />
-                <span>Restore selection</span>
+                <span>
+                  Restore<span className="hidden sm:inline"> selection</span>
+                </span>
               </button>
             )}
 
@@ -1097,7 +1160,7 @@ export default function EditModal({
                     handleMergeSection(idx - 1);
                   }
                 }}
-                className="border border-border-color bg-white hover:bg-neutral-50 text-foreground/80 px-2.5 py-1.5 rounded-md text-xs font-mono cursor-pointer transition-colors"
+                className="border-border-color hover:bg-utils-scent-gray-01/30 text-foreground/80 cursor-pointer rounded border bg-white px-2 py-1 font-mono text-[11px] transition-colors sm:px-2.5 sm:py-1.5 sm:text-xs"
                 title="Merge selected section with its neighbor"
               >
                 Merge
@@ -1106,27 +1169,41 @@ export default function EditModal({
 
             {/* Selected Segment Info */}
             {selectedSection && (
-              <span className="font-mono text-xs text-foreground/60 hidden md:inline ml-1">
-                Selected: <strong className="text-foreground">{(selectedSection.end - selectedSection.start).toFixed(1)}s</strong> ({formatDuration(selectedSection.start)} &rarr; {formatDuration(selectedSection.end)})
+              <span className="text-foreground/60 ml-1 hidden font-mono text-xs md:inline">
+                Selected:{" "}
+                <strong className="text-foreground">
+                  {formatStatDuration(
+                    selectedSection.end - selectedSection.start,
+                  )}
+                </strong>{" "}
+                ({formatDuration(selectedSection.start)} &rarr;{" "}
+                {formatDuration(selectedSection.end)})
               </span>
             )}
           </div>
 
           {/* Kept vs Cut Stats on the Right */}
-          <div className="flex items-center gap-3 font-mono text-xs">
+          <div className="flex items-center gap-2 font-mono text-[11px] sm:gap-3 sm:text-xs">
             <span className="text-foreground/70">
-              Kept: <strong className="text-utils-scent-orange">{totalKeptDuration.toFixed(1)}s</strong>
+              Kept:{" "}
+              <strong className="text-foreground">
+                {formatStatDuration(totalKeptDuration)}
+              </strong>
             </span>
             {totalCutDuration > 0.05 && (
-              <span className="text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded text-[11px]">
-                Cut -{totalCutDuration.toFixed(1)}s (-{Math.round((totalCutDuration / duration) * 100)}%)
+              <span className="border-border-color bg-utils-scent-gray-01/40 text-foreground/70 rounded border px-1.5 py-0.5 text-[10px] sm:text-[11px]">
+                Cut -{formatStatDuration(totalCutDuration)}
+                <span className="hidden sm:inline">
+                  {" "}
+                  (-{Math.round((totalCutDuration / duration) * 100)}%)
+                </span>
               </span>
             )}
           </div>
         </div>
 
-        {/* Master Timeline & Loom-Style Waveform Scrubber */}
-        <div className="p-4 bg-white flex flex-col gap-2">
+        {/* Master Timeline & Waveform Scrubber */}
+        <div className="flex flex-col gap-1.5 bg-white p-2.5 sm:gap-2 sm:p-4">
           {/* Master Interactive Track (Ruler + Waveform in ONE cohesive clickable container) */}
           <div
             ref={trackRef}
@@ -1140,66 +1217,74 @@ export default function EditModal({
             onPointerLeave={() => setHoverTime(null)}
             onPointerUp={handleTrackPointerUp}
             onPointerCancel={handleTrackPointerUp}
-            className="relative w-full cursor-pointer select-none rounded-xl border border-neutral-200/90 bg-white shadow-xs overflow-hidden"
+            className="border-border-color relative w-full cursor-pointer overflow-hidden rounded-lg border bg-white select-none"
           >
-            {/* Top Time Ruler with Loom-style tick marks */}
-            <div className="relative h-6 w-full border-b border-neutral-200/70 bg-neutral-50/50 pointer-events-none select-none">
-              {rulerMarks.map((mark, i) => (
-                <div
-                  key={i}
-                  className="absolute top-0 bottom-0 flex flex-col items-center pointer-events-none"
-                  style={{
-                    left: `${(mark.time / duration) * 100}%`,
-                    transform:
-                      i === 0
+            {/* Top Time Ruler with tick marks */}
+            <div className="border-border-color/60 bg-utils-scent-gray-01/15 pointer-events-none relative h-6 w-full border-b select-none">
+              {rulerMarks.map((mark, i) => {
+                const isFirst = i === 0;
+                const isLast = i === rulerMarks.length - 1;
+                return (
+                  <div
+                    key={i}
+                    className="pointer-events-none absolute top-0 bottom-0 flex flex-col items-center"
+                    style={{
+                      left: `${(mark.time / duration) * 100}%`,
+                      transform: isFirst
                         ? "none"
-                        : i === rulerMarks.length - 1
+                        : isLast
                           ? "translateX(-100%)"
                           : "translateX(-50%)",
-                  }}
-                >
-                  {mark.isMajor ? (
-                    <>
-                      <span className="text-[10px] font-mono text-neutral-400 font-medium pt-0.5 leading-none">
-                        {formatDuration(mark.time)}
-                      </span>
-                      <div className="w-[1px] h-2 bg-neutral-300 mt-auto" />
-                    </>
-                  ) : (
-                    <div className="w-[1px] h-1.5 bg-neutral-200 mt-auto mb-0.5" />
-                  )}
-                </div>
-              ))}
+                    }}
+                  >
+                    {mark.isMajor ? (
+                      <>
+                        <span
+                          className={clsx(
+                            "text-foreground/55 pt-1 font-mono text-[10px] leading-none",
+                            isFirst && "pl-1.5",
+                            isLast && "pr-1.5",
+                          )}
+                        >
+                          {formatDuration(mark.time)}
+                        </span>
+                        <div className="bg-border-color mt-auto h-1.5 w-[1px]" />
+                      </>
+                    ) : (
+                      <div className="bg-border-color/60 mt-auto mb-0.5 h-1 w-[1px]" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Waveform & Capsule Stage */}
-            <div className="relative h-16 w-full pointer-events-none">
+            <div className="pointer-events-none relative h-14 w-full sm:h-16">
               {/* HTML5 Canvas Audio Waveform Silhouette */}
-              <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+              <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center">
                 {isLoadingWaveform ? (
-                  <span className="text-[10px] font-mono text-foreground/40 animate-pulse">
+                  <span className="text-foreground/40 animate-pulse font-mono text-[10px]">
                     Extracting audio waveform...
                   </span>
                 ) : waveformPeaks ? (
                   <canvas
                     ref={canvasRef}
-                    className="h-full w-full pointer-events-none"
+                    className="pointer-events-none h-full w-full"
                   />
                 ) : (
-                  <span className="text-[10px] font-mono text-foreground/40">
+                  <span className="text-foreground/40 font-mono text-[10px]">
                     No audio track detected in source file
                   </span>
                 )}
               </div>
 
-              {/* Loom-Style Capsules & Handles */}
-              {sections.map((sec, idx) => {
+              {/* Section Capsules & Handles */}
+              {sections.map((sec) => {
                 const leftPct = (sec.start / duration) * 100;
                 const widthPct = ((sec.end - sec.start) / duration) * 100;
                 const isSelected = sec.id === selectedSectionId;
 
                 if (sec.isDeleted) {
-                  // Cut gap between capsules: soft background, faded gray waveform shows through cleanly without distracting badge
                   return (
                     <div
                       key={sec.id}
@@ -1208,21 +1293,20 @@ export default function EditModal({
                         setSelectedSectionId(sec.id);
                       }}
                       className={clsx(
-                        "absolute top-1 bottom-1 rounded-lg cursor-pointer transition-all z-10 pointer-events-auto",
+                        "pointer-events-auto absolute top-1 bottom-1 z-10 cursor-pointer rounded-md border border-dashed transition-all",
                         isSelected
-                          ? "bg-rose-500/10 ring-2 ring-rose-300"
-                          : "bg-neutral-100/50 hover:bg-neutral-200/50",
+                          ? "border-foreground/60 bg-utils-scent-gray-01/50"
+                          : "border-border-color/70 bg-utils-scent-gray-01/25 hover:bg-utils-scent-gray-01/40",
                       )}
                       style={{
                         left: `${leftPct}%`,
                         width: `${widthPct}%`,
                       }}
-                      title={`Cut section: ${(sec.end - sec.start).toFixed(1)}s (Click to select/restore)`}
+                      title={`Cut section: ${formatStatDuration(sec.end - sec.start)} (Click to select/restore)`}
                     />
                   );
                 }
 
-                // Kept capsule: rounded pill matching Loom screenshot!
                 return (
                   <div
                     key={sec.id}
@@ -1231,18 +1315,18 @@ export default function EditModal({
                       setSelectedSectionId(sec.id);
                     }}
                     className={clsx(
-                      "absolute top-1 bottom-1 rounded-2xl z-20 cursor-pointer pointer-events-auto",
+                      "pointer-events-auto absolute top-1 bottom-1 z-20 cursor-pointer rounded-md border",
                       !draggingBoundary && "transition-all",
                       isSelected
-                        ? "border-2 border-utils-scent-orange bg-utils-scent-orange/5 shadow-xs"
-                        : "border-2 border-utils-scent-orange/60 hover:border-utils-scent-orange bg-transparent",
+                        ? "border-foreground bg-foreground/[0.02]"
+                        : "border-border-color hover:border-foreground/50 bg-transparent",
                     )}
                     style={{
                       left: `${leftPct}%`,
                       width: `${widthPct}%`,
                     }}
                   >
-                    {/* Pill Drag Handle - LEFT (matches Loom handle pill with white slot) */}
+                    {/* Pill Drag Handle - LEFT */}
                     {isSelected && (
                       <div
                         onPointerDown={(e) => {
@@ -1257,16 +1341,16 @@ export default function EditModal({
                           });
                         }}
                         className={clsx(
-                          "group absolute -left-2 top-1/2 -translate-y-1/2 h-8 w-3.5 rounded-l-md rounded-r-xs bg-utils-scent-orange cursor-ew-resize pointer-events-auto flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-transform",
+                          "group bg-foreground pointer-events-auto absolute top-1/2 -left-1.5 flex h-7 w-3 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-sm shadow-xs transition-transform hover:scale-105 active:scale-95",
                           sec.end >= duration - 0.1 ? "z-40" : "z-30",
                         )}
                         title="Drag to trim start"
                       >
-                        <div className="w-[1.5px] h-3 bg-white rounded-full pointer-events-none" />
+                        <div className="pointer-events-none h-2.5 w-[1px] rounded-full bg-white" />
                       </div>
                     )}
 
-                    {/* Pill Drag Handle - RIGHT (matches Loom handle pill with white slot) */}
+                    {/* Pill Drag Handle - RIGHT */}
                     {isSelected && (
                       <div
                         onPointerDown={(e) => {
@@ -1281,12 +1365,12 @@ export default function EditModal({
                           });
                         }}
                         className={clsx(
-                          "group absolute -right-2 top-1/2 -translate-y-1/2 h-8 w-3.5 rounded-r-md rounded-l-xs bg-utils-scent-orange cursor-ew-resize pointer-events-auto flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-transform",
+                          "group bg-foreground pointer-events-auto absolute top-1/2 -right-1.5 flex h-7 w-3 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-sm shadow-xs transition-transform hover:scale-105 active:scale-95",
                           sec.start <= 0.1 ? "z-40" : "z-30",
                         )}
                         title="Drag to trim end"
                       >
-                        <div className="w-[1.5px] h-3 bg-white rounded-full pointer-events-none" />
+                        <div className="pointer-events-none h-2.5 w-[1px] rounded-full bg-white" />
                       </div>
                     )}
                   </div>
@@ -1294,76 +1378,90 @@ export default function EditModal({
               })}
             </div>
 
-            {/* Hover Ghost Needle (Loom style) */}
+            {/* Hover Ghost Needle */}
             {hoverTime !== null && !isDraggingPlayhead && (
               <div
-                className="absolute top-0 bottom-0 -ml-2 w-4 pointer-events-none z-30 flex flex-col items-center"
+                className="pointer-events-none absolute top-0 bottom-0 z-30 -ml-2 flex w-4 flex-col items-center"
                 style={{ left: `${(hoverTime / duration) * 100}%` }}
               >
-                <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-utils-scent-orange/50" />
-                <div className="w-px flex-1 border-l border-dashed border-utils-scent-orange/40" />
+                <div className="border-t-foreground/40 h-0 w-0 border-t-[5px] border-r-[4px] border-l-[4px] border-r-transparent border-l-transparent" />
+                <div className="border-foreground/30 w-px flex-1 border-l border-dashed" />
               </div>
             )}
 
-            {/* Active Playhead Needle */}
+            {/* Active Playhead Needle (Signature Orange Accent) */}
             <div
-              className="absolute top-0 bottom-0 -ml-2 w-4 pointer-events-none z-40 flex flex-col items-center"
+              className="pointer-events-none absolute top-0 bottom-0 z-40 -ml-2 flex w-4 flex-col items-center"
               style={{ left: `${(currentTime / duration) * 100}%` }}
             >
-              {/* Triangle flag on top of ruler */}
-              <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[7px] border-t-utils-scent-orange drop-shadow-xs" />
-              {/* Vertical needle line through the whole track */}
-              <div className="w-[1.5px] flex-1 bg-utils-scent-orange shadow-xs" />
+              <div className="border-t-utils-scent-orange h-0 w-0 border-t-[6px] border-r-[4px] border-l-[4px] border-r-transparent border-l-transparent" />
+              <div className="bg-utils-scent-orange w-[1px] flex-1" />
             </div>
           </div>
 
-          <p className="text-[10px] text-foreground/50 font-mono text-center">
-            Tap anywhere on the timeline to jump playhead &bull; Drag handles to trim &bull; Press <kbd className="px-1 py-0.5 bg-utils-scent-gray-01/40 border border-border-color rounded">S</kbd> to split &bull; Press <kbd className="px-1 py-0.5 bg-utils-scent-gray-01/40 border border-border-color rounded">Del</kbd> to cut
+          <p className="text-foreground/50 text-center font-mono text-[10px]">
+            Tap timeline to jump &bull; Drag handles to trim
+            <span className="hidden sm:inline">
+              {" "}
+              &bull; Press{" "}
+              <kbd className="bg-utils-scent-gray-01/40 border-border-color rounded border px-1 py-0.5">
+                S
+              </kbd>{" "}
+              to split &bull; Press{" "}
+              <kbd className="bg-utils-scent-gray-01/40 border-border-color rounded border px-1 py-0.5">
+                Del
+              </kbd>{" "}
+              to cut
+            </span>
           </p>
         </div>
 
         {/* Footer Bar with "Save & Compress Now" Action */}
-        <div className="border-border-color bg-white flex flex-wrap items-center justify-between gap-3 border-t border-dashed px-4 py-3">
-          <div className="flex items-center gap-2 text-xs">
-            <Sparkles size={14} className="text-utils-scent-orange" />
+        <div className="border-border-color flex flex-wrap items-center justify-between gap-2 border-t border-dashed bg-white px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+          <div className="flex items-center gap-1.5 text-xs sm:gap-2">
+            <Sparkles size={13} className="text-foreground/60 shrink-0" />
             <span className="text-foreground/70 hidden sm:inline">
               Projected Output:
             </span>
-            <span className="font-mono font-medium text-foreground">
+            <span className="text-foreground font-mono font-medium">
               ~{formatBytes(estimatedBytes)}
             </span>
             {estimatedSavings && estimatedSavings.percentSaved > 0 && (
-              <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 font-mono text-[11px]">
+              <span className="text-code-green bg-utils-scent-gray-01/40 border-border-color rounded border px-1.5 py-0.5 font-mono text-[10px] sm:text-[11px]">
                 Est. -{estimatedSavings.percentSaved}%
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 cursor-pointer rounded-md border bg-white px-3 py-1.5 text-xs font-medium transition-all"
+              className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 cursor-pointer rounded border bg-white px-2.5 py-1.5 text-[11px] font-medium transition-all sm:px-3 sm:text-xs"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleApply}
-              className="border border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1 rounded-md bg-white px-3 py-1.5 text-xs font-medium transition-all"
+              className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1 rounded border bg-white px-2.5 py-1.5 text-[11px] font-medium transition-all sm:px-3 sm:text-xs"
               title="Save trim and cut edits to queue item"
             >
               <Check size={13} />
-              <span>Apply Edits</span>
+              <span>
+                Apply<span className="hidden sm:inline"> Edits</span>
+              </span>
             </button>
             <button
               type="button"
               onClick={handleApplyAndCompress}
-              className="bg-utils-scent-orange hover:bg-utils-scent-orange/90 text-white flex cursor-pointer items-center gap-1.5 rounded-md px-3.5 py-1.5 text-xs font-medium shadow-xs transition-all active:scale-95"
+              className="bg-foreground text-background hover:bg-foreground/90 flex cursor-pointer items-center gap-1 rounded px-2.5 py-1.5 text-[11px] font-medium shadow-xs transition-all active:scale-95 sm:gap-1.5 sm:px-3.5 sm:text-xs"
               title="Save edits and immediately start compressing this video"
             >
               <Zap size={13} className="fill-current" />
-              <span>Save &amp; Compress Now</span>
+              <span>
+                Save &amp; Compress<span className="hidden sm:inline"> Now</span>
+              </span>
             </button>
           </div>
         </div>

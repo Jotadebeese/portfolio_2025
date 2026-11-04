@@ -663,6 +663,7 @@ export default function VideoOptimizer() {
             <DetailsSidebar
               item={activeItem}
               settings={settings}
+              isProcessing={isProcessing}
               onDownload={() => activeItem && handleDownloadSingle(activeItem)}
               onDelete={() => activeItem && handleDeleteItem(activeItem.id)}
               onOpenCompare={() => activeItem && setComparingItem(activeItem)}
