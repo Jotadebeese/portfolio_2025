@@ -169,6 +169,12 @@ export default function EditModal({
 
   // Extract audio waveform peaks
   useEffect(() => {
+    if (!item.hasAudio) {
+      setWaveformPeaks(null);
+      setIsLoadingWaveform(false);
+      return;
+    }
+
     let cancelled = false;
     setIsLoadingWaveform(true);
 
@@ -182,7 +188,7 @@ export default function EditModal({
     return () => {
       cancelled = true;
     };
-  }, [item.file]);
+  }, [item.file, item.hasAudio]);
 
   // Handle video playback rate changes
   const handleSetPlaybackRate = (rate: number) => {

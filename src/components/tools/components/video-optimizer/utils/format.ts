@@ -315,18 +315,29 @@ export function estimateVideoSize(
     sections || settings.sections,
   );
 
-  // 1. Calculate target dimensions based on preset
+  // 1. Calculate target dimensions based on preset (adapting for target-size floor if needed)
   let targetW = width > 0 ? width : 1920;
   let targetH = height > 0 ? height : 1080;
-  if (settings.resizePreset && settings.resizePreset !== "original") {
+  const effectivePreset =
+    settings.mode === "target-size" && settings.resizePreset
+      ? getAdaptedPresetForTargetSize(
+          settings.targetSizeMB ?? 8,
+          effectiveDuration,
+          Boolean(settings.stripAudio),
+          settings.resizePreset,
+          settings.format || "video/mp4",
+        )
+      : settings.resizePreset;
+
+  if (effectivePreset && effectivePreset !== "original") {
     const maxDim =
-      settings.resizePreset === "1080p"
+      effectivePreset === "1080p"
         ? 1920
-        : settings.resizePreset === "720p"
+        : effectivePreset === "720p"
           ? 1280
-          : settings.resizePreset === "480p"
+          : effectivePreset === "480p"
             ? 854
-            : settings.resizePreset === "360p"
+            : effectivePreset === "360p"
               ? 640
               : settings.customMaxDimension || 1280;
 

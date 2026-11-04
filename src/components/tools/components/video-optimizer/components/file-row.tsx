@@ -25,6 +25,7 @@ import {
   hasSettingsChanged,
   getEffectiveVideoDuration,
   hasEffectiveTrim,
+  getAdaptedPresetForTargetSize,
 } from "../utils/format";
 import { calculateTargetVideoDimensions } from "../utils/compress-video";
 
@@ -99,15 +100,37 @@ export default function FileRow({
     item.duration,
   );
 
+  const effectiveDuration = getEffectiveVideoDuration(
+    item.duration,
+    item.trim,
+    item.sections,
+  );
+
+  const effectivePreset =
+    settings.mode === "target-size"
+      ? getAdaptedPresetForTargetSize(
+          settings.targetSizeMB ?? 8,
+          effectiveDuration,
+          Boolean(effectiveStripAudio),
+          settings.resizePreset,
+          settings.format,
+        )
+      : settings.resizePreset;
+
   const targetDims =
     item.originalDimensions.width > 0
       ? calculateTargetVideoDimensions(
           item.originalDimensions.width,
           item.originalDimensions.height,
-          settings.resizePreset,
+          effectivePreset,
           settings.customMaxDimension,
         )
       : null;
+
+  const displayedDims =
+    item.status === "done" && !itemSettingsChanged && item.compressedDimensions
+      ? item.compressedDimensions
+      : targetDims;
 
   return (
     <div
@@ -231,12 +254,14 @@ export default function FileRow({
                 <span>
                   {item.originalDimensions.width}&times;
                   {item.originalDimensions.height}
-                  {targetDims &&
-                    (targetDims.width !== item.originalDimensions.width ||
-                      targetDims.height !== item.originalDimensions.height) && (
+                  {displayedDims &&
+                    (displayedDims.width !== item.originalDimensions.width ||
+                      displayedDims.height !==
+                        item.originalDimensions.height) && (
                       <span className="text-foreground">
                         {" "}
-                        &rarr; {targetDims.width}&times;{targetDims.height}
+                        &rarr; {displayedDims.width}&times;
+                        {displayedDims.height}
                       </span>
                     )}
                 </span>
