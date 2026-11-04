@@ -555,16 +555,25 @@ export function getVideoOrientation(
   }
 }
 
-export function getVideoFilenameWithExtension(
-  originalName: string,
-  targetFormat: VideoOutputFormat,
-): string {
+export function getDefaultOutputBaseName(originalName: string): string {
   const lastDot = originalName.lastIndexOf(".");
   const baseName =
     lastDot !== -1 ? originalName.slice(0, lastDot) : originalName;
+  return `${baseName}_compressed`;
+}
 
+export function getVideoFilenameWithExtension(
+  originalName: string,
+  targetFormat: VideoOutputFormat,
+  customName?: string,
+): string {
   const ext = targetFormat === "video/webm" ? "webm" : "mp4";
-  return `${baseName}_compressed.${ext}`;
+  const trimmedCustom = customName?.trim();
+  if (trimmedCustom) {
+    const cleaned = trimmedCustom.replace(/\.(mp4|webm|mov|m4v|mkv)$/i, "");
+    return `${cleaned || getDefaultOutputBaseName(originalName)}.${ext}`;
+  }
+  return `${getDefaultOutputBaseName(originalName)}.${ext}`;
 }
 
 export function getFormatLabel(format: VideoOutputFormat): string {

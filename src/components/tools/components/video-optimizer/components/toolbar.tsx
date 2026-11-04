@@ -12,6 +12,7 @@ import {
   VolumeX,
   Volume2,
   Play,
+  Check,
   Square,
   Loader,
   X,
@@ -29,8 +30,11 @@ type Props = {
   onSettingsChange: (settings: VideoOptimizerSettings) => void;
   onFilesSelected: (files: FileList | File[]) => void;
   selectedCount: number;
+  selectedPendingCount?: number;
+  selectedDoneCount?: number;
   totalCount: number;
   onToggleSelectAll: () => void;
+  onCompressSelected?: () => void;
   onDeleteSelected: () => void;
   onDownloadSelected: () => void;
   isDownloadingZip?: boolean;
@@ -44,6 +48,8 @@ type Props = {
   onCancelCompress: () => void;
   hasUncompressed: boolean;
   hasPendingChanges?: boolean;
+  uncompressedCount?: number;
+  pendingChangesCount?: number;
   maxFiles?: number;
 };
 
@@ -70,8 +76,11 @@ export default function Toolbar({
   onSettingsChange,
   onFilesSelected,
   selectedCount,
+  selectedPendingCount = 0,
+  selectedDoneCount = 0,
   totalCount,
   onToggleSelectAll,
+  onCompressSelected,
   onDeleteSelected,
   onDownloadSelected,
   isDownloadingZip = false,
@@ -85,6 +94,8 @@ export default function Toolbar({
   onCancelCompress,
   hasUncompressed,
   hasPendingChanges = false,
+  uncompressedCount,
+  pendingChangesCount,
   maxFiles = 10,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -174,16 +185,25 @@ export default function Toolbar({
               <button
                 type="button"
                 onClick={onStartCompress}
-                className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1.5 text-xs transition-all active:scale-[0.98]"
-                title="Run hardware-accelerated video compression"
+                disabled={!hasUncompressed && !hasPendingChanges}
+                className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1.5 text-xs transition-all active:scale-[0.98] disabled:cursor-default disabled:opacity-60 disabled:hover:bg-white"
+                title={
+                  hasUncompressed || hasPendingChanges
+                    ? "Run hardware-accelerated video compression"
+                    : "All videos in queue are already optimized with current settings"
+                }
               >
-                <Play className="h-3.5 w-3.5 fill-current" />
+                {hasUncompressed || hasPendingChanges ? (
+                  <Play className="h-3.5 w-3.5 fill-current" />
+                ) : (
+                  <Check className="text-code-green h-3.5 w-3.5" />
+                )}
                 <span>
                   {hasUncompressed
-                    ? `Compress Queue (${totalCount})`
+                    ? `Compress Queue (${(uncompressedCount ?? totalCount) + (pendingChangesCount ?? 0)})`
                     : hasPendingChanges
-                      ? `Apply Changes (${totalCount})`
-                      : "Re-compress All"}
+                      ? `Apply Changes (${pendingChangesCount ?? totalCount})`
+                      : "All Optimized"}
                 </span>
               </button>
             )}
@@ -776,18 +796,37 @@ export default function Toolbar({
 
             {isSomeSelected && (
               <>
-                <button
-                  type="button"
-                  onClick={onDownloadSelected}
-                  disabled={isDownloadingZip || isProcessing}
-                  className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
-                  title="Download selected compressed clips"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  <span className="font-mono text-[11px]">
-                    {isDownloadingZip ? "Zipping..." : `(${selectedCount})`}
-                  </span>
-                </button>
+                {onCompressSelected && selectedPendingCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={onCompressSelected}
+                    disabled={isProcessing}
+                    className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
+                    title="Optimize selected videos with pending changes"
+                  >
+                    <Play className="h-3.5 w-3.5 fill-current" />
+                    <span className="font-mono text-[11px]">
+                      ({selectedPendingCount})
+                    </span>
+                  </button>
+                )}
+
+                {selectedDoneCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={onDownloadSelected}
+                    disabled={isDownloadingZip || isProcessing}
+                    className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
+                    title="Download selected compressed clips"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    <span className="font-mono text-[11px]">
+                      {isDownloadingZip
+                        ? "Zipping..."
+                        : `(${selectedDoneCount})`}
+                    </span>
+                  </button>
+                )}
 
                 <button
                   type="button"

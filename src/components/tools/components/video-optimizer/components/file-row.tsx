@@ -26,6 +26,7 @@ import {
   getEffectiveVideoDuration,
   hasEffectiveTrim,
   getAdaptedPresetForTargetSize,
+  getVideoFilenameWithExtension,
 } from "../utils/format";
 import { calculateTargetVideoDimensions } from "../utils/compress-video";
 
@@ -207,9 +208,19 @@ export default function FileRow({
           <div className="flex w-full items-center gap-1.5 text-nowrap min-w-0">
             <span
               className="text-foreground truncate text-[11px]"
-              title={item.name}
+              title={
+                item.customName
+                  ? `${getVideoFilenameWithExtension(item.name, item.compressedFormat || settings.format, item.customName)} (Original: ${item.name})`
+                  : item.name
+              }
             >
-              {item.name}
+              {item.customName
+                ? getVideoFilenameWithExtension(
+                    item.name,
+                    item.compressedFormat || settings.format,
+                    item.customName,
+                  )
+                : item.name}
             </span>
 
             {item.originalDimensions.width > 0 && (
@@ -291,12 +302,20 @@ export default function FileRow({
                         : `+${Math.abs(savings.percentSaved)}%`}
                     </span>
                   )}
-                  {itemSettingsChanged && (
+                  {itemSettingsChanged ? (
                     <span
                       className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-foreground/70 flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]"
                       title="Settings modified since last compression. Re-compress to apply."
                     >
                       New Est: ~{formatBytes(estimatedBytes)}
+                    </span>
+                  ) : (
+                    <span
+                      className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-code-green flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]"
+                      title="Already optimized with current settings"
+                    >
+                      <Check size={9} />
+                      <span>Optimized</span>
                     </span>
                   )}
                 </>

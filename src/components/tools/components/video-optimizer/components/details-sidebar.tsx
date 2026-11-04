@@ -1,7 +1,18 @@
 "use client";
 
+import React, { useState, useEffect, useRef } from "react";
 import clsx from "clsx";
-import { Download, Trash2, Columns2, Film, Info, Scissors } from "lucide-react";
+import {
+  Download,
+  Trash2,
+  Columns2,
+  Film,
+  Info,
+  Scissors,
+  Pencil,
+  Check,
+  X,
+} from "lucide-react";
 import {
   VideoFileItem,
   VideoOptimizerSettings,
@@ -10,6 +21,7 @@ import {
 import {
   formatBytes,
   calculateSavings,
+  getDefaultOutputBaseName,
   getVideoFilenameWithExtension,
   getFormatLabel,
   formatDuration,
@@ -28,6 +40,7 @@ type Props = {
   onDelete: () => void;
   onOpenCompare: () => void;
   onOpenEdit: () => void;
+  onRename?: (newCustomName?: string) => void;
 };
 
 function getOriginalFormatLabel(name: string, file?: File): string {
@@ -48,7 +61,23 @@ export default function DetailsSidebar({
   onDelete,
   onOpenCompare,
   onOpenEdit,
+  onRename,
 }: Props) {
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setIsEditingName(false);
+  }, [item?.id]);
+
+  useEffect(() => {
+    if (isEditingName) {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    }
+  }, [isEditingName]);
+
   if (!item) {
     return (
       <div className="border-border-color bg-background/30 text-foreground/70 flex h-full min-h-[300px] flex-col items-center justify-center rounded-md border border-dashed p-6 text-center text-xs">
@@ -118,15 +147,35 @@ export default function DetailsSidebar({
 
   const estimatedSavings = calculateSavings(item.originalSize, estimatedBytes);
 
+  const activeFormat = (item.compressedFormat ||
+    settings.format) as VideoOutputFormat;
+  const outputExt = activeFormat === "video/webm" ? ".webm" : ".mp4";
+
   const targetName = getVideoFilenameWithExtension(
     item.name,
-    item.compressedFormat || settings.format,
+    activeFormat,
+    item.customName,
   );
 
+  const startEditingName = () => {
+    if (!onRename) return;
+    setDraftName(item.customName || getDefaultOutputBaseName(item.name));
+    setIsEditingName(true);
+  };
+
+  const commitNameEdit = () => {
+    if (!onRename) {
+      setIsEditingName(false);
+      return;
+    }
+    const cleaned = draftName.trim().replace(/\.(mp4|webm|mov|m4v|mkv)$/i, "");
+    const defaultBase = getDefaultOutputBaseName(item.name);
+    onRename(!cleaned || cleaned === defaultBase ? undefined : cleaned);
+    setIsEditingName(false);
+  };
+
   const origFormatLabel = getOriginalFormatLabel(item.name, item.file);
-  const targetFormatLabel = getFormatLabel(
-    (item.compressedFormat || settings.format) as VideoOutputFormat,
-  );
+  const targetFormatLabel = getFormatLabel(activeFormat);
 
   return (
     <div className="flex flex-col gap-2.5 bg-white pt-2 text-xs">
@@ -184,15 +233,84 @@ export default function DetailsSidebar({
 
       <div className="border-border-color flex items-start justify-between gap-2 border-b border-dashed pb-2.5">
         <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-center gap-1">
-            <Film
-              strokeWidth={1.5}
-              className="text-foreground/70 h-3.5 w-3.5 shrink-0"
-            />
-            <h4 title={targetName} className="truncate">
-              {targetName}
-            </h4>
-          </div>
+          {isEditingName ? (
+            <div className="flex h-6 min-w-0 items-center gap-1">
+              <Film
+                strokeWidth={1.5}
+                className="text-foreground/70 h-3.5 w-3.5 shrink-0"
+              />
+              <div className="border-border-color flex h-6 min-w-0 flex-1 items-center rounded border bg-white px-1.5">
+                <input
+                  ref={nameInputRef}
+                  type="text"
+                  value={draftName}
+                  onChange={(e) => setDraftName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      commitNameEdit();
+                    } else if (e.key === "Escape") {
+                      e.preventDefault();
+                      setIsEditingName(false);
+                    }
+                  }}
+                  onBlur={commitNameEdit}
+                  className="text-foreground h-full min-w-0 flex-1 bg-transparent text-xs leading-none focus:outline-none"
+                  aria-label="Output filename"
+                />
+                <span className="text-foreground/50 shrink-0 font-mono text-[10px] leading-none">
+                  {outputExt}
+                </span>
+              </div>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={commitNameEdit}
+                className="border-border-color text-code-green hover:bg-utils-scent-gray-01/30 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded border bg-white"
+                title="Save output filename (Enter)"
+              >
+                <Check className="h-3 w-3" />
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setIsEditingName(false)}
+                className="border-border-color text-foreground/60 hover:text-foreground hover:bg-utils-scent-gray-01/30 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded border bg-white"
+                title="Cancel (Esc)"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ) : (
+            <div className="group flex h-6 min-w-0 items-center gap-1">
+              <Film
+                strokeWidth={1.5}
+                className="text-foreground/70 h-3.5 w-3.5 shrink-0"
+              />
+              <h4
+                title={`${targetName} (Click to rename output file)`}
+                onClick={startEditingName}
+                className={clsx(
+                  "truncate leading-none",
+                  onRename &&
+                    "hover:text-utils-scent-orange cursor-pointer transition-colors",
+                )}
+              >
+                {targetName}
+              </h4>
+              {onRename && (
+                <button
+                  type="button"
+                  onClick={startEditingName}
+                  className="text-foreground/50 hover:text-foreground hover:bg-utils-scent-gray-01/30 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded transition-colors"
+                  title="Rename output file"
+                  aria-label="Rename output file"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          )}
           <span className="text-foreground/70 block truncate text-[10px]">
             Original: {item.name}
           </span>

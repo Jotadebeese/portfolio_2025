@@ -39,6 +39,7 @@ export default function VideoOptimizer() {
 
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingIndex, setProcessingIndex] = useState<number>(0);
+  const [processingTotal, setProcessingTotal] = useState<number>(0);
   const [isDownloadingZip, setIsDownloadingZip] = useState<boolean>(false);
   const [comparingItem, setComparingItem] = useState<VideoFileItem | null>(
     null,
@@ -56,6 +57,12 @@ export default function VideoOptimizer() {
   useEffect(() => {
     settingsRef.current = settings;
   }, [settings]);
+
+  useEffect(() => {
+    if (!warningNotice) return;
+    const timer = setTimeout(() => setWarningNotice(null), 6000);
+    return () => clearTimeout(timer);
+  }, [warningNotice]);
 
   useEffect(() => {
     return () => {
@@ -84,6 +91,12 @@ export default function VideoOptimizer() {
       if (remainingSlots <= 0) {
         setWarningNotice(`Batch limit of ${maxBatch} videos reached.`);
         return;
+      }
+
+      if (validFiles.length > remainingSlots) {
+        setWarningNotice(
+          `Batch limit is ${maxBatch} videos. Added the first ${remainingSlots} clip${remainingSlots > 1 ? "s" : ""}.`,
+        );
       }
 
       const filesToAdd = validFiles.slice(0, remainingSlots);
@@ -160,169 +173,75 @@ export default function VideoOptimizer() {
     [],
   );
 
-  const handleStartCompress = async () => {
-    if (isProcessing || items.length === 0) return;
+  const runCompressionBatch = async (batchItems: VideoFileItem[]) => {
+    if (isProcessing || batchItems.length === 0) return;
 
     setIsProcessing(true);
+    setProcessingTotal(batchItems.length);
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    const currentItems = [...itemsRef.current];
     const baseSettings = { ...settingsRef.current };
 
-    for (let i = 0; i < currentItems.length; i++) {
-      if (controller.signal.aborted) {
-        break;
-      }
-
-      const item = currentItems[i];
-      setProcessingIndex(i);
-
-      setItems((prev) =>
-        prev.map((it) =>
-          it.id === item.id
-            ? {
-                ...it,
-                status: "processing",
-                progress: 5,
-                errorMessage: undefined,
-              }
-            : it,
-        ),
-      );
-
-      const itemSettings: VideoOptimizerSettings = {
-        ...baseSettings,
-        trim: item.trim || baseSettings.trim,
-        sections: item.sections,
-        stripAudio:
-          item.stripAudio !== undefined
-            ? item.stripAudio
-            : baseSettings.stripAudio,
-      };
-
-      try {
-        const result = await compressVideo(
-          item.file,
-          itemSettings,
-          (progress) => {
-            if (controller.signal.aborted) return;
-            setItems((prev) =>
-              prev.map((it) => (it.id === item.id ? { ...it, progress } : it)),
-            );
-          },
-          controller.signal,
-        );
-
+    try {
+      for (let i = 0; i < batchItems.length; i++) {
         if (controller.signal.aborted) {
-          URL.revokeObjectURL(result.url);
           break;
         }
+
+        const item = batchItems[i];
+        setProcessingIndex(i);
 
         setItems((prev) =>
           prev.map((it) =>
             it.id === item.id
               ? {
                   ...it,
-                  status: "done",
-                  progress: 100,
-                  compressedBlob: result.blob,
-                  compressedUrl: result.url,
-                  compressedSize: result.size,
-                  compressedDimensions: result.dimensions,
-                  compressedFormat: result.format,
-                  compressedDuration: result.duration,
-                  lastCompressedSettings: { ...itemSettings },
+                  status: "processing",
+                  progress: 5,
+                  errorMessage: undefined,
                 }
               : it,
           ),
         );
-      } catch (err: unknown) {
-        if (
-          controller.signal.aborted ||
-          (err instanceof Error && err.name === "ConversionCanceledError")
-        ) {
-          setItems((prev) =>
-            prev.map((it) =>
-              it.id === item.id ? { ...it, status: "idle", progress: 0 } : it,
-            ),
+
+        const itemSettings: VideoOptimizerSettings = {
+          ...baseSettings,
+          trim: item.trim || baseSettings.trim,
+          sections: item.sections,
+          stripAudio:
+            item.stripAudio !== undefined
+              ? item.stripAudio
+              : baseSettings.stripAudio,
+        };
+
+        try {
+          const result = await compressVideo(
+            item.file,
+            itemSettings,
+            (progress) => {
+              if (controller.signal.aborted) return;
+              setItems((prev) =>
+                prev.map((it) =>
+                  it.id === item.id ? { ...it, progress } : it,
+                ),
+              );
+            },
+            controller.signal,
           );
-          break;
-        }
 
-        const msg = err instanceof Error ? err.message : "Compression failed";
-        console.error("Compression failed for", item.name, err);
-        setItems((prev) =>
-          prev.map((it) =>
-            it.id === item.id
-              ? { ...it, status: "error", progress: 0, errorMessage: msg }
-              : it,
-          ),
-        );
-      }
-    }
+          if (controller.signal.aborted) {
+            URL.revokeObjectURL(result.url);
+            break;
+          }
 
-    if (abortControllerRef.current === controller) {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleCompressSingle = async (targetItem: VideoFileItem) => {
-    if (isProcessing) return;
-
-    setIsProcessing(true);
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    const baseSettings = { ...settingsRef.current };
-
-    setItems((prev) =>
-      prev.map((it) =>
-        it.id === targetItem.id
-          ? {
-              ...it,
-              status: "processing",
-              progress: 5,
-              errorMessage: undefined,
-            }
-          : it,
-      ),
-    );
-
-    const itemSettings: VideoOptimizerSettings = {
-      ...baseSettings,
-      trim: targetItem.trim || baseSettings.trim,
-      sections: targetItem.sections,
-      stripAudio:
-        targetItem.stripAudio !== undefined
-          ? targetItem.stripAudio
-          : baseSettings.stripAudio,
-    };
-
-    try {
-      const result = await compressVideo(
-        targetItem.file,
-        itemSettings,
-        (progress) => {
-          if (controller.signal.aborted) return;
           setItems((prev) =>
-            prev.map((it) =>
-              it.id === targetItem.id ? { ...it, progress } : it,
-            ),
-          );
-        },
-        controller.signal,
-      );
-
-      if (controller.signal.aborted) {
-        URL.revokeObjectURL(result.url);
-        return;
-      }
-
-      setItems((prev) =>
-        prev.map((it) =>
-          it.id === targetItem.id
-            ? {
+            prev.map((it) => {
+              if (it.id !== item.id) return it;
+              if (it.compressedUrl && it.compressedUrl !== result.url) {
+                URL.revokeObjectURL(it.compressedUrl);
+              }
+              return {
                 ...it,
                 status: "done",
                 progress: 100,
@@ -333,39 +252,80 @@ export default function VideoOptimizer() {
                 compressedFormat: result.format,
                 compressedDuration: result.duration,
                 lastCompressedSettings: { ...itemSettings },
-              }
-            : it,
-        ),
-      );
-    } catch (err: unknown) {
-      if (
-        controller.signal.aborted ||
-        (err instanceof Error && err.name === "ConversionCanceledError")
-      ) {
-        setItems((prev) =>
-          prev.map((it) =>
-            it.id === targetItem.id
-              ? { ...it, status: "idle", progress: 0 }
-              : it,
-          ),
-        );
-        return;
-      }
+              };
+            }),
+          );
+        } catch (err: unknown) {
+          if (
+            controller.signal.aborted ||
+            (err instanceof Error && err.name === "ConversionCanceledError")
+          ) {
+            setItems((prev) =>
+              prev.map((it) =>
+                it.id === item.id ? { ...it, status: "idle", progress: 0 } : it,
+              ),
+            );
+            break;
+          }
 
-      const msg = err instanceof Error ? err.message : "Compression failed";
-      console.error("Compression failed for", targetItem.name, err);
-      setItems((prev) =>
-        prev.map((it) =>
-          it.id === targetItem.id
-            ? { ...it, status: "error", progress: 0, errorMessage: msg }
-            : it,
-        ),
-      );
+          const msg = err instanceof Error ? err.message : "Compression failed";
+          console.error("Compression failed for", item.name, err);
+          setItems((prev) =>
+            prev.map((it) =>
+              it.id === item.id
+                ? { ...it, status: "error", progress: 0, errorMessage: msg }
+                : it,
+            ),
+          );
+        }
+      }
     } finally {
       if (abortControllerRef.current === controller) {
         setIsProcessing(false);
       }
     }
+  };
+
+  const handleStartCompress = async () => {
+    const currentItems = [...itemsRef.current];
+    const baseSettings = { ...settingsRef.current };
+    const itemsNeedingWork = currentItems.filter(
+      (it) =>
+        it.status !== "done" ||
+        hasSettingsChanged(
+          baseSettings,
+          it.lastCompressedSettings,
+          it.trim,
+          it.stripAudio,
+          it.sections,
+          it.duration,
+        ),
+    );
+    if (itemsNeedingWork.length === 0) return;
+    await runCompressionBatch(itemsNeedingWork);
+  };
+
+  const handleCompressSelected = async () => {
+    const baseSettings = { ...settingsRef.current };
+    const selectedItemsNeedingWork = itemsRef.current.filter(
+      (it) =>
+        selectedIds.has(it.id) &&
+        (it.status !== "done" ||
+          hasSettingsChanged(
+            baseSettings,
+            it.lastCompressedSettings,
+            it.trim,
+            it.stripAudio,
+            it.sections,
+            it.duration,
+          )),
+    );
+    if (selectedItemsNeedingWork.length === 0) return;
+    await runCompressionBatch(selectedItemsNeedingWork);
+  };
+
+  const handleCompressSingle = async (targetItem: VideoFileItem) => {
+    await runCompressionBatch([targetItem]);
   };
 
   const handleCancelCompress = () => {
@@ -418,6 +378,7 @@ export default function VideoOptimizer() {
   };
 
   const handleDeleteSelected = () => {
+    const remaining = items.filter((i) => !selectedIds.has(i.id));
     setItems((prev) => {
       prev.forEach((i) => {
         if (selectedIds.has(i.id)) {
@@ -427,8 +388,16 @@ export default function VideoOptimizer() {
       });
       return prev.filter((i) => !selectedIds.has(i.id));
     });
+    if (!activeId || selectedIds.has(activeId)) {
+      setActiveId(remaining.length > 0 ? remaining[0].id : null);
+    }
     setSelectedIds(new Set());
-    setActiveId(null);
+  };
+
+  const handleRenameItem = (id: string, customName?: string) => {
+    setItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, customName } : it)),
+    );
   };
 
   const handleDownloadSingle = (item: VideoFileItem) => {
@@ -438,6 +407,7 @@ export default function VideoOptimizer() {
     a.download = getVideoFilenameWithExtension(
       item.name,
       item.compressedFormat || settings.format,
+      item.customName,
     );
     document.body.appendChild(a);
     a.click();
@@ -458,13 +428,27 @@ export default function VideoOptimizer() {
     try {
       setIsDownloadingZip(true);
       const zip = new JSZip();
+      const usedNames = new Set<string>();
 
       for (const item of selectedItems) {
         if (item.compressedBlob) {
-          const filename = getVideoFilenameWithExtension(
+          const baseFilename = getVideoFilenameWithExtension(
             item.name,
             item.compressedFormat || settings.format,
+            item.customName,
           );
+          let filename = baseFilename;
+          let counter = 1;
+          while (usedNames.has(filename.toLowerCase())) {
+            const dotIdx = baseFilename.lastIndexOf(".");
+            if (dotIdx !== -1) {
+              filename = `${baseFilename.slice(0, dotIdx)}_${counter}${baseFilename.slice(dotIdx)}`;
+            } else {
+              filename = `${baseFilename}_${counter}`;
+            }
+            counter++;
+          }
+          usedNames.add(filename.toLowerCase());
           zip.file(filename, item.compressedBlob);
         }
       }
@@ -496,7 +480,9 @@ export default function VideoOptimizer() {
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDraggingOver(false);
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDraggingOver(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -535,8 +521,8 @@ export default function VideoOptimizer() {
     );
     return acc + (est > 0 ? est : item.originalSize);
   }, 0);
-  const hasUncompressed = items.some((i) => i.status !== "done");
-  const hasPendingChanges = items.some(
+  const uncompressedCount = items.filter((i) => i.status !== "done").length;
+  const pendingChangesCount = items.filter(
     (i) =>
       i.status === "done" &&
       hasSettingsChanged(
@@ -547,7 +533,25 @@ export default function VideoOptimizer() {
         i.sections,
         i.duration,
       ),
-  );
+  ).length;
+  const selectedPendingCount = items.filter(
+    (i) =>
+      selectedIds.has(i.id) &&
+      (i.status !== "done" ||
+        hasSettingsChanged(
+          settings,
+          i.lastCompressedSettings,
+          i.trim,
+          i.stripAudio,
+          i.sections,
+          i.duration,
+        )),
+  ).length;
+  const selectedDoneCount = items.filter(
+    (i) => selectedIds.has(i.id) && i.status === "done" && i.compressedBlob,
+  ).length;
+  const hasUncompressed = uncompressedCount > 0;
+  const hasPendingChanges = pendingChangesCount > 0;
 
   return (
     <div
@@ -562,8 +566,11 @@ export default function VideoOptimizer() {
         onSettingsChange={setSettings}
         onFilesSelected={handleFilesSelected}
         selectedCount={selectedIds.size}
+        selectedPendingCount={selectedPendingCount}
+        selectedDoneCount={selectedDoneCount}
         totalCount={items.length}
         onToggleSelectAll={handleToggleSelectAll}
+        onCompressSelected={handleCompressSelected}
         onDeleteSelected={handleDeleteSelected}
         onDownloadSelected={handleDownloadSelected}
         isDownloadingZip={isDownloadingZip}
@@ -572,11 +579,13 @@ export default function VideoOptimizer() {
         totalEstimatedBytes={totalEstimatedBytes}
         isProcessing={isProcessing}
         processingIndex={processingIndex}
-        processingTotal={items.length}
+        processingTotal={processingTotal || items.length}
         onStartCompress={handleStartCompress}
         onCancelCompress={handleCancelCompress}
         hasUncompressed={hasUncompressed}
         hasPendingChanges={hasPendingChanges}
+        uncompressedCount={uncompressedCount}
+        pendingChangesCount={pendingChangesCount}
         maxFiles={10}
       />
 
@@ -658,6 +667,9 @@ export default function VideoOptimizer() {
               onDelete={() => activeItem && handleDeleteItem(activeItem.id)}
               onOpenCompare={() => activeItem && setComparingItem(activeItem)}
               onOpenEdit={() => activeItem && setEditingItem(activeItem)}
+              onRename={(newName) =>
+                activeItem && handleRenameItem(activeItem.id, newName)
+              }
             />
           </div>
         </div>

@@ -39,6 +39,7 @@ export interface VideoFileItem {
   id: string;
   file: File;
   name: string;
+  customName?: string;
   originalSize: number;
   originalType: string;
   originalDimensions: { width: number; height: number };
