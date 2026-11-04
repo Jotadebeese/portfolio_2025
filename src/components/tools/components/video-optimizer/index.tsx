@@ -164,13 +164,14 @@ export default function VideoOptimizer() {
     if (isProcessing || items.length === 0) return;
 
     setIsProcessing(true);
-    abortControllerRef.current = new AbortController();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     const currentItems = [...itemsRef.current];
     const baseSettings = { ...settingsRef.current };
 
     for (let i = 0; i < currentItems.length; i++) {
-      if (abortControllerRef.current?.signal.aborted) {
+      if (controller.signal.aborted) {
         break;
       }
 
@@ -205,11 +206,18 @@ export default function VideoOptimizer() {
           item.file,
           itemSettings,
           (progress) => {
+            if (controller.signal.aborted) return;
             setItems((prev) =>
               prev.map((it) => (it.id === item.id ? { ...it, progress } : it)),
             );
           },
+          controller.signal,
         );
+
+        if (controller.signal.aborted) {
+          URL.revokeObjectURL(result.url);
+          break;
+        }
 
         setItems((prev) =>
           prev.map((it) =>
@@ -230,6 +238,18 @@ export default function VideoOptimizer() {
           ),
         );
       } catch (err: unknown) {
+        if (
+          controller.signal.aborted ||
+          (err instanceof Error && err.name === "ConversionCanceledError")
+        ) {
+          setItems((prev) =>
+            prev.map((it) =>
+              it.id === item.id ? { ...it, status: "idle", progress: 0 } : it,
+            ),
+          );
+          break;
+        }
+
         const msg = err instanceof Error ? err.message : "Compression failed";
         console.error("Compression failed for", item.name, err);
         setItems((prev) =>
@@ -242,14 +262,17 @@ export default function VideoOptimizer() {
       }
     }
 
-    setIsProcessing(false);
+    if (abortControllerRef.current === controller) {
+      setIsProcessing(false);
+    }
   };
 
   const handleCompressSingle = async (targetItem: VideoFileItem) => {
     if (isProcessing) return;
 
     setIsProcessing(true);
-    abortControllerRef.current = new AbortController();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     const baseSettings = { ...settingsRef.current };
 
@@ -281,13 +304,20 @@ export default function VideoOptimizer() {
         targetItem.file,
         itemSettings,
         (progress) => {
+          if (controller.signal.aborted) return;
           setItems((prev) =>
             prev.map((it) =>
               it.id === targetItem.id ? { ...it, progress } : it,
             ),
           );
         },
+        controller.signal,
       );
+
+      if (controller.signal.aborted) {
+        URL.revokeObjectURL(result.url);
+        return;
+      }
 
       setItems((prev) =>
         prev.map((it) =>
@@ -308,6 +338,20 @@ export default function VideoOptimizer() {
         ),
       );
     } catch (err: unknown) {
+      if (
+        controller.signal.aborted ||
+        (err instanceof Error && err.name === "ConversionCanceledError")
+      ) {
+        setItems((prev) =>
+          prev.map((it) =>
+            it.id === targetItem.id
+              ? { ...it, status: "idle", progress: 0 }
+              : it,
+          ),
+        );
+        return;
+      }
+
       const msg = err instanceof Error ? err.message : "Compression failed";
       console.error("Compression failed for", targetItem.name, err);
       setItems((prev) =>
@@ -317,9 +361,11 @@ export default function VideoOptimizer() {
             : it,
         ),
       );
+    } finally {
+      if (abortControllerRef.current === controller) {
+        setIsProcessing(false);
+      }
     }
-
-    setIsProcessing(false);
   };
 
   const handleCancelCompress = () => {
@@ -617,7 +663,6 @@ export default function VideoOptimizer() {
         </div>
       )}
 
-      {/* Synchronized Before / After Compare Modal */}
       {comparingItem && (
         <CompareModal
           item={comparingItem}

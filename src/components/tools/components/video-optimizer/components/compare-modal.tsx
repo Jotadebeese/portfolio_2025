@@ -49,11 +49,11 @@ export default function CompareModal({
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isLooping, setIsLooping] = useState<boolean>(true);
   const [isMuted, setIsMuted] = useState<boolean>(true);
-  const [splitPos, setSplitPos] = useState<number>(50); // percentage 0 - 100
+  const [splitPos, setSplitPos] = useState<number>(50);
 
-  // Detect if video was trimmed or has cut sections
   const effectiveTrim = item.trim || item.lastCompressedSettings?.trim;
-  const effectiveSections = item.sections || item.lastCompressedSettings?.sections;
+  const effectiveSections =
+    item.sections || item.lastCompressedSettings?.sections;
 
   const isTrimmedOrCut = hasEffectiveTrim(
     item.duration,
@@ -62,19 +62,12 @@ export default function CompareModal({
   );
 
   const keptRanges = useMemo(
-    () =>
-      getKeptRanges(
-        item.duration,
-        effectiveTrim,
-        effectiveSections,
-      ),
+    () => getKeptRanges(item.duration, effectiveTrim, effectiveSections),
     [item.duration, effectiveTrim, effectiveSections],
   );
 
-  // Sync mode: "cut-range" (frame-synchronized to the cut) vs "full-timeline" (full original timeline)
   const [syncMode, setSyncMode] = useState<SyncMode>("cut-range");
 
-  // Track playback timecodes independently
   const [origCurrentTime, setOrigCurrentTime] = useState<number>(0);
   const [compCurrentTime, setCompCurrentTime] = useState<number>(0);
 
@@ -95,13 +88,12 @@ export default function CompareModal({
   const splitContainerRef = useRef<HTMLDivElement>(null);
   const isDraggingSplit = useRef<boolean>(false);
 
-  // When modal opens or item changes, reset timecodes
   useEffect(() => {
     if (!isOpen) {
       setIsPlaying(false);
       return;
     }
-    const startOrig = isTrimmedOrCut ? keptRanges[0]?.start ?? 0 : 0;
+    const startOrig = isTrimmedOrCut ? (keptRanges[0]?.start ?? 0) : 0;
     setCompCurrentTime(0);
     setOrigCurrentTime(startOrig);
 
@@ -109,7 +101,6 @@ export default function CompareModal({
     if (origVideoRef.current) origVideoRef.current.currentTime = startOrig;
   }, [isOpen, item.id, isTrimmedOrCut, keptRanges]);
 
-  // Lock body scroll and listen for Escape / Space keys
   useEffect(() => {
     if (!isOpen) return;
 
@@ -131,7 +122,6 @@ export default function CompareModal({
     };
   }, [isOpen, onClose]);
 
-  // Read metadata for durations
   const handleOrigLoadedMetadata = () => {
     if (origVideoRef.current && origVideoRef.current.duration > 0) {
       setOrigDuration(origVideoRef.current.duration);
@@ -156,18 +146,15 @@ export default function CompareModal({
     }
   };
 
-  // Determine master timeline parameters based on current sync mode
   const isCutSync = isTrimmedOrCut && syncMode === "cut-range";
   const masterDuration = isCutSync ? compDuration : origDuration || 1;
   const masterCurrentTime = isCutSync ? compCurrentTime : origCurrentTime;
 
-  // Check if original video is currently inside the cut range (in full-timeline mode)
   const origCutStatus = useMemo(
     () => mapOrigTimeToCompTime(origCurrentTime, keptRanges),
     [origCurrentTime, keptRanges],
   );
 
-  // Synchronized playback toggle
   const togglePlayPause = () => {
     const v1 = origVideoRef.current;
     const v2 = compVideoRef.current;
@@ -179,15 +166,16 @@ export default function CompareModal({
       setIsPlaying(false);
     } else {
       if (isCutSync) {
-        // Frame-matched mode: align original video to compressed video's timestamp
         const targetOrig = mapCompTimeToOrigTime(v2.currentTime, keptRanges);
         v1.currentTime = targetOrig;
         v2.play().catch(() => {});
         v1.play().catch(() => {});
       } else {
-        // Full timeline mode: start v1, play v2 only if inside cut range
         v1.play().catch(() => {});
-        const { compTime, isInside } = mapOrigTimeToCompTime(v1.currentTime, keptRanges);
+        const { compTime, isInside } = mapOrigTimeToCompTime(
+          v1.currentTime,
+          keptRanges,
+        );
         v2.currentTime = compTime;
         if (isInside) {
           v2.play().catch(() => {});
@@ -199,7 +187,6 @@ export default function CompareModal({
     }
   };
 
-  // Compressed video time update (drives playback in "cut-range" mode)
   const handleCompTimeUpdate = () => {
     if (!compVideoRef.current) return;
     const tc = compVideoRef.current.currentTime;
@@ -209,7 +196,6 @@ export default function CompareModal({
       const targetOrig = mapCompTimeToOrigTime(tc, keptRanges);
       setOrigCurrentTime(targetOrig);
       if (origVideoRef.current) {
-        // Maintain tight sync (< 0.15s drift)
         if (Math.abs(origVideoRef.current.currentTime - targetOrig) > 0.15) {
           origVideoRef.current.currentTime = targetOrig;
         }
@@ -217,7 +203,6 @@ export default function CompareModal({
     }
   };
 
-  // Original video time update (drives playback in "full-timeline" mode or untrimmed)
   const handleOrigTimeUpdate = () => {
     if (!origVideoRef.current) return;
     const to = origVideoRef.current.currentTime;
@@ -243,7 +228,6 @@ export default function CompareModal({
     }
   };
 
-  // Video ended handlers
   const handleCompEnded = () => {
     if (isCutSync) {
       if (isLooping) {
@@ -282,21 +266,18 @@ export default function CompareModal({
     }
   };
 
-  // Scrubber seek handler
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const t = Number(e.target.value);
     const v1 = origVideoRef.current;
     const v2 = compVideoRef.current;
 
     if (isCutSync) {
-      // Seek in cut space
       setCompCurrentTime(t);
       if (v2) v2.currentTime = t;
       const targetOrig = mapCompTimeToOrigTime(t, keptRanges);
       setOrigCurrentTime(targetOrig);
       if (v1) v1.currentTime = targetOrig;
     } else {
-      // Seek in full original space
       setOrigCurrentTime(t);
       if (v1) v1.currentTime = t;
       const { compTime } = mapOrigTimeToCompTime(t, keptRanges);
@@ -305,27 +286,26 @@ export default function CompareModal({
     }
   };
 
-  // Jump by delta seconds
   const jumpTime = (delta: number) => {
-    const newTime = Math.max(0, Math.min(masterDuration, masterCurrentTime + delta));
+    const newTime = Math.max(
+      0,
+      Math.min(masterDuration, masterCurrentTime + delta),
+    );
     handleSeek({
       target: { value: String(newTime) },
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
-  // Switch between sync modes
   const handleToggleSyncMode = (newMode: SyncMode) => {
     setSyncMode(newMode);
     const v1 = origVideoRef.current;
     const v2 = compVideoRef.current;
     if (newMode === "cut-range") {
-      // Align to start of cut
       if (v2) v2.currentTime = 0;
       if (v1) v1.currentTime = keptRanges[0]?.start ?? 0;
       setCompCurrentTime(0);
       setOrigCurrentTime(keptRanges[0]?.start ?? 0);
     } else {
-      // Reset to 0 of full original
       if (v1) v1.currentTime = 0;
       if (v2) v2.currentTime = 0;
       setOrigCurrentTime(0);
@@ -333,7 +313,6 @@ export default function CompareModal({
     }
   };
 
-  // Split drag handler
   const handleSplitMove = useCallback((clientX: number) => {
     if (!splitContainerRef.current) return;
     const rect = splitContainerRef.current.getBoundingClientRect();
@@ -365,7 +344,6 @@ export default function CompareModal({
     } catch {}
   };
 
-  // Restore playback and timestamps when switching viewMode (side-by-side <-> split)
   useEffect(() => {
     const v1 = origVideoRef.current;
     const v2 = compVideoRef.current;
@@ -393,25 +371,28 @@ export default function CompareModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="border-border-color flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-md bg-white shadow-2xl overscroll-contain"
+        className="border-border-color flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden overscroll-contain rounded-md bg-white shadow-2xl"
       >
-        {/* Modal Header */}
         <div className="border-border-color flex flex-wrap items-center justify-between gap-2 border-b border-dashed p-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <h4 className="text-foreground text-sm font-semibold truncate max-w-xs sm:max-w-md">
+          <div className="flex min-w-0 items-center gap-2">
+            <h4 className="text-foreground max-w-xs truncate text-sm font-semibold sm:max-w-md">
               Visual Inspection: {item.name}
             </h4>
 
             {savings && (
-              <span className="bg-emerald-500/10 text-emerald-600 rounded-md px-2 py-0.5 font-mono text-[11px] font-medium shrink-0">
-                Saved {formatBytes(savings.bytesSaved)} (-{savings.percentSaved}%)
+              <span className="shrink-0 rounded-md bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] font-medium text-emerald-600">
+                Saved {formatBytes(savings.bytesSaved)} (-{savings.percentSaved}
+                %)
               </span>
             )}
 
             {isTrimmedOrCut && (
-              <span className="border border-utils-scent-orange/40 bg-utils-scent-orange/10 text-utils-scent-orange rounded-md px-2 py-0.5 font-mono text-[11px] font-medium shrink-0 flex items-center gap-1">
+              <span className="border-utils-scent-orange/40 bg-utils-scent-orange/10 text-utils-scent-orange flex shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 font-mono text-[11px] font-medium">
                 <Scissors size={10} />
-                <span>Cut: {formatDuration(compDuration)} of {formatDuration(origDuration)}</span>
+                <span>
+                  Cut: {formatDuration(compDuration)} of{" "}
+                  {formatDuration(origDuration)}
+                </span>
               </span>
             )}
           </div>
@@ -419,12 +400,12 @@ export default function CompareModal({
           <div className="flex items-center gap-2">
             {/* Sync Mode Selector (only when video is trimmed or cut) */}
             {isTrimmedOrCut && (
-              <div className="border border-border-color bg-utils-scent-gray-01/30 flex items-center rounded-md p-0.5 text-xs">
+              <div className="border-border-color bg-utils-scent-gray-01/30 flex items-center rounded-md border p-0.5 text-xs">
                 <button
                   type="button"
                   onClick={() => handleToggleSyncMode("cut-range")}
                   className={clsx(
-                    "flex cursor-pointer items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono transition-all",
+                    "flex cursor-pointer items-center gap-1 rounded px-2 py-0.5 font-mono text-[11px] transition-all",
                     syncMode === "cut-range"
                       ? "bg-foreground text-background font-semibold shadow-2xs"
                       : "text-foreground/70 hover:text-foreground",
@@ -439,7 +420,7 @@ export default function CompareModal({
                   type="button"
                   onClick={() => handleToggleSyncMode("full-timeline")}
                   className={clsx(
-                    "flex cursor-pointer items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono transition-all",
+                    "flex cursor-pointer items-center gap-1 rounded px-2 py-0.5 font-mono text-[11px] transition-all",
                     syncMode === "full-timeline"
                       ? "bg-foreground text-background font-semibold shadow-2xs"
                       : "text-foreground/70 hover:text-foreground",
@@ -497,11 +478,11 @@ export default function CompareModal({
         </div>
 
         {/* Video Canvas Area */}
-        <div className="relative flex h-[54vh] min-h-[380px] max-h-[60vh] w-full items-center justify-center overflow-hidden bg-black/95 p-3 select-none">
+        <div className="relative flex h-[54vh] max-h-[60vh] min-h-[380px] w-full items-center justify-center overflow-hidden bg-black/95 p-3 select-none">
           {viewMode === "side-by-side" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full h-full">
+            <div className="grid h-full w-full grid-cols-1 gap-3 md:grid-cols-2">
               {/* Left: Original */}
-              <div className="relative flex flex-col items-center justify-center overflow-hidden rounded bg-black border border-white/10 h-full">
+              <div className="relative flex h-full flex-col items-center justify-center overflow-hidden rounded border border-white/10 bg-black">
                 <video
                   ref={origVideoRef}
                   src={item.originalUrl}
@@ -512,16 +493,19 @@ export default function CompareModal({
                   onEnded={handleOrigEnded}
                   className="max-h-full w-full object-contain"
                 />
-                <span className="absolute top-2 left-2 bg-black/80 px-2 py-0.5 rounded text-[10px] font-mono text-white/90 border border-white/20">
+                <span className="absolute top-2 left-2 rounded border border-white/20 bg-black/80 px-2 py-0.5 font-mono text-[10px] text-white/90">
                   Original &bull; {formatBytes(item.originalSize)}
                 </span>
-                <span className="absolute bottom-2 left-2 bg-black/80 px-1.5 py-0.5 rounded text-[9px] font-mono text-white/80">
-                  {item.originalDimensions.width} &times; {item.originalDimensions.height} &bull; {formatDuration(origCurrentTime)} / {formatDuration(origDuration)}
+                <span className="absolute bottom-2 left-2 rounded bg-black/80 px-1.5 py-0.5 font-mono text-[9px] text-white/80">
+                  {item.originalDimensions.width} &times;{" "}
+                  {item.originalDimensions.height} &bull;{" "}
+                  {formatDuration(origCurrentTime)} /{" "}
+                  {formatDuration(origDuration)}
                 </span>
               </div>
 
               {/* Right: Compressed */}
-              <div className="relative flex flex-col items-center justify-center overflow-hidden rounded bg-black border border-white/10 h-full">
+              <div className="relative flex h-full flex-col items-center justify-center overflow-hidden rounded border border-white/10 bg-black">
                 <video
                   ref={compVideoRef}
                   src={item.compressedUrl}
@@ -532,17 +516,21 @@ export default function CompareModal({
                   onEnded={handleCompEnded}
                   className="max-h-full w-full object-contain"
                 />
-                <span className="absolute top-2 right-2 bg-emerald-950/80 px-2 py-0.5 rounded text-[10px] font-mono text-emerald-300 border border-emerald-500/30">
-                  Compressed &bull; {item.compressedSize ? formatBytes(item.compressedSize) : ""}
+                <span className="absolute top-2 right-2 rounded border border-emerald-500/30 bg-emerald-950/80 px-2 py-0.5 font-mono text-[10px] text-emerald-300">
+                  Compressed &bull;{" "}
+                  {item.compressedSize ? formatBytes(item.compressedSize) : ""}
                 </span>
-                <span className="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[9px] font-mono text-white/80">
-                  {item.compressedDimensions?.width} &times; {item.compressedDimensions?.height} &bull; {formatDuration(compCurrentTime)} / {formatDuration(compDuration)}
+                <span className="absolute right-2 bottom-2 rounded bg-black/80 px-1.5 py-0.5 font-mono text-[9px] text-white/80">
+                  {item.compressedDimensions?.width} &times;{" "}
+                  {item.compressedDimensions?.height} &bull;{" "}
+                  {formatDuration(compCurrentTime)} /{" "}
+                  {formatDuration(compDuration)}
                 </span>
 
                 {/* Notice in full-timeline mode when outside cut */}
                 {!isCutSync && !origCutStatus.isInside && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center pointer-events-none p-4 text-center">
-                    <span className="bg-black/90 text-white/90 border border-white/20 rounded px-2.5 py-1 text-xs font-mono">
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/60 p-4 text-center">
+                    <span className="rounded border border-white/20 bg-black/90 px-2.5 py-1 font-mono text-xs text-white/90">
                       ✂️ Outside cut range ({formatDuration(origCurrentTime)})
                     </span>
                   </div>
@@ -557,7 +545,7 @@ export default function CompareModal({
               onPointerMove={handleSplitPointerMove}
               onPointerUp={handleSplitPointerUp}
               onPointerCancel={handleSplitPointerUp}
-              className="relative h-full w-full flex items-center justify-center overflow-hidden cursor-ew-resize select-none touch-none rounded bg-black"
+              className="relative flex h-full w-full cursor-ew-resize touch-none items-center justify-center overflow-hidden rounded bg-black select-none"
             >
               {/* Compressed (Underneath / Base layer) */}
               <video
@@ -568,7 +556,7 @@ export default function CompareModal({
                 onLoadedMetadata={handleCompLoadedMetadata}
                 onTimeUpdate={handleCompTimeUpdate}
                 onEnded={handleCompEnded}
-                className="absolute inset-0 h-full w-full object-contain pointer-events-none"
+                className="pointer-events-none absolute inset-0 h-full w-full object-contain"
               />
 
               {/* Original (Clipped on top: reveals 0..splitPos%) */}
@@ -583,42 +571,45 @@ export default function CompareModal({
                 style={{
                   clipPath: `inset(0 ${100 - splitPos}% 0 0)`,
                 }}
-                className="absolute inset-0 h-full w-full object-contain pointer-events-none"
+                className="pointer-events-none absolute inset-0 h-full w-full object-contain"
               />
 
               {/* Split Divider Line and Draggable Knob */}
               <div
-                className="absolute top-0 bottom-0 z-30 w-0.5 bg-white shadow-[0_0_12px_rgba(0,0,0,0.85)] pointer-events-none"
+                className="pointer-events-none absolute top-0 bottom-0 z-30 w-0.5 bg-white shadow-[0_0_12px_rgba(0,0,0,0.85)]"
                 style={{ left: `${splitPos}%` }}
               >
-                <div className="bg-foreground text-background absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-8 w-8 rounded-full border-2 border-white flex items-center justify-center text-xs font-bold shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
+                <div className="bg-foreground text-background absolute top-1/2 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
                   &harr;
                 </div>
               </div>
 
               {/* Corner Info Badges */}
-              <div className="absolute top-3 left-3 z-30 pointer-events-none">
-                <span className="bg-black/85 backdrop-blur-xs px-2.5 py-1 rounded text-[11px] font-mono text-white border border-white/20 shadow-md">
-                  Original ({formatBytes(item.originalSize)}) &bull; {formatDuration(origCurrentTime)}
+              <div className="pointer-events-none absolute top-3 left-3 z-30">
+                <span className="rounded border border-white/20 bg-black/85 px-2.5 py-1 font-mono text-[11px] text-white shadow-md backdrop-blur-xs">
+                  Original ({formatBytes(item.originalSize)}) &bull;{" "}
+                  {formatDuration(origCurrentTime)}
                 </span>
               </div>
-              <div className="absolute top-3 right-3 z-30 pointer-events-none">
-                <span className="bg-emerald-950/85 backdrop-blur-xs px-2.5 py-1 rounded text-[11px] font-mono text-emerald-300 border border-emerald-500/40 shadow-md">
-                  Compressed ({item.compressedSize ? formatBytes(item.compressedSize) : ""}) &bull; {formatDuration(compCurrentTime)}
+              <div className="pointer-events-none absolute top-3 right-3 z-30">
+                <span className="rounded border border-emerald-500/40 bg-emerald-950/85 px-2.5 py-1 font-mono text-[11px] text-emerald-300 shadow-md backdrop-blur-xs">
+                  Compressed (
+                  {item.compressedSize ? formatBytes(item.compressedSize) : ""})
+                  &bull; {formatDuration(compCurrentTime)}
                 </span>
               </div>
 
               {/* Split position percentage pill at bottom */}
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
-                <span className="bg-black/85 backdrop-blur-xs text-white/80 border border-white/15 rounded-full px-2.5 py-0.5 text-[10px] font-mono shadow-md">
+              <div className="pointer-events-none absolute bottom-3 left-1/2 z-30 -translate-x-1/2">
+                <span className="rounded-full border border-white/15 bg-black/85 px-2.5 py-0.5 font-mono text-[10px] text-white/80 shadow-md backdrop-blur-xs">
                   {Math.round(splitPos)}% / {100 - Math.round(splitPos)}%
                 </span>
               </div>
 
               {/* Notice in full-timeline mode when outside cut */}
               {!isCutSync && !origCutStatus.isInside && (
-                <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
-                  <span className="bg-black/90 text-white/90 border border-white/20 rounded px-2.5 py-1 text-xs font-mono shadow-md">
+                <div className="pointer-events-none absolute top-12 left-1/2 z-30 -translate-x-1/2">
+                  <span className="rounded border border-white/20 bg-black/90 px-2.5 py-1 font-mono text-xs text-white/90 shadow-md">
                     ✂️ Outside cut range ({formatDuration(origCurrentTime)})
                   </span>
                 </div>
@@ -628,19 +619,19 @@ export default function CompareModal({
         </div>
 
         {/* Master Playback Controls Bar */}
-        <div className="border-border-color bg-utils-scent-gray-01/20 border-t p-3 flex flex-col gap-2">
+        <div className="border-border-color bg-utils-scent-gray-01/20 flex flex-col gap-2 border-t p-3">
           <div className="flex items-center gap-3">
             {/* Play/Pause Button */}
             <button
               type="button"
               onClick={togglePlayPause}
-              className="bg-foreground text-background hover:bg-foreground/90 h-8 w-8 rounded-full flex items-center justify-center cursor-pointer transition-transform active:scale-95 shrink-0"
+              className="bg-foreground text-background hover:bg-foreground/90 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-transform active:scale-95"
               title={isPlaying ? "Pause (Space)" : "Play (Space)"}
             >
               {isPlaying ? (
                 <Pause className="h-3.5 w-3.5 fill-current" />
               ) : (
-                <Play className="h-3.5 w-3.5 fill-current ml-0.5" />
+                <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />
               )}
             </button>
 
@@ -648,7 +639,7 @@ export default function CompareModal({
             <button
               type="button"
               onClick={() => jumpTime(-5)}
-              className="text-foreground/70 hover:text-foreground h-7 px-1.5 flex items-center gap-0.5 rounded cursor-pointer font-mono text-[11px]"
+              className="text-foreground/70 hover:text-foreground flex h-7 cursor-pointer items-center gap-0.5 rounded px-1.5 font-mono text-[11px]"
               title="Jump back 5s"
             >
               <RotateCcw size={12} />
@@ -656,22 +647,24 @@ export default function CompareModal({
             </button>
 
             {/* Current / Total Master Time */}
-            <span className="font-mono text-xs text-foreground shrink-0 min-w-[75px]">
-              {formatDuration(masterCurrentTime)} / {formatDuration(masterDuration)}
+            <span className="text-foreground min-w-[75px] shrink-0 font-mono text-xs">
+              {formatDuration(masterCurrentTime)} /{" "}
+              {formatDuration(masterDuration)}
             </span>
 
             {/* Synchronized Timeline Scrubber with Kept Region Indicators */}
-            <div className="relative flex-1 flex items-center h-6">
+            <div className="relative flex h-6 flex-1 items-center">
               {/* Highlight kept regions on track in full-timeline mode */}
               {!isCutSync && isTrimmedOrCut && (
-                <div className="absolute inset-x-0 h-1.5 rounded-lg bg-neutral-200 pointer-events-none overflow-hidden">
+                <div className="pointer-events-none absolute inset-x-0 h-1.5 overflow-hidden rounded-lg bg-neutral-200">
                   {keptRanges.map((range, idx) => {
                     const leftPct = (range.start / origDuration) * 100;
-                    const widthPct = ((range.end - range.start) / origDuration) * 100;
+                    const widthPct =
+                      ((range.end - range.start) / origDuration) * 100;
                     return (
                       <div
                         key={idx}
-                        className="absolute top-0 bottom-0 bg-utils-scent-orange/50"
+                        className="bg-utils-scent-orange/50 absolute top-0 bottom-0"
                         style={{
                           left: `${leftPct}%`,
                           width: `${widthPct}%`,
@@ -689,7 +682,7 @@ export default function CompareModal({
                 step="0.05"
                 value={masterCurrentTime}
                 onChange={handleSeek}
-                className="relative z-10 w-full accent-utils-scent-orange bg-utils-scent-gray-01/60 h-1.5 cursor-pointer appearance-none rounded-lg"
+                className="accent-utils-scent-orange bg-utils-scent-gray-01/60 relative z-10 h-1.5 w-full cursor-pointer appearance-none rounded-lg"
               />
             </div>
 
@@ -698,7 +691,7 @@ export default function CompareModal({
               type="button"
               onClick={() => setIsLooping(!isLooping)}
               className={clsx(
-                "border flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono transition-colors cursor-pointer shrink-0",
+                "flex shrink-0 cursor-pointer items-center gap-1 rounded border px-2 py-0.5 font-mono text-[11px] transition-colors",
                 isLooping
                   ? "border-utils-scent-orange bg-utils-scent-orange/15 text-utils-scent-orange font-semibold"
                   : "border-border-color text-foreground/70 hover:text-foreground bg-white",
@@ -713,7 +706,7 @@ export default function CompareModal({
             <button
               type="button"
               onClick={() => setIsMuted((prev) => !prev)}
-              className="text-foreground/70 hover:text-foreground h-7 w-7 flex items-center justify-center rounded cursor-pointer transition-colors shrink-0"
+              className="text-foreground/70 hover:text-foreground flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded transition-colors"
               title={isMuted ? "Unmute" : "Mute"}
             >
               {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
@@ -723,7 +716,7 @@ export default function CompareModal({
             <button
               type="button"
               onClick={onDownload}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md text-xs font-medium cursor-pointer flex items-center gap-1.5 transition-colors shrink-0"
+              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-700"
             >
               <Download size={13} />
               <span>Download</span>

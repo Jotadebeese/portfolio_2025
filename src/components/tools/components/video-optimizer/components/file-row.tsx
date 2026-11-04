@@ -360,7 +360,7 @@ export default function FileRow({
                 }}
                 className={clsx(
                   "border-border-color flex h-6 w-6 items-center justify-center rounded-xs border transition-all",
-                  item.trim || item.stripAudio !== undefined
+                  isTrimmed || item.stripAudio !== undefined
                     ? "border-border-color text-code-rust hover:bg-utils-scent-gray-01/30"
                     : "text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground",
                   isProcessing
