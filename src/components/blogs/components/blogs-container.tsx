@@ -2,7 +2,7 @@
 
 import { Blog, BlogTag } from "@/payload-types";
 import { useSearchParams } from "next/navigation";
-import BlogFilters from "./blog-filters";
+import BlogFilters, { BlogTagWithCount } from "./blog-filters";
 import BlogCard from "./blog-card";
 import { useMemo } from "react";
 
@@ -11,7 +11,7 @@ export default function BlogsContainer({
   tags,
 }: {
   blogs: Partial<Blog>[];
-  tags: BlogTag[];
+  tags: BlogTagWithCount[];
 }) {
   const searchParams = useSearchParams();
   const tagsParam = searchParams.get("tags");
@@ -40,7 +40,6 @@ export default function BlogsContainer({
       if (sort === "title-desc")
         return (b.title || "").localeCompare(a.title || "");
 
-      // Default: newest first
       return dateB - dateA;
     });
 
@@ -51,10 +50,12 @@ export default function BlogsContainer({
     <>
       <BlogFilters tags={tags} />
       <div className="flex flex-col">
-        <div className="flex flex-col gap-5 p-2.5 sm:px-0 pb-8">
+        <div className="flex flex-col gap-5 p-2.5 pb-8 sm:px-0">
           {filteredBlogs.length === 0 ? (
             <div className="flex w-full py-5">
-              <p className="font-light">Work in progress, nothing to see here.</p>
+              <p className="font-light">
+                Work in progress, nothing to see here.
+              </p>
             </div>
           ) : (
             filteredBlogs.map((blog) => <BlogCard key={blog.id} {...blog} />)

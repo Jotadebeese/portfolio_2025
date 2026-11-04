@@ -5,7 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
 import clsx from "clsx";
 
-export default function BlogFilters({ tags }: { tags: BlogTag[] }) {
+export type BlogTagWithCount = BlogTag & {
+  count?: number;
+};
+
+export default function BlogFilters({ tags }: { tags: BlogTagWithCount[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -95,7 +99,17 @@ export default function BlogFilters({ tags }: { tags: BlogTag[] }) {
                   !isSelected && "pr-3",
                 )}
               >
-                {tag.name}
+                <span>{tag.name}</span>
+                {typeof tag.count === "number" && (
+                  <span
+                    className={clsx(
+                      "text-xs",
+                      isSelected ? "text-white/80" : "opacity-60",
+                    )}
+                  >
+                    ({tag.count})
+                  </span>
+                )}
                 {isSelected && <X size={12} className="ml-1 text-white" />}
               </button>
             );

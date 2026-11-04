@@ -52,6 +52,25 @@ export default async function Blog() {
     getAllBlogs(),
   ]);
 
+  const tagCounts = new Map<number, number>();
+  for (const blog of allBlogs) {
+    if (Array.isArray(blog.blogTags)) {
+      for (const tag of blog.blogTags) {
+        const id = typeof tag === "object" && tag !== null ? tag.id : tag;
+        if (typeof id === "number") {
+          tagCounts.set(id, (tagCounts.get(id) || 0) + 1);
+        }
+      }
+    }
+  }
+
+  const activeTags = allTags
+    .filter((tag) => (tagCounts.get(tag.id) || 0) > 0)
+    .map((tag) => ({
+      ...tag,
+      count: tagCounts.get(tag.id) || 0,
+    }));
+
   const image = blogPage.featuredImage as Media;
   const baseUrl = process.env.NEXT_WEB_APP_PUBLIC_URL || "http://localhost:3000";
 
@@ -86,7 +105,7 @@ export default async function Blog() {
         image={image}
       />
       <Suspense fallback={null}>
-        <BlogsContainer blogs={allBlogs} tags={allTags} />
+        <BlogsContainer blogs={allBlogs} tags={activeTags} />
       </Suspense>
     </>
   );
