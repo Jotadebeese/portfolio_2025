@@ -13,6 +13,7 @@ import {
 import ToolCard from "../components/tool-card";
 import ToolSkeleton from "./tool-skeleton";
 import { AVAILABLE_TOOLS, ToolId } from "../types";
+import { notifyWorkbenchTools } from "../utils/toc-sync";
 
 const SecretGenerator = lazy(() => import("../components/secret-generator"));
 const ImageOptimizer = lazy(() => import("../components/image-optimizer"));
@@ -69,6 +70,10 @@ export default function ToolsWorkbench({
   const [activeTools, setActiveTools] = useState<ToolId[]>(fallbackTools);
   const [copiedShare, setCopiedShare] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    notifyWorkbenchTools(activeTools);
+  }, [activeTools]);
 
   useEffect(() => {
     setMounted(true);
@@ -162,7 +167,7 @@ export default function ToolsWorkbench({
       .replace(/[^a-z0-9-]/g, "") || "tools-workbench";
 
   return (
-    <section id={sectionId} className="flex w-full flex-col gap-2">
+    <section id={sectionId} className="flex w-full scroll-mt-24 flex-col gap-2">
       {(sectionHeading || description) && (
         <div className="flex flex-col gap-1 pb-2">
           {sectionHeading && <h2>{sectionHeading}</h2>}

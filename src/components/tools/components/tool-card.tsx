@@ -37,7 +37,7 @@ export default function ToolCard({
     <article
       id={id}
       className={clsx(
-        "group border-border-color w-full rounded-lg bg-white shadow-sm transition-all duration-200",
+        "group border-border-color w-full scroll-mt-24 rounded-lg bg-white shadow-sm transition-all duration-200",
         className,
       )}
     >

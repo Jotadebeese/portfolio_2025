@@ -144,8 +144,7 @@ export default function CompareModal({
       v1.playbackRate = 1;
       v2.playbackRate = 1;
       if (isCutSync) {
-        const tc =
-          v2.currentTime >= compDuration - 0.05 ? 0 : v2.currentTime;
+        const tc = v2.currentTime >= compDuration - 0.05 ? 0 : v2.currentTime;
         const targetOrig = mapCompTimeToOrigTime(tc, keptRanges);
         v2.currentTime = tc;
         v1.currentTime = targetOrig;
@@ -154,8 +153,7 @@ export default function CompareModal({
         v2.play().catch(() => {});
         v1.play().catch(() => {});
       } else {
-        const to =
-          v1.currentTime >= origDuration - 0.05 ? 0 : v1.currentTime;
+        const to = v1.currentTime >= origDuration - 0.05 ? 0 : v1.currentTime;
         v1.currentTime = to;
         const { compTime, isInside } = mapOrigTimeToCompTime(to, keptRanges);
         v2.currentTime = compTime;
@@ -172,9 +170,6 @@ export default function CompareModal({
     }
   }, [isPlaying, isCutSync, keptRanges, compDuration, origDuration]);
 
-  // High-frequency requestAnimationFrame drift-lock loop:
-  // Uses proportional playbackRate micro-adjustment (0.85x..1.18x) to eliminate
-  // 2-5 frame 4K decode lag without triggering keyframe seek stalls.
   useEffect(() => {
     if (!isOpen || !isPlaying) return;
 
@@ -189,7 +184,7 @@ export default function CompareModal({
           const drift = targetOrig - v1.currentTime;
           if (!v1.seeking) {
             if (Math.abs(drift) > 0.35) {
-              v1. playbackRate = 1;
+              v1.playbackRate = 1;
               v1.currentTime = targetOrig;
             } else if (Math.abs(drift) > 0.012) {
               const rate = Math.max(0.85, Math.min(1.18, 1 + drift * 1.5));
@@ -497,7 +492,8 @@ export default function CompareModal({
                 <span className="hidden lg:inline">
                   Saved {formatBytes(savings.bytesSaved)} (
                 </span>
-                -{savings.percentSaved}%<span className="hidden lg:inline">)</span>
+                -{savings.percentSaved}%
+                <span className="hidden lg:inline">)</span>
               </span>
             )}
             {savings && !savings.isReduced && savings.bytesSaved < 0 && (
@@ -523,7 +519,6 @@ export default function CompareModal({
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            {/* Sync Mode Selector (only when video is trimmed or cut) */}
             {isTrimmedOrCut && (
               <div className="border-border-color bg-background flex shrink-0 items-center rounded-md border p-0.5 text-xs">
                 <button
