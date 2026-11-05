@@ -972,7 +972,7 @@ export default function EditModal({
             <button
               type="button"
               onClick={() => jumpTime(-5)}
-              className="text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/40 flex h-7 cursor-pointer items-center gap-0.5 rounded px-1 font-mono text-[10px] transition-all sm:px-1.5 sm:text-[11px]"
+              className="text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/40 hidden h-7 cursor-pointer items-center gap-0.5 rounded px-1.5 font-mono text-[11px] transition-all sm:flex"
               title="Jump back 5s"
             >
               <RotateCcw size={12} />
@@ -982,7 +982,7 @@ export default function EditModal({
             <button
               type="button"
               onClick={() => jumpTime(5)}
-              className="text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/40 flex h-7 cursor-pointer items-center gap-0.5 rounded px-1 font-mono text-[10px] transition-all sm:px-1.5 sm:text-[11px]"
+              className="text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/40 hidden h-7 cursor-pointer items-center gap-0.5 rounded px-1.5 font-mono text-[11px] transition-all sm:flex"
               title="Jump forward 5s"
             >
               <RotateCw size={12} />
@@ -1095,12 +1095,12 @@ export default function EditModal({
 
         {/* Action Toolbar Above Timeline */}
         <div className="border-border-color bg-utils-scent-gray-01/15 text-foreground flex flex-wrap items-center justify-between gap-1.5 border-b px-2.5 py-1.5 text-xs sm:px-4 sm:py-2">
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2">
             {/* Split at Playhead Button */}
             <button
               type="button"
               onClick={handleSplitAtPlayhead}
-              className="bg-foreground text-background hover:bg-foreground/90 flex cursor-pointer items-center gap-1.5 rounded px-2.5 py-1 text-[11px] font-medium shadow-xs transition-colors sm:px-3 sm:py-1.5 sm:text-xs"
+              className="bg-foreground text-background hover:bg-foreground/90 flex cursor-pointer items-center gap-1 rounded px-2 py-1 text-[11px] font-medium shadow-xs transition-colors sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs"
               title="Split clip at current playhead position (Shortcut: S)"
             >
               <Scissors size={12} />
@@ -1167,7 +1167,7 @@ export default function EditModal({
                     handleMergeSection(idx - 1);
                   }
                 }}
-                className="border-border-color hover:bg-utils-scent-gray-01/30 text-foreground/80 cursor-pointer rounded border bg-white px-2 py-1 font-mono text-[11px] transition-colors sm:px-2.5 sm:py-1.5 sm:text-xs"
+                className="border-border-color hover:bg-utils-scent-gray-01/30 text-foreground/80 cursor-pointer rounded border bg-white px-1.5 py-1 font-mono text-[11px] transition-colors sm:px-2.5 sm:py-1.5 sm:text-xs"
                 title="Merge selected section with its neighbor"
               >
                 Merge
@@ -1190,9 +1190,13 @@ export default function EditModal({
           </div>
 
           {/* Kept vs Cut Stats on the Right */}
-          <div className="flex items-center gap-2 font-mono text-[11px] sm:gap-3 sm:text-xs">
+          <div className="flex items-center gap-1.5 font-mono text-[11px] sm:gap-3 sm:text-xs">
             <span className="text-foreground/70">
-              Kept:{" "}
+              <span
+                className={clsx(totalCutDuration > 0.05 && "hidden sm:inline")}
+              >
+                Kept:{" "}
+              </span>
               <strong className="text-foreground">
                 {formatStatDuration(totalKeptDuration)}
               </strong>
@@ -1348,7 +1352,8 @@ export default function EditModal({
                           });
                         }}
                         className={clsx(
-                          "group bg-foreground pointer-events-auto absolute top-1/2 -left-1.5 flex h-7 w-3 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-sm shadow-xs transition-transform hover:scale-105 active:scale-95",
+                          "group bg-foreground pointer-events-auto absolute top-1/2 flex h-7 w-3 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-sm shadow-xs transition-transform hover:scale-105 active:scale-95",
+                          sec.start <= 0.05 ? "left-0.5" : "-left-1.5",
                           sec.end >= duration - 0.1 ? "z-40" : "z-30",
                         )}
                         title="Drag to trim start"
@@ -1372,7 +1377,10 @@ export default function EditModal({
                           });
                         }}
                         className={clsx(
-                          "group bg-foreground pointer-events-auto absolute top-1/2 -right-1.5 flex h-7 w-3 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-sm shadow-xs transition-transform hover:scale-105 active:scale-95",
+                          "group bg-foreground pointer-events-auto absolute top-1/2 flex h-7 w-3 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-sm shadow-xs transition-transform hover:scale-105 active:scale-95",
+                          sec.end >= duration - 0.05
+                            ? "right-0.5"
+                            : "-right-1.5",
                           sec.start <= 0.1 ? "z-40" : "z-30",
                         )}
                         title="Drag to trim end"

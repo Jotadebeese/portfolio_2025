@@ -16,7 +16,8 @@ import Toolbar from "./components/toolbar";
 import CompareModal from "./components/compare-modal";
 import EditModal from "./components/edit-modal";
 import DetailsSidebar from "./components/details-sidebar";
-import { X } from "lucide-react";
+import OptimizationGuide from "./components/optimization-guide";
+import { X, AlertCircle } from "lucide-react";
 
 const DEFAULT_SETTINGS: VideoOptimizerSettings = {
   format: "video/mp4",
@@ -36,6 +37,13 @@ export default function VideoOptimizer() {
     useState<VideoOptimizerSettings>(DEFAULT_SETTINGS);
   const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
   const [warningNotice, setWarningNotice] = useState<string | null>(null);
+  const [supportsWebCodecs, setSupportsWebCodecs] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && typeof VideoEncoder === "undefined") {
+      setSupportsWebCodecs(false);
+    }
+  }, []);
 
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingIndex, setProcessingIndex] = useState<number>(0);
@@ -589,6 +597,18 @@ export default function VideoOptimizer() {
         maxFiles={10}
       />
 
+      {!supportsWebCodecs && (
+        <div className="border-code-rust/40 bg-code-rust/10 text-foreground flex items-center gap-2 rounded-md border p-2.5 text-xs">
+          <AlertCircle className="text-code-rust h-4 w-4 shrink-0" />
+          <span className="text-foreground/80">
+            Your browser does not support the{" "}
+            <strong className="text-foreground font-mono">WebCodecs API</strong>{" "}
+            required for hardware-accelerated video encoding. Please use a
+            recent version of Chrome, Edge, Safari 16.4+, or Firefox 130+.
+          </span>
+        </div>
+      )}
+
       {warningNotice && (
         <div className="bg-code-rust/10 text-foreground flex items-center justify-between gap-2 rounded-md p-2 text-xs transition-all">
           <div className="flex min-w-0 items-center gap-2">
@@ -668,6 +688,9 @@ export default function VideoOptimizer() {
               onDelete={() => activeItem && handleDeleteItem(activeItem.id)}
               onOpenCompare={() => activeItem && setComparingItem(activeItem)}
               onOpenEdit={() => activeItem && setEditingItem(activeItem)}
+              onCompressSingle={() =>
+                activeItem && handleCompressSingle(activeItem)
+              }
               onRename={(newName) =>
                 activeItem && handleRenameItem(activeItem.id, newName)
               }
@@ -675,6 +698,8 @@ export default function VideoOptimizer() {
           </div>
         </div>
       )}
+
+      <OptimizationGuide />
 
       {comparingItem && (
         <CompareModal

@@ -12,6 +12,7 @@ import {
   Pencil,
   Check,
   X,
+  Play,
 } from "lucide-react";
 import {
   VideoFileItem,
@@ -27,6 +28,7 @@ import {
   formatDuration,
   getEffectiveVideoDuration,
   hasEffectiveTrim,
+  hasSettingsChanged,
   getVideoOrientation,
   getAdaptedPresetForTargetSize,
   estimateVideoSize,
@@ -41,6 +43,7 @@ type Props = {
   onDelete: () => void;
   onOpenCompare: () => void;
   onOpenEdit: () => void;
+  onCompressSingle?: () => void;
   onRename?: (newCustomName?: string) => void;
 };
 
@@ -63,6 +66,7 @@ export default function DetailsSidebar({
   onDelete,
   onOpenCompare,
   onOpenEdit,
+  onCompressSingle,
   onRename,
 }: Props) {
   const [isEditingName, setIsEditingName] = useState(false);
@@ -99,6 +103,15 @@ export default function DetailsSidebar({
   );
 
   const isTrimmed = hasEffectiveTrim(item.duration, item.trim, item.sections);
+
+  const itemSettingsChanged = hasSettingsChanged(
+    settings,
+    item.lastCompressedSettings,
+    item.trim,
+    item.stripAudio,
+    item.sections,
+    item.duration,
+  );
 
   const orientation = getVideoOrientation(
     item.originalDimensions.width,
@@ -465,15 +478,34 @@ export default function DetailsSidebar({
       </div>
 
       <div className="flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={onOpenEdit}
-          disabled={isProcessing}
-          className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Scissors className="h-3.5 w-3.5" />
-          <span>Edit Studio</span>
-        </button>
+        <div className="flex gap-2">
+          {onCompressSingle &&
+            item.status !== "processing" &&
+            (item.status === "idle" ||
+              item.status === "error" ||
+              itemSettingsChanged) && (
+              <button
+                type="button"
+                onClick={onCompressSingle}
+                disabled={isProcessing}
+                className="border-foreground bg-foreground text-background flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Play className="h-3.5 w-3.5 fill-current" />
+                <span>
+                  {itemSettingsChanged ? "Apply Changes" : "Optimize"}
+                </span>
+              </button>
+            )}
+          <button
+            type="button"
+            onClick={onOpenEdit}
+            disabled={isProcessing}
+            className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Scissors className="h-3.5 w-3.5" />
+            <span>Edit Studio</span>
+          </button>
+        </div>
 
         <div className="border-border-color flex gap-2 border-t border-dashed pt-3">
           <button

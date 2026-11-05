@@ -226,15 +226,17 @@ export default function FileRow({
             {item.originalDimensions.width > 0 && (
               <span
                 className={
-                  "py-0.2 border-border-color bg-utils-scent-gray-01/30 text-foreground/70 rounded-xs border px-1 font-mono text-[9px]"
+                  "py-0.2 border-border-color bg-utils-scent-gray-01/30 text-foreground/70 shrink-0 rounded-xs border px-1 font-mono text-[9px]"
                 }
               >
-                {orientation.label} ({orientation.ratio})
+                <span className="hidden sm:inline">{orientation.label} (</span>
+                {orientation.ratio}
+                <span className="hidden sm:inline">)</span>
               </span>
             )}
 
             {isTrimmed && (
-              <span className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-foreground/70 flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]">
+              <span className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-foreground/70 flex shrink-0 items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]">
                 <Scissors size={9} />
                 <span>
                   {item.sections && item.sections.some((s) => s.isDeleted)
@@ -247,14 +249,14 @@ export default function FileRow({
             )}
 
             {effectiveStripAudio || !item.hasAudio ? (
-              <span className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-code-rust flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]">
+              <span className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-code-rust flex shrink-0 items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]">
                 <VolumeX size={9} />
                 <span>Muted</span>
               </span>
             ) : (
               item.stripAudio === false &&
               settings.stripAudio && (
-                <span className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-code-green flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]">
+                <span className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-code-green flex shrink-0 items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]">
                   <Volume2 size={9} />
                   <span>Audio</span>
                 </span>
@@ -262,21 +264,27 @@ export default function FileRow({
             )}
           </div>
           <div className="flex">
-            <div className="text-foreground/70 flex flex-wrap items-center gap-1.5 text-[10px]">
+            <div className="text-foreground/70 flex flex-wrap items-center gap-1 text-[10px] sm:gap-1.5">
               {item.originalDimensions.width > 0 && (
                 <span>
-                  {item.originalDimensions.width}&times;
-                  {item.originalDimensions.height}
                   {displayedDims &&
-                    (displayedDims.width !== item.originalDimensions.width ||
-                      displayedDims.height !==
-                        item.originalDimensions.height) && (
-                      <span className="text-foreground">
-                        {" "}
-                        &rarr; {displayedDims.width}&times;
-                        {displayedDims.height}
+                  (displayedDims.width !== item.originalDimensions.width ||
+                    displayedDims.height !== item.originalDimensions.height) ? (
+                    <>
+                      <span className="hidden sm:inline">
+                        {item.originalDimensions.width}&times;
+                        {item.originalDimensions.height} &rarr;{" "}
                       </span>
-                    )}
+                      <span className="text-foreground">
+                        {displayedDims.width}&times;{displayedDims.height}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      {item.originalDimensions.width}&times;
+                      {item.originalDimensions.height}
+                    </>
+                  )}
                 </span>
               )}
 

@@ -22,7 +22,7 @@ import {
   VideoOutputFormat,
   VideoResizePreset,
 } from "../types";
-import { formatBytes } from "../utils/format";
+import { formatBytes, calculateSavings } from "../utils/format";
 import clsx from "clsx";
 
 type Props = {
@@ -124,9 +124,13 @@ export default function Toolbar({
     0,
     totalOriginalBytes - totalCompressedBytes,
   );
-  const totalSavingsPct =
-    totalOriginalBytes > 0
-      ? Math.round((totalSavedBytes / totalOriginalBytes) * 100)
+  const totalSavingsPct = calculateSavings(
+    totalOriginalBytes,
+    totalCompressedBytes,
+  ).percentSaved;
+  const totalEstSavingsPct =
+    totalEstimatedBytes && totalEstimatedBytes > 0
+      ? calculateSavings(totalOriginalBytes, totalEstimatedBytes).percentSaved
       : 0;
 
   return (
@@ -551,7 +555,7 @@ export default function Toolbar({
                 </span>
               </div>
 
-              <div className="flex flex-wrap items-center gap-1">
+              <div className="flex items-center gap-1 overflow-x-auto sm:flex-wrap">
                 {[
                   { label: "Low", val: 40 },
                   { label: "Draft", val: 60 },
@@ -567,7 +571,7 @@ export default function Toolbar({
                       onSettingsChange({ ...settings, qualityPercent: qp.val })
                     }
                     className={clsx(
-                      "border-border-color cursor-pointer rounded border border-dashed px-1.5 py-1 text-[10px] text-nowrap transition-all",
+                      "border-border-color shrink-0 cursor-pointer rounded border border-dashed px-1.5 py-1 text-[10px] text-nowrap transition-all",
                       (settings.qualityPercent || 80) === qp.val
                         ? "bg-foreground/5 text-foreground border-foreground/5 border-solid"
                         : "text-foreground/50 hover:text-foreground",
@@ -648,7 +652,7 @@ export default function Toolbar({
                 </span>
               </div>
 
-              <div className="flex flex-wrap items-center gap-1">
+              <div className="flex items-center gap-1 overflow-x-auto sm:flex-wrap">
                 {[
                   { label: "Mini", val: 1 },
                   { label: "Hero", val: 3 },
@@ -665,7 +669,7 @@ export default function Toolbar({
                       onSettingsChange({ ...settings, targetSizeMB: sp.val })
                     }
                     className={clsx(
-                      "border-border-color cursor-pointer rounded border border-dashed px-1.5 py-1 text-[10px] text-nowrap transition-all",
+                      "border-border-color shrink-0 cursor-pointer rounded border border-dashed px-1.5 py-1 text-[10px] text-nowrap transition-all",
                       (settings.targetSizeMB || 8) === sp.val
                         ? "bg-foreground/5 text-foreground border-foreground/5 border-solid"
                         : "text-foreground/50 hover:text-foreground",
@@ -744,7 +748,7 @@ export default function Toolbar({
                 </span>
               </div>
 
-              <div className="flex flex-wrap items-center gap-1">
+              <div className="flex items-center gap-1 overflow-x-auto sm:flex-wrap">
                 {[
                   { label: "Loop", val: 1.0 },
                   { label: "Web", val: 2.5 },
@@ -759,7 +763,7 @@ export default function Toolbar({
                       onSettingsChange({ ...settings, bitrateMbps: bp.val })
                     }
                     className={clsx(
-                      "border-border-color cursor-pointer rounded border border-dashed px-1.5 py-1 text-[10px] text-nowrap transition-all",
+                      "border-border-color shrink-0 cursor-pointer rounded border border-dashed px-1.5 py-1 text-[10px] text-nowrap transition-all",
                       settings.bitrateMbps === bp.val
                         ? "bg-foreground/5 text-foreground border-foreground/5 border-solid"
                         : "text-foreground/50 hover:text-foreground",
@@ -773,9 +777,9 @@ export default function Toolbar({
           )}
         </div>
       </div>
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         {totalCount > 0 && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={onToggleSelectAll}
@@ -845,12 +849,12 @@ export default function Toolbar({
           </div>
         )}
         {totalCompressedBytes > 0 && totalSavedBytes > 0 && !hasUncompressed ? (
-          <div className="flex items-center gap-2 text-xs">
+          <div className="ml-auto flex shrink-0 items-center gap-2 text-xs whitespace-nowrap">
             <div className="flex items-center gap-1.5">
               <span className="text-foreground/70 hidden sm:inline">
                 Saved:
               </span>
-              <span className="text-code-green bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
+              <span className="text-code-green bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap">
                 {formatBytes(totalSavedBytes)} (-{totalSavingsPct}%)
               </span>
             </div>
@@ -866,14 +870,9 @@ export default function Toolbar({
                   <span className="text-foreground/70 hidden sm:inline">
                     New:
                   </span>
-                  <span className="text-code-blue bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
+                  <span className="text-code-blue bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap">
                     ~{formatBytes(totalEstimatedBytes)} (-
-                    {Math.round(
-                      ((totalOriginalBytes - totalEstimatedBytes) /
-                        totalOriginalBytes) *
-                        100,
-                    )}
-                    %)
+                    {totalEstSavingsPct}%)
                   </span>
                 </div>
               )}
@@ -883,20 +882,14 @@ export default function Toolbar({
           totalOriginalBytes > totalEstimatedBytes &&
           hasUncompressed ? (
           <div
-            className="flex items-center gap-1.5 text-xs"
+            className="ml-auto flex shrink-0 items-center gap-1.5 text-xs whitespace-nowrap"
             title="Estimated total output file size based on selected bitrate and duration"
           >
             <span className="text-foreground/70 hidden sm:inline">
               Est. Output:
             </span>
-            <span className="text-code-blue bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
-              ~{formatBytes(totalEstimatedBytes)} (-
-              {Math.round(
-                ((totalOriginalBytes - totalEstimatedBytes) /
-                  totalOriginalBytes) *
-                  100,
-              )}
-              %)
+            <span className="text-code-blue bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap">
+              ~{formatBytes(totalEstimatedBytes)} (-{totalEstSavingsPct}%)
             </span>
           </div>
         ) : null}

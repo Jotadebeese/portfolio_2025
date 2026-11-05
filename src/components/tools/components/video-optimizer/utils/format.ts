@@ -25,8 +25,10 @@ export function formatDuration(seconds: number): string {
 
 export function calculateSavings(original: number, compressed: number) {
   const bytesSaved = original - compressed;
-  const percentSaved =
+  const rawPercent =
     original > 0 ? Math.round((bytesSaved / original) * 100) : 0;
+  const percentSaved =
+    compressed > 0 && rawPercent >= 100 ? 99 : rawPercent;
   return {
     bytesSaved,
     percentSaved,
