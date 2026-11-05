@@ -217,7 +217,7 @@ export default function Toolbar({
             "pointer-events-none cursor-not-allowed opacity-50 select-none",
         )}
       >
-        <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
+        <div className="flex min-w-0 flex-col justify-center gap-2 lg:shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-foreground shrink-0">Format:</span>
             <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
@@ -393,7 +393,7 @@ export default function Toolbar({
                   </button>
                 </div>
               ) : (
-                <div className="border-border-color flex max-w-full items-center overflow-x-auto rounded-md border bg-white p-0.5">
+                <div className="border-border-color flex max-w-full items-center overflow-x-auto rounded-md border bg-white p-0.5 sm:overflow-visible">
                   {RESIZE_PRESETS.map((p) => (
                     <button
                       key={p.value}
@@ -410,7 +410,7 @@ export default function Toolbar({
                         })
                       }
                       className={clsx(
-                        "shrink-0 cursor-pointer rounded px-2.5 py-0.5 text-xs whitespace-nowrap transition-all",
+                        "shrink-0 cursor-pointer rounded px-2 py-0.5 text-xs whitespace-nowrap transition-all",
                         settings.resizePreset === p.value
                           ? "bg-foreground text-background font-medium"
                           : "text-foreground/70 hover:text-foreground",
@@ -428,7 +428,7 @@ export default function Toolbar({
           </div>
         </div>
 
-        <div className="border-border-color flex flex-col gap-2 border-t border-dashed pt-2.5 lg:border-t-0 lg:border-l lg:border-dashed lg:pt-0 lg:pl-4">
+        <div className="border-border-color flex min-w-0 flex-1 flex-col gap-2 border-t border-dashed pt-2.5 lg:border-t-0 lg:border-l lg:border-dashed lg:pt-0 lg:pl-4">
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5">
               <Sliders className="text-foreground/70 h-3.5 w-3.5 shrink-0" />

@@ -807,6 +807,8 @@ export default function EditModal({
     : undefined;
 
   const finalSectionsToApply = hasActiveCuts ? sections : undefined;
+  const finalStripAudioToApply =
+    isMuted === settings.stripAudio ? undefined : isMuted;
 
   // Estimated size calculation
   const simulatedSettings: Partial<VideoOptimizerSettings> = {
@@ -828,15 +830,20 @@ export default function EditModal({
   const estimatedSavings = calculateSavings(item.originalSize, estimatedBytes);
 
   const handleApply = () => {
-    onApply(item, computedTrim, isMuted, finalSectionsToApply);
+    onApply(item, computedTrim, finalStripAudioToApply, finalSectionsToApply);
     onClose();
   };
 
   const handleApplyAndCompress = () => {
     if (onCompressNow) {
-      onCompressNow(item, computedTrim, isMuted, finalSectionsToApply);
+      onCompressNow(
+        item,
+        computedTrim,
+        finalStripAudioToApply,
+        finalSectionsToApply,
+      );
     } else {
-      onApply(item, computedTrim, isMuted, finalSectionsToApply);
+      onApply(item, computedTrim, finalStripAudioToApply, finalSectionsToApply);
       onClose();
     }
   };

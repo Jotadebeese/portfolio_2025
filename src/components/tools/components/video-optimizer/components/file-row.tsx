@@ -246,18 +246,20 @@ export default function FileRow({
               </span>
             )}
 
-            {item.stripAudio !== undefined &&
-              (item.stripAudio ? (
-                <span className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-code-rust flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]">
-                  <VolumeX size={9} />
-                  <span>Muted</span>
-                </span>
-              ) : (
+            {effectiveStripAudio || !item.hasAudio ? (
+              <span className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-code-rust flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]">
+                <VolumeX size={9} />
+                <span>Muted</span>
+              </span>
+            ) : (
+              item.stripAudio === false &&
+              settings.stripAudio && (
                 <span className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-code-green flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]">
                   <Volume2 size={9} />
                   <span>Audio</span>
                 </span>
-              ))}
+              )
+            )}
           </div>
           <div className="flex">
             <div className="text-foreground/70 flex flex-wrap items-center gap-1.5 text-[10px]">
@@ -302,25 +304,8 @@ export default function FileRow({
                         : `+${Math.abs(savings.percentSaved)}%`}
                     </span>
                   )}
-                  {itemSettingsChanged ? (
-                    <span
-                      className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-foreground/70 flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]"
-                      title="Settings modified since last compression. Re-compress to apply."
-                    >
-                      New Est: ~{formatBytes(estimatedBytes)}
-                    </span>
-                  ) : (
-                    <span
-                      className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-code-green flex items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]"
-                      title="Already optimized with current settings"
-                    >
-                      <Check size={9} />
-                      <span>Optimized</span>
-                    </span>
-                  )}
                 </>
               ) : (
-                item.status !== "processing" &&
                 estimatedBytes > 0 && (
                   <>
                     <span className="text-foreground/30">&rarr;</span>
@@ -350,22 +335,9 @@ export default function FileRow({
             </div>
           </div>
 
-          {item.status === "processing" && (
-            <div className="flex w-full items-center gap-2">
-              <div className="bg-border-color/30 relative mt-0.5 h-1 w-full overflow-hidden rounded-full">
-                <div
-                  className="bg-utils-scent-orange absolute top-0 bottom-0 left-0 transition-all duration-200"
-                  style={{ width: `${item.progress}%` }}
-                />
-              </div>
-              <span className="text-foreground flex items-center gap-1 font-mono text-[10px]">
-                <Loader className="h-2.5 w-2.5 animate-spin" />
-                <span>{item.progress}%</span>
-              </span>
-            </div>
-          )}
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex h-6 w-full items-center gap-1">
             {onCompressSingle &&
+              item.status !== "processing" &&
               (item.status === "idle" ||
                 itemSettingsChanged ||
                 item.status === "error" ||
@@ -378,7 +350,7 @@ export default function FileRow({
                     if (!isProcessing) onCompressSingle();
                   }}
                   className={clsx(
-                    "flex h-6 items-center justify-center gap-1 rounded-xs border px-1.5 font-mono text-[10px] transition-all",
+                    "flex h-6 shrink-0 items-center justify-center gap-1 rounded-xs border px-1.5 font-mono text-[10px] transition-all",
                     itemSettingsChanged
                       ? "border-foreground bg-foreground text-white shadow-xs hover:opacity-90"
                       : "border-border-color hover:bg-foreground text-foreground bg-white hover:text-white",
@@ -403,8 +375,10 @@ export default function FileRow({
                   if (!isProcessing) onOpenEdit();
                 }}
                 className={clsx(
-                  "border-border-color flex h-6 w-6 items-center justify-center rounded-xs border transition-all",
-                  isTrimmed || item.stripAudio !== undefined
+                  "border-border-color flex h-6 w-6 shrink-0 items-center justify-center rounded-xs border transition-all",
+                  isTrimmed ||
+                    (item.stripAudio !== undefined &&
+                      item.stripAudio !== settings.stripAudio)
                     ? "border-border-color text-code-rust hover:bg-utils-scent-gray-01/30"
                     : "text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground",
                   isProcessing
@@ -425,7 +399,7 @@ export default function FileRow({
                   e.stopPropagation();
                   onOpenCompare();
                 }}
-                className="border-border-color text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-6 w-6 cursor-pointer items-center justify-center rounded-xs border transition-all"
+                className="border-border-color text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-xs border transition-all"
                 title="Compare Original vs Compressed"
                 aria-label="Compare video"
               >
@@ -440,7 +414,7 @@ export default function FileRow({
                   e.stopPropagation();
                   onDownload();
                 }}
-                className="border-border-color text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-6 w-6 cursor-pointer items-center justify-center rounded-xs border transition-all"
+                className="border-border-color text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-xs border transition-all"
                 title="Download compressed video"
                 aria-label="Download video"
               >
@@ -456,7 +430,7 @@ export default function FileRow({
                 if (!isProcessing) onDelete();
               }}
               className={clsx(
-                "border-border-color text-foreground/50 flex h-6 w-6 items-center justify-center rounded-xs border transition-all",
+                "border-border-color text-foreground/50 flex h-6 w-6 shrink-0 items-center justify-center rounded-xs border transition-all",
                 isProcessing
                   ? "cursor-not-allowed opacity-40"
                   : "hover:bg-utils-scent-gray-01/30 hover:text-code-rust cursor-pointer",
@@ -470,6 +444,40 @@ export default function FileRow({
             >
               <Trash2 size={12} />
             </button>
+
+            {item.status === "processing" ? (
+              <div className="flex min-w-0 flex-1 items-center gap-2 pl-1.5">
+                <div className="bg-border-color/30 relative h-1.5 flex-1 overflow-hidden rounded-full">
+                  <div
+                    className="bg-utils-scent-orange absolute top-0 bottom-0 left-0 transition-all duration-200"
+                    style={{ width: `${item.progress}%` }}
+                  />
+                </div>
+                <span className="text-foreground flex shrink-0 items-center gap-1 font-mono text-[10px]">
+                  <Loader className="h-2.5 w-2.5 animate-spin" />
+                  <span>{item.progress}%</span>
+                </span>
+              </div>
+            ) : (
+              item.status === "done" &&
+              item.compressedSize !== undefined &&
+              (itemSettingsChanged ? (
+                <span
+                  className="border-border-color bg-utils-scent-gray-01/30 text-foreground/70 ml-0.5 flex h-6 shrink-0 items-center gap-0.5 rounded-xs border px-1.5 font-mono text-[9px]"
+                  title="Settings modified since last compression. Re-compress to apply."
+                >
+                  New Est: ~{formatBytes(estimatedBytes)}
+                </span>
+              ) : (
+                <span
+                  className="border-border-color bg-utils-scent-gray-01/30 text-code-green ml-0.5 flex h-6 shrink-0 items-center gap-1 rounded-xs border px-1.5 font-mono text-[9px]"
+                  title="Already optimized with current settings"
+                >
+                  <Check size={9} />
+                  <span>Optimized</span>
+                </span>
+              ))
+            )}
           </div>
         </div>
       </div>
