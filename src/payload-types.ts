@@ -372,7 +372,15 @@ export interface CodeBlock {
 export interface ToolsWorkbenchBlock {
   heading?: string | null;
   description?: string | null;
-  defaultTools?: ('secret-generator' | 'jwt-inspector' | 'image-optimizer')[] | null;
+  hideSelector?: boolean | null;
+  /**
+   * Choose which tools to include. If empty, all tools are available.
+   */
+  availableTools?: ('secret-generator' | 'jwt-inspector' | 'image-optimizer' | 'video-optimizer')[] | null;
+  /**
+   * Tools opened on initial load. If none selected, no tools will be opened by default.
+   */
+  defaultTools?: ('secret-generator' | 'jwt-inspector' | 'image-optimizer' | 'video-optimizer')[] | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'tools-workbench';
@@ -703,6 +711,8 @@ export interface CodeBlockSelect<T extends boolean = true> {
 export interface ToolsWorkbenchBlockSelect<T extends boolean = true> {
   heading?: T;
   description?: T;
+  hideSelector?: T;
+  availableTools?: T;
   defaultTools?: T;
   id?: T;
   blockName?: T;

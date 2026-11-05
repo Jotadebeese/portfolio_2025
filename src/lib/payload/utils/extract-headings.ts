@@ -23,19 +23,30 @@ export function extractHeadingsFromBlocks(blocks: any[]) {
         "secret-generator": "UUID & Key Generator",
         "jwt-inspector": "JWT Inspector",
         "image-optimizer": "Image Optimizer",
+        "video-optimizer": "Video Compressor",
       };
 
-      const sectionText = block.heading || "Tools Workbench";
-      const sectionId =
-        sectionText
-          .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, "") || "tools-workbench";
+      const sectionText =
+        block.heading ?? (!block.hideSelector ? "Tools Workbench" : null);
 
-      headings.push({ id: sectionId, text: sectionText });
+      if (sectionText) {
+        const sectionId =
+          sectionText
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9-]/g, "") || "tools-workbench";
 
-      if (Array.isArray(block.defaultTools)) {
-        block.defaultTools.forEach((tool: string) => {
+        headings.push({ id: sectionId, text: sectionText });
+      }
+
+      const activeTools = block.hideSelector
+        ? block.availableTools?.length
+          ? block.availableTools
+          : block.defaultTools || []
+        : block.defaultTools || [];
+
+      if (Array.isArray(activeTools)) {
+        activeTools.forEach((tool: string) => {
           if (toolLabels[tool]) {
             headings.push({
               id: tool,

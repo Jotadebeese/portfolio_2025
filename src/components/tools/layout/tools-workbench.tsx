@@ -21,20 +21,51 @@ const VideoOptimizer = lazy(() => import("../components/video-optimizer"));
 type Props = {
   heading?: string | null;
   description?: string | null;
-  defaultTools?:
-    | ("secret-generator" | "jwt-inspector" | "image-optimizer" | "video-optimizer")[]
-    | null;
+  availableTools?: ToolId[] | null;
+  defaultTools?: ToolId[] | null;
+  hideSelector?: boolean | null;
 };
 
 export default function ToolsWorkbench({
   heading,
   description,
+  availableTools,
   defaultTools,
+  hideSelector,
 }: Props) {
-  const fallbackTools: ToolId[] = defaultTools?.length
-    ? (defaultTools as ToolId[])
-    : ["secret-generator"];
+  // Determine the pool of tools allowed in this block instance
+  const toolsToDisplay =
+    availableTools && availableTools.length > 0
+      ? AVAILABLE_TOOLS.filter((t) => availableTools.includes(t.id))
+      : AVAILABLE_TOOLS;
 
+  // Determine initial active tools:
+  // - If hideSelector is true (standalone mode), open the available/selected tool(s)
+  // - If selector is enabled: ONLY open what was explicitly chosen in defaultTools.
+  //   If no tool is selected in defaultTools, fallback is [] (no tools opened).
+  const getInitialTools = (): ToolId[] => {
+    if (hideSelector) {
+      if (availableTools && availableTools.length > 0) {
+        return toolsToDisplay.map((t) => t.id);
+      }
+      if (defaultTools && defaultTools.length > 0) {
+        return defaultTools.filter((id) =>
+          toolsToDisplay.some((t) => t.id === id),
+        ) as ToolId[];
+      }
+      return toolsToDisplay.map((t) => t.id);
+    }
+
+    if (defaultTools && defaultTools.length > 0) {
+      return defaultTools.filter((id) =>
+        toolsToDisplay.some((t) => t.id === id),
+      ) as ToolId[];
+    }
+
+    return [];
+  };
+
+  const fallbackTools = getInitialTools();
   const [activeTools, setActiveTools] = useState<ToolId[]>(fallbackTools);
   const [copiedShare, setCopiedShare] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -43,24 +74,33 @@ export default function ToolsWorkbench({
     setMounted(true);
     if (typeof window === "undefined") return;
 
-    const params = new URLSearchParams(window.location.search);
-    const toolsParam = params.get("tools");
+    if (!hideSelector) {
+      const params = new URLSearchParams(window.location.search);
+      const toolsParam = params.get("tools");
 
-    if (toolsParam) {
-      const parsed = toolsParam
-        .split(",")
-        .filter((t) =>
-          AVAILABLE_TOOLS.some((item) => item.id === t),
-        ) as ToolId[];
+      if (toolsParam) {
+        const parsed = toolsParam
+          .split(",")
+          .filter((t) =>
+            toolsToDisplay.some((item) => item.id === t),
+          ) as ToolId[];
 
-      if (parsed.length > 0) {
-        setActiveTools(parsed);
+        if (parsed.length > 0) {
+          setActiveTools(parsed);
+          if (
+            window.location.search.includes("%2C") ||
+            window.location.search.includes("%2c")
+          ) {
+            const cleanUrl = window.location.href.replace(/%2C/gi, ",");
+            window.history.replaceState({}, "", cleanUrl);
+          }
+        }
       }
     }
 
     const handleHash = () => {
       const hash = window.location.hash.replace("#", "") as ToolId;
-      if (AVAILABLE_TOOLS.some((item) => item.id === hash)) {
+      if (toolsToDisplay.some((item) => item.id === hash)) {
         setActiveTools((prev) =>
           prev.includes(hash) ? prev : [...prev, hash],
         );
@@ -70,10 +110,10 @@ export default function ToolsWorkbench({
     handleHash();
     window.addEventListener("hashchange", handleHash);
     return () => window.removeEventListener("hashchange", handleHash);
-  }, []);
+  }, [hideSelector, toolsToDisplay]);
 
   const updateUrl = (tools: ToolId[]) => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || hideSelector) return;
     const url = new URL(window.location.href);
 
     if (tools.length > 0) {
@@ -82,7 +122,8 @@ export default function ToolsWorkbench({
       url.searchParams.delete("tools");
     }
 
-    window.history.replaceState({}, "", url.toString());
+    const cleanUrl = url.toString().replace(/%2C/gi, ",");
+    window.history.replaceState({}, "", cleanUrl);
   };
 
   const toggleTool = (id: ToolId) => {
@@ -107,106 +148,113 @@ export default function ToolsWorkbench({
 
   const shareWorkspace = () => {
     if (typeof window === "undefined") return;
-    navigator.clipboard.writeText(window.location.href);
+    const cleanUrl = window.location.href.replace(/%2C/gi, ",");
+    navigator.clipboard.writeText(cleanUrl);
     setCopiedShare(true);
     setTimeout(() => setCopiedShare(false), 2000);
   };
 
-  const sectionHeading = heading || "Tools Workbench";
+  const sectionHeading = heading ?? (!hideSelector ? "Tools Workbench" : null);
   const sectionId =
     sectionHeading
-      .toLowerCase()
+      ?.toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "") || "tools-workbench";
 
   return (
     <section id={sectionId} className="flex w-full flex-col gap-2">
-      <div className="flex flex-col gap-1 pb-2">
-        <h2>{sectionHeading}</h2>
-        {description && <p>{description}</p>}
-      </div>
-
-      <div className="flex w-full flex-col gap-2 rounded-lg bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            <small>
-              Tools{" "}
-              <span className="bg-utils-scent-gray-01/60 rounded-md px-1.5 py-1">
-                {activeTools.length} of {AVAILABLE_TOOLS.length} selected
-              </span>
-            </small>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={shareWorkspace}
-              className="bg-background text-foreground flex cursor-pointer items-center gap-1.5 rounded-md p-1.5 text-xs transition-all hover:opacity-80"
-              title="Copy shareable link with current active tools"
-            >
-              {copiedShare ? (
-                <Check className="h-3.5 w-3.5" />
-              ) : (
-                <Share2 className="h-3.5 w-3.5" />
-              )}
-              <span>Share</span>
-            </button>
-
-            <button
-              onClick={resetTools}
-              className="bg-background text-foreground hover:text-foreground flex cursor-pointer items-center gap-1 rounded-md p-1.5 text-xs transition-all hover:opacity-80"
-              title="Reset to default tools"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span>Reset</span>
-            </button>
-          </div>
+      {(sectionHeading || description) && (
+        <div className="flex flex-col gap-1 pb-2">
+          {sectionHeading && <h2>{sectionHeading}</h2>}
+          {description && <p>{description}</p>}
         </div>
+      )}
 
-        <div className="flex flex-wrap gap-2">
-          {AVAILABLE_TOOLS.map((tool) => {
-            const isOpen = activeTools.includes(tool.id);
+      {!hideSelector && (
+        <div className="flex w-full flex-col gap-2 rounded-lg bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <small>
+                Tools{" "}
+                <span className="bg-utils-scent-gray-01/60 rounded-md px-1.5 py-1">
+                  {activeTools.length} of {toolsToDisplay.length} selected
+                </span>
+              </small>
+            </div>
 
-            return (
+            <div className="flex items-center gap-2">
               <button
-                key={tool.id}
-                onClick={() => toggleTool(tool.id)}
-                className={clsx(
-                  "flex cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 text-xs transition-all hover:opacity-80",
-                  isOpen
-                    ? "bg-background border-background border-solid"
-                    : "border-border-color border-dashed bg-white",
-                )}
+                onClick={shareWorkspace}
+                className="bg-background text-foreground flex cursor-pointer items-center gap-1.5 rounded-md p-1.5 text-xs transition-all hover:opacity-80"
+                title="Copy shareable link with current active tools"
               >
-                {isOpen ? (
-                  <Check className="text-foreground h-3.5 w-3.5 stroke-[2]" />
+                {copiedShare ? (
+                  <Check className="h-3.5 w-3.5" />
                 ) : (
-                  <Plus className="text-foreground/70 h-3.5 w-3.5" />
+                  <Share2 className="h-3.5 w-3.5" />
                 )}
-                <span>{tool.name}</span>
-                <span
+                <span>Share</span>
+              </button>
+
+              <button
+                onClick={resetTools}
+                className="bg-background text-foreground hover:text-foreground flex cursor-pointer items-center gap-1 rounded-md p-1.5 text-xs transition-all hover:opacity-80"
+                title="Reset to default tools"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Reset</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {toolsToDisplay.map((tool) => {
+              const isOpen = activeTools.includes(tool.id);
+
+              return (
+                <button
+                  key={tool.id}
+                  onClick={() => toggleTool(tool.id)}
                   className={clsx(
-                    "text-foreground bg-background hidden rounded-md px-1.5 py-1 text-[10px] md:inline",
-                    isOpen && "bg-white",
+                    "flex cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 text-xs transition-all hover:opacity-80",
+                    isOpen
+                      ? "bg-background border-background border-solid"
+                      : "border-border-color border-dashed bg-white",
                   )}
                 >
-                  {tool.apiBadge}
-                </span>
-              </button>
-            );
-          })}
+                  {isOpen ? (
+                    <Check className="text-foreground h-3.5 w-3.5 stroke-[2]" />
+                  ) : (
+                    <Plus className="text-foreground/70 h-3.5 w-3.5" />
+                  )}
+                  <span>{tool.name}</span>
+                  <span
+                    className={clsx(
+                      "text-foreground bg-background hidden rounded-md px-1.5 py-1 text-[10px] md:inline",
+                      isOpen && "bg-white",
+                    )}
+                  >
+                    {tool.apiBadge}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {activeTools.length === 0 ? (
-        <div className="border-border-color text-foreground flex flex-col items-center justify-center rounded-lg border border-dashed py-10 text-center">
-          <Wrench className="text-foreground h-5 w-5 stroke-1" />
-          <small>All tools are currently closed.</small>
-          <small className="text-foreground/70">
-            Click any tool in the selector tray above to dock it into your
-            workbench.
-          </small>
-        </div>
+        !hideSelector ? (
+          <div className="border-border-color text-foreground flex flex-col items-center justify-center rounded-lg border border-dashed py-10 text-center">
+            <Wrench className="text-foreground h-5 w-5 stroke-1" />
+            <small>All tools are currently closed.</small>
+            <small className="text-foreground/70">
+              Click any tool in the selector tray above to dock it into your
+              workbench.
+            </small>
+          </div>
+        ) : null
       ) : (
         <div className="flex flex-col gap-2">
           {activeTools.map((toolId) => {
@@ -219,7 +267,7 @@ export default function ToolsWorkbench({
                 id={toolId}
                 title={def.name}
                 apiBadge={def.apiBadge}
-                onClose={() => closeTool(toolId)}
+                onClose={hideSelector ? undefined : () => closeTool(toolId)}
               >
                 <Suspense fallback={<ToolSkeleton toolId={toolId} />}>
                   {toolId === "secret-generator" && <SecretGenerator />}

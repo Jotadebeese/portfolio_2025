@@ -76,7 +76,9 @@ export default function BlockContent({
                   <ToolsWorkbench
                     heading={block.heading}
                     description={block.description}
+                    availableTools={block.availableTools}
                     defaultTools={block.defaultTools}
+                    hideSelector={block.hideSelector}
                   />
                 </div>
               );

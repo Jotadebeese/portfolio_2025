@@ -161,11 +161,20 @@ export const contentField: Field = {
             "A browser-native suite of developer utilities running 100% locally with zero server requests.",
         },
         {
-          name: "defaultTools",
+          name: "hideSelector",
+          type: "checkbox",
+          label: "Hide Tool Selector (Display as standalone tool / single entry)",
+          defaultValue: false,
+        },
+        {
+          name: "availableTools",
           type: "select",
-          label: "Default Opened Tools",
+          label: "Available Tools",
           hasMany: true,
-          defaultValue: ["secret-generator", "jwt-inspector"],
+          admin: {
+            description:
+              "Choose which tools to include. If empty, all tools are available.",
+          },
           options: [
             {
               label: "Cryptographic Keys & UUID v7",
@@ -178,6 +187,39 @@ export const contentField: Field = {
             {
               label: "Web Image Optimizer",
               value: "image-optimizer",
+            },
+            {
+              label: "Web Video Compressor",
+              value: "video-optimizer",
+            },
+          ],
+        },
+        {
+          name: "defaultTools",
+          type: "select",
+          label: "Default Opened Tools",
+          hasMany: true,
+          admin: {
+            description:
+              "Tools opened on initial load. If none selected, no tools will be opened by default.",
+            condition: (_, siblingData) => !siblingData?.hideSelector,
+          },
+          options: [
+            {
+              label: "Cryptographic Keys & UUID v7",
+              value: "secret-generator",
+            },
+            {
+              label: "Zero-Knowledge JWT Inspector",
+              value: "jwt-inspector",
+            },
+            {
+              label: "Web Image Optimizer",
+              value: "image-optimizer",
+            },
+            {
+              label: "Web Video Compressor",
+              value: "video-optimizer",
             },
           ],
         },
