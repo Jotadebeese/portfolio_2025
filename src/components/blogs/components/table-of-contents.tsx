@@ -245,9 +245,9 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
                 className={clsx(
                   "block rounded-full px-3 py-2 text-sm transition-all",
                   isParentActive
-                    ? "bg-utils-scent-gray-01/60 border-utils-scent-gray-01 text-foreground border font-medium shadow-xs"
+                    ? "bg-utils-scent-gray-01/60 border-utils-scent-gray-01 text-foreground border shadow-xs"
                     : isParentOfActive
-                      ? "text-foreground border border-transparent font-medium"
+                      ? "text-foreground border border-transparent"
                       : "text-foreground/60 hover:text-foreground hover:bg-utils-scent-gray-01/30 border border-transparent",
                 )}
                 title={group.parent.text}
@@ -277,7 +277,7 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
                             className={clsx(
                               "group/sub relative flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-all",
                               isChildActive
-                                ? "bg-utils-scent-gray-01/60 text-foreground font-medium"
+                                ? "bg-utils-scent-gray-01/60 text-foreground"
                                 : "text-foreground/55 hover:text-foreground hover:bg-utils-scent-gray-01/30",
                             )}
                             title={child.text}
@@ -286,7 +286,7 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
                               className={clsx(
                                 "h-1 w-1 shrink-0 rounded-full transition-all",
                                 isChildActive
-                                  ? "bg-foreground scale-110"
+                                  ? "bg-foreground"
                                   : "bg-foreground/25 group-hover/sub:bg-foreground/60",
                               )}
                             />
