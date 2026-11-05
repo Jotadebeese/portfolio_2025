@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, lazy } from "react";
+import { useState, useEffect, useMemo, Suspense, lazy } from "react";
 import clsx from "clsx";
 import {
   Check,
@@ -34,16 +34,14 @@ export default function ToolsWorkbench({
   defaultTools,
   hideSelector,
 }: Props) {
-  // Determine the pool of tools allowed in this block instance
-  const toolsToDisplay =
-    availableTools && availableTools.length > 0
-      ? AVAILABLE_TOOLS.filter((t) => availableTools.includes(t.id))
-      : AVAILABLE_TOOLS;
+  const toolsToDisplay = useMemo(
+    () =>
+      availableTools && availableTools.length > 0
+        ? AVAILABLE_TOOLS.filter((t) => availableTools.includes(t.id))
+        : AVAILABLE_TOOLS,
+    [availableTools],
+  );
 
-  // Determine initial active tools:
-  // - If hideSelector is true (standalone mode), open the available/selected tool(s)
-  // - If selector is enabled: ONLY open what was explicitly chosen in defaultTools.
-  //   If no tool is selected in defaultTools, fallback is [] (no tools opened).
   const getInitialTools = (): ToolId[] => {
     if (hideSelector) {
       if (availableTools && availableTools.length > 0) {
@@ -91,13 +89,18 @@ export default function ToolsWorkbench({
           ) as ToolId[];
 
         if (parsed.length > 0) {
-          setActiveTools(parsed);
+          setActiveTools((prev) =>
+            prev.length === parsed.length &&
+            prev.every((val, idx) => val === parsed[idx])
+              ? prev
+              : parsed,
+          );
           if (
             window.location.search.includes("%2C") ||
             window.location.search.includes("%2c")
           ) {
             const cleanUrl = window.location.href.replace(/%2C/gi, ",");
-            window.history.replaceState({}, "", cleanUrl);
+            window.history.replaceState(window.history.state, "", cleanUrl);
           }
         }
       }
@@ -128,7 +131,7 @@ export default function ToolsWorkbench({
     }
 
     const cleanUrl = url.toString().replace(/%2C/gi, ",");
-    window.history.replaceState({}, "", cleanUrl);
+    window.history.replaceState(window.history.state, "", cleanUrl);
   };
 
   const toggleTool = (id: ToolId) => {

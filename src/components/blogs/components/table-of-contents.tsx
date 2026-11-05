@@ -125,7 +125,7 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
     const element = document.getElementById(id);
     if (element) {
       e.preventDefault();
-      history.pushState(null, "", `#${id}`);
+      window.history.pushState(window.history.state, "", `#${id}`);
       element.scrollIntoView({ behavior: "smooth" });
     }
 
