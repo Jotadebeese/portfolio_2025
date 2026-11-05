@@ -159,7 +159,9 @@ export default function ToolsWorkbench({
     setTimeout(() => setCopiedShare(false), 2000);
   };
 
-  const sectionHeading = heading ?? (!hideSelector ? "Tools Workbench" : null);
+  const customHeading = heading?.trim();
+  const sectionHeading =
+    customHeading || (!hideSelector ? "Tools Workbench" : null);
   const sectionId =
     sectionHeading
       ?.toLowerCase()

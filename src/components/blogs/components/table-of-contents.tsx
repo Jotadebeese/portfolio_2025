@@ -37,13 +37,16 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
   useEffect(() => {
     return subscribeWorkbenchTools((activeTools) => {
       setItems((prevItems) => {
-        const hasWorkbench = prevItems.some(
-          (item) =>
-            item.isWorkbenchParent ||
-            item.id === "tools-workbench" ||
-            item.isWorkbenchTool ||
-            item.parentId === "tools-workbench",
-        );
+        const hasWorkbench =
+          prevItems.some(
+            (item) =>
+              item.isWorkbenchParent ||
+              item.id === "tools-workbench" ||
+              item.isWorkbenchTool ||
+              item.parentId === "tools-workbench",
+          ) ||
+          (typeof document !== "undefined" &&
+            Boolean(document.getElementById("tools-workbench")));
 
         if (!hasWorkbench) {
           return prevItems;
@@ -63,6 +66,22 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
         );
 
         if (targetIndex === -1) {
+          if (activeTools.length > 0) {
+            const workbenchHeading: Heading = {
+              id: parentId,
+              text: "Tools Workbench",
+              level: 2,
+              isWorkbenchParent: true,
+            };
+            const newToolHeadings: Heading[] = activeTools.map((tool) => ({
+              id: tool.id,
+              text: tool.name,
+              level: 3,
+              parentId,
+              isWorkbenchTool: true,
+            }));
+            return [workbenchHeading, ...newToolHeadings, ...nonToolItems];
+          }
           return prevItems;
         }
 

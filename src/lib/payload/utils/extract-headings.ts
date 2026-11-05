@@ -73,8 +73,9 @@ export function extractHeadingsFromBlocks(blocks: any[]): HeadingItem[] {
     }
 
     if (block.blockType === "tools-workbench") {
+      const customHeading = block.heading?.trim();
       const sectionText =
-        block.heading ?? (!block.hideSelector ? "Tools Workbench" : null);
+        customHeading || (!block.hideSelector ? "Tools Workbench" : null);
 
       let sectionId = "tools-workbench";
       if (sectionText) {

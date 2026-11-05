@@ -140,6 +140,13 @@ export default async function BlogsPage({ params }: Props) {
   };
 
   const headings = extractHeadingsFromBlocks(blog.content);
+  const hasWorkbench = Boolean(
+    Array.isArray(blog.content) &&
+      blog.content.some(
+        (b: any) => b.blockType === "tools-workbench" && !b.hideSelector,
+      ),
+  );
+  const hasSidebar = headings.length > 0 || hasWorkbench;
 
   return (
     <>
@@ -157,7 +164,7 @@ export default async function BlogsPage({ params }: Props) {
         <main
           className={clsx(
             "flex justify-start",
-            headings.length > 0 ? "md:col-span-9" : "md:col-span-12",
+            hasSidebar ? "md:col-span-9" : "md:col-span-12",
           )}
         >
           <BlockContent data={blog.content} />

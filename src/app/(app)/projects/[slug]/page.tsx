@@ -74,6 +74,13 @@ export default async function ProjectsPage({ params }: Props) {
   }
 
   const headings = extractHeadingsFromBlocks(project.content);
+  const hasWorkbench = Boolean(
+    Array.isArray(project.content) &&
+      project.content.some(
+        (b: any) => b.blockType === "tools-workbench" && !b.hideSelector,
+      ),
+  );
+  const hasSidebar = headings.length > 0 || hasWorkbench;
   const publishedAt = project.publishedAt
     ? new Date(project.publishedAt)
     : new Date();
@@ -142,7 +149,7 @@ export default async function ProjectsPage({ params }: Props) {
         <main
           className={clsx(
             "flex justify-start",
-            headings.length > 0 ? "md:col-span-9" : "md:col-span-12",
+            hasSidebar ? "md:col-span-9" : "md:col-span-12",
           )}
         >
           <BlockContent data={project.content} />
