@@ -61,6 +61,7 @@ export default function VideoOptimizer() {
     itemsRef.current = items;
   }, [items]);
 
+  const containerRef = useRef<HTMLDivElement>(null);
   const settingsRef = useRef(settings);
   useEffect(() => {
     settingsRef.current = settings;
@@ -83,6 +84,7 @@ export default function VideoOptimizer() {
 
   const handleFilesSelected = useCallback(
     async (files: FileList | File[]) => {
+      setIsDraggingOver(false);
       const validFiles = Array.from(files).filter(
         (f) =>
           f.type.startsWith("video/") ||
@@ -157,6 +159,63 @@ export default function VideoOptimizer() {
     },
     [activeId],
   );
+
+  // Support Ctrl+V / Cmd+V clipboard video pasting anywhere when not typing in an input
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (isProcessing) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const pastedVideos: File[] = [];
+      const clipboardFiles = e.clipboardData?.files;
+      if (clipboardFiles && clipboardFiles.length > 0) {
+        for (let i = 0; i < clipboardFiles.length; i++) {
+          const f = clipboardFiles[i];
+          if (
+            f.type.startsWith("video/") ||
+            /\.(mp4|mov|webm|m4v|mkv)$/i.test(f.name)
+          ) {
+            pastedVideos.push(f);
+          }
+        }
+      } else if (e.clipboardData?.items) {
+        for (let i = 0; i < e.clipboardData.items.length; i++) {
+          const item = e.clipboardData.items[i];
+          if (item.type.startsWith("video/")) {
+            const file = item.getAsFile();
+            if (file) {
+              const ext = item.type.split("/")[1] || "mp4";
+              const namedFile =
+                file.name && !file.name.startsWith("video.")
+                  ? file
+                  : new File(
+                      [file],
+                      `clipboard-${new Date().toISOString().slice(11, 19).replace(/:/g, "")}.${ext}`,
+                      { type: file.type },
+                    );
+              pastedVideos.push(namedFile);
+            }
+          }
+        }
+      }
+
+      if (pastedVideos.length > 0) {
+        e.preventDefault();
+        handleFilesSelected(pastedVideos);
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, [handleFilesSelected, isProcessing]);
 
   const handleApplyEdit = useCallback(
     (
@@ -478,24 +537,76 @@ export default function VideoOptimizer() {
     }
   };
 
+  useEffect(() => {
+    if (!isDraggingOver) return;
+    const resetDrag = () => setIsDraggingOver(false);
+    const handleWindowDrag = (e: DragEvent) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const isOutsideRect =
+        e.clientX < rect.left ||
+        e.clientX > rect.right ||
+        e.clientY < rect.top ||
+        e.clientY > rect.bottom;
+      const isOutsideNode =
+        e.target instanceof Node && !el.contains(e.target);
+      if (isOutsideRect || isOutsideNode) {
+        setIsDraggingOver(false);
+      }
+    };
+    const handleWindowDragLeave = (e: DragEvent) => {
+      const el = containerRef.current;
+      if (!el) return;
+      if (
+        !e.relatedTarget ||
+        (e.relatedTarget instanceof Node && !el.contains(e.relatedTarget))
+      ) {
+        setIsDraggingOver(false);
+      }
+    };
+    window.addEventListener("dragenter", handleWindowDrag, true);
+    window.addEventListener("dragover", handleWindowDrag, true);
+    window.addEventListener("dragleave", handleWindowDragLeave, true);
+    window.addEventListener("drop", resetDrag, true);
+    window.addEventListener("dragend", resetDrag, true);
+    window.addEventListener("blur", resetDrag);
+    return () => {
+      window.removeEventListener("dragenter", handleWindowDrag, true);
+      window.removeEventListener("dragover", handleWindowDrag, true);
+      window.removeEventListener("dragleave", handleWindowDragLeave, true);
+      window.removeEventListener("drop", resetDrag, true);
+      window.removeEventListener("dragend", resetDrag, true);
+      window.removeEventListener("blur", resetDrag);
+    };
+  }, [isDraggingOver]);
+
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     if (isProcessing) return;
     setIsDraggingOver(true);
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (isProcessing) return;
+    if (!isDraggingOver) {
+      setIsDraggingOver(true);
+    }
+  };
+
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+    if (
+      !e.relatedTarget ||
+      !e.currentTarget.contains(e.relatedTarget as Node)
+    ) {
       setIsDraggingOver(false);
     }
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     setIsDraggingOver(false);
     if (isProcessing) return;
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -563,8 +674,9 @@ export default function VideoOptimizer() {
 
   return (
     <div
+      ref={containerRef}
       onDragEnter={handleDragEnter}
-      onDragOver={(e) => e.preventDefault()}
+      onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className="flex w-full flex-col gap-4 select-none"
@@ -693,6 +805,9 @@ export default function VideoOptimizer() {
               }
               onRename={(newName) =>
                 activeItem && handleRenameItem(activeItem.id, newName)
+              }
+              onApplySettings={(patch) =>
+                setSettings((prev) => ({ ...prev, ...patch }))
               }
             />
           </div>

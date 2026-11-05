@@ -103,6 +103,13 @@ export default function Toolbar({
 
   const isCustom = settings.resizePreset === "custom";
   const isQueueFull = totalCount >= maxFiles;
+  const [customInputText, setCustomInputText] = useState<string>(
+    String(settings.customMaxDimension || 1280),
+  );
+
+  useEffect(() => {
+    setCustomInputText(String(settings.customMaxDimension || 1280));
+  }, [settings.customMaxDimension]);
 
   useEffect(() => {
     if (isCustom) {
@@ -110,6 +117,39 @@ export default function Toolbar({
       customInputRef.current?.select();
     }
   }, [isCustom]);
+
+  useEffect(() => {
+    if (!isCustom) return;
+    const parsed = parseInt(customInputText, 10);
+    if (isNaN(parsed) || parsed < 240 || parsed > 3840) return;
+    if (parsed === (settings.customMaxDimension || 1280)) return;
+
+    const timer = setTimeout(() => {
+      onSettingsChange({
+        ...settings,
+        customMaxDimension: parsed,
+      });
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [customInputText, isCustom, settings, onSettingsChange]);
+
+  const commitCustomDimension = (raw: string) => {
+    const parsed = parseInt(raw, 10);
+    if (isNaN(parsed)) {
+      const fallback = settings.customMaxDimension || 1280;
+      setCustomInputText(String(fallback));
+      return;
+    }
+    const clamped = Math.min(3840, Math.max(240, parsed));
+    setCustomInputText(String(clamped));
+    if (clamped !== settings.customMaxDimension) {
+      onSettingsChange({
+        ...settings,
+        customMaxDimension: clamped,
+      });
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -309,17 +349,22 @@ export default function Toolbar({
                   <div className="border-border-color flex shrink-0 items-center rounded-md border bg-white p-0.5">
                     <button
                       type="button"
-                      disabled={isProcessing}
-                      onClick={() =>
+                      disabled={
+                        isProcessing ||
+                        (settings.customMaxDimension || 1280) <= 240
+                      }
+                      onClick={() => {
+                        const next = Math.max(
+                          240,
+                          (settings.customMaxDimension || 1280) - 100,
+                        );
+                        setCustomInputText(String(next));
                         onSettingsChange({
                           ...settings,
-                          customMaxDimension: Math.max(
-                            240,
-                            (settings.customMaxDimension || 1280) - 100,
-                          ),
-                        })
-                      }
-                      className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90"
+                          customMaxDimension: next,
+                        });
+                      }}
+                      className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90 disabled:cursor-not-allowed disabled:opacity-30"
                       title="Decrease 100px"
                       aria-label="Decrease custom size by 100px"
                     >
@@ -334,41 +379,42 @@ export default function Toolbar({
                       step="50"
                       disabled={isProcessing}
                       placeholder="1280"
-                      value={settings.customMaxDimension || 1280}
+                      value={customInputText}
                       onFocus={(e) => e.target.select()}
+                      onBlur={(e) => commitCustomDimension(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Escape") {
                           onSettingsChange({
                             ...settings,
                             resizePreset: "1080p",
                           });
+                        } else if (e.key === "Enter") {
+                          e.currentTarget.blur();
+                          commitCustomDimension(customInputText);
                         }
                       }}
-                      onChange={(e) =>
-                        onSettingsChange({
-                          ...settings,
-                          customMaxDimension: Math.max(
-                            100,
-                            Number(e.target.value) || 1280,
-                          ),
-                        })
-                      }
+                      onChange={(e) => setCustomInputText(e.target.value)}
                       className="text-foreground focus:text-foreground w-12 [appearance:textfield] text-center font-mono text-xs focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     />
 
                     <button
                       type="button"
-                      disabled={isProcessing}
-                      onClick={() =>
+                      disabled={
+                        isProcessing ||
+                        (settings.customMaxDimension || 1280) >= 3840
+                      }
+                      onClick={() => {
+                        const next = Math.min(
+                          3840,
+                          (settings.customMaxDimension || 1280) + 100,
+                        );
+                        setCustomInputText(String(next));
                         onSettingsChange({
                           ...settings,
-                          customMaxDimension: Math.min(
-                            3840,
-                            (settings.customMaxDimension || 1280) + 100,
-                          ),
-                        })
-                      }
-                      className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90"
+                          customMaxDimension: next,
+                        });
+                      }}
+                      className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90 disabled:cursor-not-allowed disabled:opacity-30"
                       title="Increase 100px"
                       aria-label="Increase custom size by 100px"
                     >
@@ -876,6 +922,23 @@ export default function Toolbar({
                   </span>
                 </div>
               )}
+          </div>
+        ) : totalCompressedBytes > totalOriginalBytes &&
+          totalOriginalBytes > 0 &&
+          !hasUncompressed ? (
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 text-xs whitespace-nowrap">
+            <span className="text-foreground/70 hidden sm:inline">
+              Size change:
+            </span>
+            <span className="text-code-rust bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap">
+              +{formatBytes(totalCompressedBytes - totalOriginalBytes)} (+
+              {Math.round(
+                ((totalCompressedBytes - totalOriginalBytes) /
+                  totalOriginalBytes) *
+                  100,
+              )}
+              %)
+            </span>
           </div>
         ) : totalEstimatedBytes &&
           totalEstimatedBytes > 0 &&

@@ -301,10 +301,10 @@ export default function FileRow({
                   {savings && (
                     <span
                       className={clsx(
-                        "bg-border-color/30 rounded-sm px-1 font-mono text-[9px]",
+                        "bg-utils-scent-gray-01/40 rounded px-1 font-mono text-[10px]",
                         savings.isReduced
                           ? "text-code-green"
-                          : "text-foreground",
+                          : "text-code-rust",
                       )}
                     >
                       {savings.isReduced

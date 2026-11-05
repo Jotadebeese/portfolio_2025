@@ -23,25 +23,9 @@ export default function Dropzone({
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (disabled) return;
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      onFilesSelected(e.dataTransfer.files);
-    }
-  };
-
   if (compact) {
     return (
       <div
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
         onClick={() => {
           if (!disabled) fileInputRef.current?.click();
         }}
@@ -78,8 +62,6 @@ export default function Dropzone({
 
   return (
     <div
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
       onClick={() => fileInputRef.current?.click()}
       className={clsx(
         "border-border-color flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-dashed px-6 py-14 text-center transition-all",

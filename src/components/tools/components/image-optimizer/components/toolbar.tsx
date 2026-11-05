@@ -70,6 +70,13 @@ export default function Toolbar({
   const isCustom = settings.resizePreset === "custom";
   const isQueueFull = totalCount >= maxFiles;
   const [showWebpExplainer, setShowWebpExplainer] = useState(false);
+  const [customInputText, setCustomInputText] = useState<string>(
+    String(settings.customMaxDimension || 1600),
+  );
+
+  useEffect(() => {
+    setCustomInputText(String(settings.customMaxDimension || 1600));
+  }, [settings.customMaxDimension]);
 
   useEffect(() => {
     if (isCustom) {
@@ -77,6 +84,39 @@ export default function Toolbar({
       customInputRef.current?.select();
     }
   }, [isCustom]);
+
+  useEffect(() => {
+    if (!isCustom) return;
+    const parsed = parseInt(customInputText, 10);
+    if (isNaN(parsed) || parsed < 50 || parsed > 8000) return;
+    if (parsed === (settings.customMaxDimension || 1600)) return;
+
+    const timer = setTimeout(() => {
+      onSettingsChange({
+        ...settings,
+        customMaxDimension: parsed,
+      });
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [customInputText, isCustom, settings, onSettingsChange]);
+
+  const commitCustomDimension = (raw: string) => {
+    const parsed = parseInt(raw, 10);
+    if (isNaN(parsed)) {
+      const fallback = settings.customMaxDimension || 1600;
+      setCustomInputText(String(fallback));
+      return;
+    }
+    const clamped = Math.min(8000, Math.max(50, parsed));
+    setCustomInputText(String(clamped));
+    if (clamped !== settings.customMaxDimension) {
+      onSettingsChange({
+        ...settings,
+        customMaxDimension: clamped,
+      });
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -231,16 +271,19 @@ export default function Toolbar({
                 <div className="border-border-color flex shrink-0 items-center rounded-md border bg-white p-0.5">
                   <button
                     type="button"
-                    onClick={() =>
+                    disabled={(settings.customMaxDimension || 1600) <= 50}
+                    onClick={() => {
+                      const next = Math.max(
+                        50,
+                        (settings.customMaxDimension || 1600) - 100,
+                      );
+                      setCustomInputText(String(next));
                       onSettingsChange({
                         ...settings,
-                        customMaxDimension: Math.max(
-                          50,
-                          (settings.customMaxDimension || 1600) - 100,
-                        ),
-                      })
-                    }
-                    className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90"
+                        customMaxDimension: next,
+                      });
+                    }}
+                    className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90 disabled:cursor-not-allowed disabled:opacity-30"
                     title="Decrease 100px"
                     aria-label="Decrease custom size by 100px"
                   >
@@ -254,40 +297,39 @@ export default function Toolbar({
                     max="8000"
                     step="50"
                     placeholder="1600"
-                    value={settings.customMaxDimension || 1600}
+                    value={customInputText}
                     onFocus={(e) => e.target.select()}
+                    onBlur={(e) => commitCustomDimension(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Escape") {
                         onSettingsChange({
                           ...settings,
                           resizePreset: "original",
                         });
+                      } else if (e.key === "Enter") {
+                        e.currentTarget.blur();
+                        commitCustomDimension(customInputText);
                       }
                     }}
-                    onChange={(e) =>
-                      onSettingsChange({
-                        ...settings,
-                        customMaxDimension: Math.max(
-                          10,
-                          Number(e.target.value) || 1600,
-                        ),
-                      })
-                    }
+                    onChange={(e) => setCustomInputText(e.target.value)}
                     className="text-foreground focus:text-foreground w-12 [appearance:textfield] text-center font-mono text-xs focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
 
                   <button
                     type="button"
-                    onClick={() =>
+                    disabled={(settings.customMaxDimension || 1600) >= 8000}
+                    onClick={() => {
+                      const next = Math.min(
+                        8000,
+                        (settings.customMaxDimension || 1600) + 100,
+                      );
+                      setCustomInputText(String(next));
                       onSettingsChange({
                         ...settings,
-                        customMaxDimension: Math.min(
-                          8000,
-                          (settings.customMaxDimension || 1600) + 100,
-                        ),
-                      })
-                    }
-                    className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90"
+                        customMaxDimension: next,
+                      });
+                    }}
+                    className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90 disabled:cursor-not-allowed disabled:opacity-30"
                     title="Increase 100px"
                     aria-label="Increase custom size by 100px"
                   >
@@ -453,7 +495,7 @@ export default function Toolbar({
           )}
         </div>
 
-        {totalOptimizedBytes > 0 && totalSavedBytes > 0 && (
+        {totalOptimizedBytes > 0 && totalSavedBytes > 0 ? (
           <div className="flex items-center gap-1.5 text-xs">
             <Sparkles className="text-foreground/70 h-3.5 w-3.5" />
             <span className="text-foreground/70 hidden sm:inline">Saved:</span>
@@ -461,7 +503,23 @@ export default function Toolbar({
               {formatBytes(totalSavedBytes)} (-{totalSavingsPct}%)
             </span>
           </div>
-        )}
+        ) : totalOptimizedBytes > totalOriginalBytes &&
+          totalOriginalBytes > 0 ? (
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="text-foreground/70 hidden sm:inline">
+              Size change:
+            </span>
+            <span className="text-code-rust bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
+              +{formatBytes(totalOptimizedBytes - totalOriginalBytes)} (+
+              {Math.round(
+                ((totalOptimizedBytes - totalOriginalBytes) /
+                  totalOriginalBytes) *
+                  100,
+              )}
+              %)
+            </span>
+          </div>
+        ) : null}
       </div>
     </div>
   );

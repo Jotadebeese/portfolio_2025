@@ -65,8 +65,8 @@ export default function OptimizationGuide() {
                 </li>
                 <li>
                   <strong className="text-foreground font-mono">PNG:</strong>{" "}
-                  Pure lossless. Keep only for UI screenshots with fine
-                  typography or graphics that cannot tolerate lossy compression.
+                  Lossless at 100% quality, or smart color-quantized below 100%
+                  to shrink UI screenshots and transparent graphics by 40%–70%.
                 </li>
                 <li>
                   <strong className="text-foreground font-mono">GIFs:</strong>{" "}

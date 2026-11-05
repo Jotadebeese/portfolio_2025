@@ -492,12 +492,21 @@ export default function CompareModal({
               {item.name}
             </h4>
 
-            {savings && (
+            {savings && savings.isReduced && (
               <span className="bg-utils-scent-gray-01/40 text-code-green hidden shrink-0 rounded-md px-2 py-0.5 font-mono text-[11px] sm:inline-flex">
                 <span className="hidden lg:inline">
                   Saved {formatBytes(savings.bytesSaved)} (
                 </span>
                 -{savings.percentSaved}%<span className="hidden lg:inline">)</span>
+              </span>
+            )}
+            {savings && !savings.isReduced && savings.bytesSaved < 0 && (
+              <span className="bg-utils-scent-gray-01/40 text-code-rust hidden shrink-0 rounded-md px-2 py-0.5 font-mono text-[11px] sm:inline-flex">
+                <span className="hidden lg:inline">
+                  +{formatBytes(Math.abs(savings.bytesSaved))} (
+                </span>
+                +{Math.abs(savings.percentSaved)}%
+                <span className="hidden lg:inline">)</span>
               </span>
             )}
 

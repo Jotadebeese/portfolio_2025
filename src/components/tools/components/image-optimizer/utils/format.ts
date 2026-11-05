@@ -20,21 +20,29 @@ export function calculateSavings(original: number, optimized: number) {
   };
 }
 
+export function getDefaultOutputBaseName(originalName: string): string {
+  const lastDot = originalName.lastIndexOf(".");
+  return lastDot !== -1 ? originalName.slice(0, lastDot) : originalName;
+}
+
 export function getFilenameWithExtension(
   originalName: string,
   targetMime: OutputFormat,
+  customName?: string,
 ): string {
-  const lastDot = originalName.lastIndexOf(".");
-  const baseName =
-    lastDot !== -1 ? originalName.slice(0, lastDot) : originalName;
-
   const extMap: Record<OutputFormat, string> = {
     "image/webp": "webp",
     "image/jpeg": "jpg",
     "image/png": "png",
   };
+  const ext = extMap[targetMime] || "webp";
+  const trimmedCustom = customName?.trim();
+  if (trimmedCustom) {
+    const cleaned = trimmedCustom.replace(/\.(webp|jpe?g|png|avif|gif)$/i, "");
+    return `${cleaned || getDefaultOutputBaseName(originalName)}.${ext}`;
+  }
 
-  return `${baseName}.${extMap[targetMime] || "webp"}`;
+  return `${getDefaultOutputBaseName(originalName)}.${ext}`;
 }
 
 export function getFormatLabel(mimeType: string): string {

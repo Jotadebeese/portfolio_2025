@@ -45,6 +45,7 @@ type Props = {
   onOpenEdit: () => void;
   onCompressSingle?: () => void;
   onRename?: (newCustomName?: string) => void;
+  onApplySettings?: (patch: Partial<VideoOptimizerSettings>) => void;
 };
 
 function getOriginalFormatLabel(name: string, file?: File): string {
@@ -68,6 +69,7 @@ export default function DetailsSidebar({
   onOpenEdit,
   onCompressSingle,
   onRename,
+  onApplySettings,
 }: Props) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [draftName, setDraftName] = useState("");
@@ -334,7 +336,7 @@ export default function DetailsSidebar({
         </div>
 
         {realSavings && realSavings.isReduced && (
-          <span className="text-code-green bg-utils-scent-gray-01/40 shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px]">
+          <span className="text-code-green bg-utils-scent-gray-01/40 shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px]">
             -{realSavings.percentSaved}%
           </span>
         )}
@@ -342,7 +344,7 @@ export default function DetailsSidebar({
           !realSavings.isReduced &&
           item.compressedSize !== undefined &&
           item.compressedSize > item.originalSize && (
-            <span className="text-foreground/70 bg-utils-scent-gray-01/40 shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px]">
+            <span className="text-code-rust bg-utils-scent-gray-01/40 shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px]">
               +
               {Math.round(
                 ((item.compressedSize - item.originalSize) /
@@ -395,7 +397,7 @@ export default function DetailsSidebar({
                   realSavings.bytesSaved > 0
                     ? "text-code-green"
                     : realSavings.bytesSaved < 0
-                      ? "text-foreground/70"
+                      ? "text-code-rust"
                       : "text-foreground/50",
                 )}
               >
@@ -475,6 +477,147 @@ export default function DetailsSidebar({
             )}
           </span>
         </div>
+
+        {realSavings &&
+          realSavings.bytesSaved < 0 &&
+          (() => {
+            const usedSettings = item.lastCompressedSettings || settings;
+            const maxOrigDim = Math.max(
+              item.originalDimensions.width,
+              item.originalDimensions.height,
+            );
+            const canDownscaleTo720 =
+              maxOrigDim > 1280 &&
+              (settings.resizePreset === "1080p" ||
+                settings.resizePreset === "original");
+
+            if (
+              usedSettings.mode === "quality" &&
+              (usedSettings.qualityPercent || 80) > 85
+            ) {
+              return (
+                <div className="bg-background/40 border-border-color text-foreground/80 flex flex-col gap-2 rounded border border-dashed p-2 text-[10px] leading-relaxed">
+                  <div>
+                    <strong className="text-foreground">
+                      Why size increased:
+                    </strong>{" "}
+                    Re-encoding at{" "}
+                    <strong className="text-foreground">
+                      {usedSettings.qualityPercent}% quality
+                    </strong>{" "}
+                    inflates an already-compressed {origFormatLabel} clip
+                    without adding visual detail. Drop to the{" "}
+                    <strong className="text-foreground">80% sweet spot</strong>
+                    {canDownscaleTo720 ? " or downscale to 720p" : ""}.
+                  </div>
+                  {onApplySettings && !isProcessing && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onApplySettings({
+                            mode: "quality",
+                            qualityPercent: 80,
+                          })
+                        }
+                        className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                      >
+                        Set Quality to 80%
+                      </button>
+                      {canDownscaleTo720 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onApplySettings({ resizePreset: "720p" })
+                          }
+                          className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                        >
+                          Resize to 720p
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            if (usedSettings.mode === "bitrate") {
+              return (
+                <div className="bg-background/40 border-border-color text-foreground/80 flex flex-col gap-2 rounded border border-dashed p-2 text-[10px] leading-relaxed">
+                  <div>
+                    <strong className="text-foreground">
+                      Why size increased:
+                    </strong>{" "}
+                    Target bitrate (
+                    <strong className="text-foreground">
+                      {usedSettings.bitrateMbps.toFixed(1)} Mbps
+                    </strong>
+                    ) exceeds the source clip&apos;s original bitrate. Lower the
+                    bitrate budget or switch to{" "}
+                    <strong className="text-foreground">Quality (80%)</strong>{" "}
+                    mode.
+                  </div>
+                  {onApplySettings && !isProcessing && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onApplySettings({
+                            mode: "quality",
+                            qualityPercent: 80,
+                          })
+                        }
+                        className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                      >
+                        Switch to Quality (80%)
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <div className="bg-background/40 border-border-color text-foreground/80 flex flex-col gap-2 rounded border border-dashed p-2 text-[10px] leading-relaxed">
+                <div>
+                  <strong className="text-foreground">
+                    Why size increased:
+                  </strong>{" "}
+                  This {origFormatLabel} is already tightly compressed. Lower
+                  quality to{" "}
+                  <strong className="text-foreground">60%–75%</strong> or
+                  downscale resolution to reduce byte size.
+                </div>
+                {onApplySettings && !isProcessing && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onApplySettings({
+                          mode: "quality",
+                          qualityPercent: 75,
+                        })
+                      }
+                      className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                    >
+                      Set Quality to 75%
+                    </button>
+                    {canDownscaleTo720 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onApplySettings({ resizePreset: "720p" })
+                        }
+                        className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                      >
+                        Resize to 720p
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
       </div>
 
       <div className="flex flex-col gap-2">

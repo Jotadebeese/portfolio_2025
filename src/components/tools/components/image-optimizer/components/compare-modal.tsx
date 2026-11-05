@@ -21,6 +21,23 @@ type Props = {
 };
 
 type ViewMode = "slider" | "side-by-side";
+type BackdropMode = "checker" | "dark" | "light";
+
+const BACKDROP_STYLES: Record<BackdropMode, React.CSSProperties> = {
+  checker: {
+    backgroundColor: "#d8d2cc",
+    backgroundImage:
+      "linear-gradient(45deg, #bcb4ac 25%, transparent 25%), linear-gradient(-45deg, #bcb4ac 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #bcb4ac 75%), linear-gradient(-45deg, transparent 75%, #bcb4ac 75%)",
+    backgroundSize: "16px 16px",
+    backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0",
+  },
+  dark: {
+    backgroundColor: "#181411",
+  },
+  light: {
+    backgroundColor: "#ffffff",
+  },
+};
 
 export default function CompareModal({
   item,
@@ -29,10 +46,42 @@ export default function CompareModal({
   onDownload,
 }: Props) {
   const [sliderPos, setSliderPos] = useState<number>(50); // percentage 0 - 100
-  const [isDragging, setIsDragging] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<ViewMode>("slider");
+  const [backdrop, setBackdrop] = useState<BackdropMode>("checker");
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef<boolean>(false);
+
+  const handlePointerMove = useCallback((clientX: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const x = clientX - rect.left;
+    const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setSliderPos(pct);
+  }, []);
+
+  const handleSplitPointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    isDraggingRef.current = true;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
+    handlePointerMove(e.clientX);
+  };
+
+  const handleSplitPointerMove = (e: React.PointerEvent) => {
+    if (isDraggingRef.current) {
+      handlePointerMove(e.clientX);
+    }
+  };
+
+  const handleSplitPointerUp = (e: React.PointerEvent) => {
+    isDraggingRef.current = false;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -44,7 +93,17 @@ export default function CompareModal({
     document.documentElement.style.overflow = "hidden";
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+      } else if (viewMode === "slider" && e.key === "ArrowLeft") {
+        e.preventDefault();
+        const step = e.shiftKey ? 1 : 5;
+        setSliderPos((prev) => Math.max(0, prev - step));
+      } else if (viewMode === "slider" && e.key === "ArrowRight") {
+        e.preventDefault();
+        const step = e.shiftKey ? 1 : 5;
+        setSliderPos((prev) => Math.min(100, prev + step));
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -54,44 +113,7 @@ export default function CompareModal({
       document.body.style.overflow = originalBodyOverflow;
       document.documentElement.style.overflow = originalHtmlOverflow;
     };
-  }, [isOpen, onClose]);
-
-  const handlePointerMove = useCallback((clientX: number) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
-    setSliderPos(pct);
-  }, []);
-
-  const handleMouseDown = () => setIsDragging(true);
-
-  useEffect(() => {
-    const handleMouseUp = () => setIsDragging(false);
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) handlePointerMove(e.clientX);
-    };
-    const handleTouchMove = (e: TouchEvent) => {
-      if (isDragging && e.touches[0]) {
-        e.preventDefault();
-        handlePointerMove(e.touches[0].clientX);
-      }
-    };
-
-    if (isDragging) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
-      window.addEventListener("touchmove", handleTouchMove, { passive: false });
-      window.addEventListener("touchend", handleMouseUp);
-    }
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("touchend", handleMouseUp);
-    };
-  }, [isDragging, handlePointerMove]);
+  }, [isOpen, onClose, viewMode]);
 
   if (!isOpen) return null;
 
@@ -109,9 +131,59 @@ export default function CompareModal({
         onClick={(e) => e.stopPropagation()}
         className="border-border-color flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-md bg-white shadow-xl overscroll-contain"
       >
-        <div className="border-border-color flex flex-wrap items-center justify-between gap-2 border-b border-dashed p-3">
-          <h4>Visual Inspection: {item.name}</h4>
-          <div className="flex items-center gap-2">
+        <div className="border-border-color flex items-center justify-between gap-2 border-b border-dashed px-3 py-2.5">
+          <h4
+            title={`Visual Inspection: ${item.name}`}
+            className="min-w-0 flex-1 truncate"
+          >
+            <span className="hidden md:inline">Visual Inspection: </span>
+            {item.name}
+          </h4>
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <div
+              className="border-border-color bg-background flex shrink-0 items-center rounded-md border p-0.5 text-xs"
+              title="Preview backdrop for transparent images"
+            >
+              {(["checker", "dark", "light"] as BackdropMode[]).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setBackdrop(mode)}
+                  title={`${mode.charAt(0).toUpperCase() + mode.slice(1)} backdrop`}
+                  aria-label={`${mode} backdrop`}
+                  className={clsx(
+                    "flex cursor-pointer items-center gap-1.5 rounded px-2 py-1 capitalize transition-all",
+                    backdrop === mode
+                      ? "bg-foreground text-background"
+                      : "text-foreground/70 hover:text-foreground",
+                  )}
+                >
+                  <span
+                    style={
+                      mode === "checker"
+                        ? {
+                            backgroundColor: "#d8d2cc",
+                            backgroundImage:
+                              "linear-gradient(45deg, #9e958c 25%, transparent 25%), linear-gradient(-45deg, #9e958c 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #9e958c 75%), linear-gradient(-45deg, transparent 75%, #9e958c 75%)",
+                            backgroundSize: "6px 6px",
+                            backgroundPosition: "0 0, 0 3px, 3px -3px, -3px 0",
+                          }
+                        : mode === "dark"
+                          ? { backgroundColor: "#181411" }
+                          : { backgroundColor: "#ffffff" }
+                    }
+                    className={clsx(
+                      "h-3 w-3 shrink-0 rounded-xs border",
+                      backdrop === mode
+                        ? "border-white/40"
+                        : "border-foreground/30",
+                    )}
+                  />
+                  <span className="hidden sm:inline">{mode}</span>
+                </button>
+              ))}
+            </div>
+
             <div className="border-border-color bg-background flex items-center rounded-md border p-0.5 text-xs">
               <button
                 onClick={() => setViewMode("slider")}
@@ -156,17 +228,20 @@ export default function CompareModal({
           {viewMode === "slider" ? (
             <div
               ref={containerRef}
-              onMouseDown={handleMouseDown}
-              onTouchStart={handleMouseDown}
-              style={
-                item.originalDimensions.width > 0 &&
+              onPointerDown={handleSplitPointerDown}
+              onPointerMove={handleSplitPointerMove}
+              onPointerUp={handleSplitPointerUp}
+              onPointerCancel={handleSplitPointerUp}
+              style={{
+                ...(item.originalDimensions.width > 0 &&
                 item.originalDimensions.height > 0
                   ? {
                       aspectRatio: `${item.originalDimensions.width} / ${item.originalDimensions.height}`,
                     }
-                  : undefined
-              }
-              className="relative flex h-full max-h-[60vh] w-full max-w-3xl cursor-ew-resize items-center justify-center overflow-hidden select-none touch-none"
+                  : {}),
+                ...BACKDROP_STYLES[backdrop],
+              }}
+              className="border-border-color relative flex h-full max-h-[60vh] w-full max-w-3xl cursor-ew-resize items-center justify-center overflow-hidden rounded border select-none touch-none"
             >
               <img
                 src={item.optimizedUrl || item.originalUrl}
@@ -184,7 +259,7 @@ export default function CompareModal({
               />
 
               <div
-                className="pointer-events-none absolute top-0 bottom-0 z-20 flex w-0.5 items-center justify-center bg-white shadow-md"
+                className="bg-foreground/70 pointer-events-none absolute top-0 bottom-0 z-20 flex w-0.5 items-center justify-center shadow-md"
                 style={{ left: `${sliderPos}%` }}
               >
                 <div className="bg-foreground text-background flex h-7 min-w-7 items-center justify-center rounded-full border-2 border-white text-[10px] shadow-md">
@@ -206,7 +281,10 @@ export default function CompareModal({
           ) : (
             <div className="grid h-full max-h-[60vh] w-full max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1 bg-white">
-                <div className="flex flex-1 justify-center overflow-hidden">
+                <div
+                  style={BACKDROP_STYLES[backdrop]}
+                  className="border-border-color flex flex-1 justify-center overflow-hidden rounded border"
+                >
                   <img
                     src={item.originalUrl}
                     alt="Original"
@@ -224,7 +302,10 @@ export default function CompareModal({
               </div>
 
               <div className="flex flex-col gap-1 bg-white">
-                <div className="flex flex-1 items-center justify-center overflow-hidden">
+                <div
+                  style={BACKDROP_STYLES[backdrop]}
+                  className="border-border-color flex flex-1 items-center justify-center overflow-hidden rounded border"
+                >
                   <img
                     src={item.optimizedUrl || item.originalUrl}
                     alt="Optimized"
@@ -235,10 +316,24 @@ export default function CompareModal({
                   <span className="text-foreground flex items-center gap-1">
                     Optimized
                     {savings && savings.isReduced && (
-                      <span className="text-code-green bg-utils-scent-gray-01/40 rounded px-1 text-[10px]">
+                      <span className="text-code-green bg-utils-scent-gray-01/40 rounded px-1 font-mono text-[10px]">
                         -{savings.percentSaved}%
                       </span>
                     )}
+                    {savings &&
+                      !savings.isReduced &&
+                      item.optimizedSize !== undefined &&
+                      item.optimizedSize > item.originalSize && (
+                        <span className="text-code-rust bg-utils-scent-gray-01/40 rounded px-1 font-mono text-[10px]">
+                          +
+                          {Math.round(
+                            ((item.optimizedSize - item.originalSize) /
+                              item.originalSize) *
+                              100,
+                          )}
+                          %
+                        </span>
+                      )}
                   </span>
                   <span className="text-foreground/70 font-mono">
                     {item.optimizedSize !== undefined
@@ -260,11 +355,28 @@ export default function CompareModal({
             {savings && savings.isReduced && (
               <span className="flex items-center gap-1.5">
                 Saved{" "}
-                <span className="text-code-green font-mono">
-                  {formatBytes(savings.bytesSaved)} ({savings.percentSaved}%)
+                <span className="text-code-green bg-utils-scent-gray-01/40 rounded px-1.5 py-0.5 font-mono text-[11px]">
+                  {formatBytes(savings.bytesSaved)} (-{savings.percentSaved}%)
                 </span>{" "}
               </span>
             )}
+            {savings &&
+              !savings.isReduced &&
+              item.optimizedSize !== undefined &&
+              item.optimizedSize > item.originalSize && (
+                <span className="flex items-center gap-1.5">
+                  Size change{" "}
+                  <span className="text-code-rust bg-utils-scent-gray-01/40 rounded px-1.5 py-0.5 font-mono text-[11px]">
+                    +{formatBytes(Math.abs(savings.bytesSaved))} (+
+                    {Math.round(
+                      ((item.optimizedSize - item.originalSize) /
+                        item.originalSize) *
+                        100,
+                    )}
+                    %)
+                  </span>
+                </span>
+              )}
           </div>
 
           <div className="flex items-center gap-2">
