@@ -27,7 +27,19 @@ export const Media: CollectionConfig = {
   ],
   upload: {
     disableLocalStorage: true,
-    adminThumbnail: "thumbnail",
+    adminThumbnail: ({ doc }) => {
+      const thumbnail = (doc?.sizes as Record<string, any> | undefined)?.thumbnail;
+      if (thumbnail?.url) return thumbnail.url;
+      if (thumbnail?.filename) {
+        const storeId = process.env.BLOB_READ_WRITE_TOKEN?.match(
+          /^vercel_blob_rw_([a-z\d]+)_[a-z\d]+$/i
+        )?.[1]?.toLowerCase();
+        if (storeId) {
+          return `https://${storeId}.public.blob.vercel-storage.com/${thumbnail.filename}`;
+        }
+      }
+      return (doc?.url as string) || null;
+    },
     imageSizes: [
       {
         name: "thumbnail",
