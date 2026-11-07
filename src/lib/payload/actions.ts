@@ -12,7 +12,19 @@ import config from "@payload-config";
 
 const payload = await getPayload({ config });
 
-export const getAllProjects = unstable_cache(
+// Only cache data in production. In development, always fetch fresh data from Neon DB
+const devAwareCache = <T extends (...args: any[]) => Promise<any>>(
+  fn: T,
+  keyParts?: string[],
+  options?: { revalidate?: number | false; tags?: string[] },
+): T => {
+  if (process.env.NODE_ENV === "development") {
+    return fn;
+  }
+  return unstable_cache(fn, keyParts, options);
+};
+
+export const getAllProjects = devAwareCache(
   async (): Promise<Project[]> => {
     const res = await payload.find({
       collection: "projects",
@@ -41,7 +53,7 @@ export const getAllProjects = unstable_cache(
   { tags: ["projects"] },
 );
 
-export const getProjectBySlug = unstable_cache(
+export const getProjectBySlug = devAwareCache(
   async (slug: string): Promise<Project | null> => {
     const res = await payload.find({
       collection: "projects",
@@ -62,7 +74,7 @@ export const getProjectBySlug = unstable_cache(
   { tags: ["projects"] },
 );
 
-export const getProjectSlugs = unstable_cache(
+export const getProjectSlugs = devAwareCache(
   async (): Promise<{ slug: string }[]> => {
     try {
       const projects = await payload.find({
@@ -82,7 +94,7 @@ export const getProjectSlugs = unstable_cache(
   { tags: ["projects"] },
 );
 
-export const getAllTags = unstable_cache(
+export const getAllTags = devAwareCache(
   async (): Promise<BlogTag[]> => {
     const res = await payload.find({
       collection: "blogTags",
@@ -95,7 +107,7 @@ export const getAllTags = unstable_cache(
   { tags: ["blog-tags"] },
 );
 
-export const getAllBlogs = unstable_cache(
+export const getAllBlogs = devAwareCache(
   async (
     tagIds?: number[],
     sortOption: string = "newest",
@@ -133,7 +145,7 @@ export const getAllBlogs = unstable_cache(
   { tags: ["blogs"] },
 );
 
-export const getBlogSlugs = unstable_cache(
+export const getBlogSlugs = devAwareCache(
   async (): Promise<{ slug: string }[]> => {
     try {
       const blogs = await payload.find({
@@ -152,7 +164,7 @@ export const getBlogSlugs = unstable_cache(
   { tags: ["blogs"] },
 );
 
-export const getBlogBySlug = unstable_cache(
+export const getBlogBySlug = devAwareCache(
   async (slug: string): Promise<Blog | null> => {
     const res = await payload.find({
       collection: "blog",
@@ -174,7 +186,7 @@ export const getBlogBySlug = unstable_cache(
 );
 
 // Globals
-export const getAboutPage = unstable_cache(
+export const getAboutPage = devAwareCache(
   async (): Promise<About> => {
     const res = await payload.findGlobal({
       slug: "about",
@@ -186,7 +198,7 @@ export const getAboutPage = unstable_cache(
   { tags: ["about-page"] },
 );
 
-export const getBlogPage = unstable_cache(
+export const getBlogPage = devAwareCache(
   async (): Promise<BlogPage> => {
     const res = await payload.findGlobal({
       slug: "blogPage",
@@ -198,7 +210,7 @@ export const getBlogPage = unstable_cache(
   { tags: ["blog-page"] },
 );
 
-export const getHomePage = unstable_cache(
+export const getHomePage = devAwareCache(
   async (): Promise<HomePage> => {
     const res = await payload.findGlobal({
       slug: "homePage",

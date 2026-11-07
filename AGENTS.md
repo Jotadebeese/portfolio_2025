@@ -94,6 +94,8 @@ src/
 
 **CRITICAL: Every data-fetching function uses `unstable_cache` with explicit tags.**
 
+> **Dev bypass:** Functions are wrapped in `devAwareCache()` (in `actions.ts`), which skips `unstable_cache` when `NODE_ENV === "development"`. Local dev shares the production Neon DB, so it always reads fresh data. Production caching is unchanged.
+
 This is safe because every Payload collection has `afterChange` and `afterDelete` hooks that call `revalidateTag()`.
 
 | Function           | Cache Key           | Tag             | Notes                                    |
