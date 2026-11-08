@@ -278,6 +278,8 @@ export interface Project {
         blockType: 'gallery';
       }
     | ToolsWorkbenchBlock
+    | TableBlock
+    | RecipeScalerBlock
   )[];
   /**
    * Best to keep this under 60 characters.
@@ -387,6 +389,53 @@ export interface ToolsWorkbenchBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TableBlock".
+ */
+export interface TableBlock {
+  title?: string | null;
+  caption?: string | null;
+  variant?: ('standard' | 'compact' | 'striped') | null;
+  /**
+   * Paste a markdown table (| Col 1 | Col 2 |) or tab-separated values copied directly from Google Sheets / Excel.
+   */
+  tableData: string;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'table';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RecipeScalerBlock".
+ */
+export interface RecipeScalerBlock {
+  title?: string | null;
+  description?: string | null;
+  baseYield: number;
+  yieldUnit: string;
+  yieldLabel?: string | null;
+  presets?: string | null;
+  /**
+   * Optional note displayed below the ingredients (e.g. explaining baker's percentages for this recipe). Leave blank if not needed.
+   */
+  footnote?: string | null;
+  sections: {
+    sectionName: string;
+    ingredients: {
+      name: string;
+      amount: number;
+      unit: string;
+      percentage?: number | null;
+      notes?: string | null;
+      id?: string | null;
+    }[];
+    id?: string | null;
+  }[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'recipe-scaler';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "blogTags".
  */
 export interface BlogTag {
@@ -463,6 +512,8 @@ export interface Blog {
         blockType: 'gallery';
       }
     | ToolsWorkbenchBlock
+    | TableBlock
+    | RecipeScalerBlock
   )[];
   /**
    * Best to keep this under 60 characters.
@@ -686,6 +737,8 @@ export interface ProjectsSelect<T extends boolean = true> {
               blockName?: T;
             };
         'tools-workbench'?: T | ToolsWorkbenchBlockSelect<T>;
+        table?: T | TableBlockSelect<T>;
+        'recipe-scaler'?: T | RecipeScalerBlockSelect<T>;
       };
   metaTitle?: T;
   metaDescription?: T;
@@ -714,6 +767,49 @@ export interface ToolsWorkbenchBlockSelect<T extends boolean = true> {
   hideSelector?: T;
   availableTools?: T;
   defaultTools?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TableBlock_select".
+ */
+export interface TableBlockSelect<T extends boolean = true> {
+  title?: T;
+  caption?: T;
+  variant?: T;
+  tableData?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RecipeScalerBlock_select".
+ */
+export interface RecipeScalerBlockSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  baseYield?: T;
+  yieldUnit?: T;
+  yieldLabel?: T;
+  presets?: T;
+  footnote?: T;
+  sections?:
+    | T
+    | {
+        sectionName?: T;
+        ingredients?:
+          | T
+          | {
+              name?: T;
+              amount?: T;
+              unit?: T;
+              percentage?: T;
+              notes?: T;
+              id?: T;
+            };
+        id?: T;
+      };
   id?: T;
   blockName?: T;
 }
@@ -792,6 +888,8 @@ export interface BlogSelect<T extends boolean = true> {
               blockName?: T;
             };
         'tools-workbench'?: T | ToolsWorkbenchBlockSelect<T>;
+        table?: T | TableBlockSelect<T>;
+        'recipe-scaler'?: T | RecipeScalerBlockSelect<T>;
       };
   metaTitle?: T;
   metaDescription?: T;
@@ -896,6 +994,8 @@ export interface About {
         blockType: 'gallery';
       }
     | ToolsWorkbenchBlock
+    | TableBlock
+    | RecipeScalerBlock
   )[];
   /**
    * Best to keep this under 60 characters.
@@ -1061,6 +1161,8 @@ export interface AboutSelect<T extends boolean = true> {
               blockName?: T;
             };
         'tools-workbench'?: T | ToolsWorkbenchBlockSelect<T>;
+        table?: T | TableBlockSelect<T>;
+        'recipe-scaler'?: T | RecipeScalerBlockSelect<T>;
       };
   metaTitle?: T;
   metaDescription?: T;

@@ -6,6 +6,8 @@ import InteractiveCode from "./interactive-code";
 import BlockGallery from "./block-gallery";
 import BlockImage from "./block-image";
 import ToolsWorkbench from "@/components/tools/layout/tools-workbench";
+import BlockTable from "./block-table";
+import RecipeScaler from "@/components/recipes/recipe-scaler";
 
 export default function BlockContent({
   data,
@@ -62,11 +64,8 @@ export default function BlockContent({
             }
             if (block.blockType === "gallery") {
               return (
-                <div key={index} className="w-full my-4">
-                  <BlockGallery
-                    layout={block.layout}
-                    images={block.images}
-                  />
+                <div key={index} className="my-4 w-full">
+                  <BlockGallery layout={block.layout} images={block.images} />
                 </div>
               );
             }
@@ -79,6 +78,34 @@ export default function BlockContent({
                     availableTools={block.availableTools}
                     defaultTools={block.defaultTools}
                     hideSelector={block.hideSelector}
+                  />
+                </div>
+              );
+            }
+
+            if (block.blockType === "table") {
+              return (
+                <div key={index} className="w-full">
+                  <BlockTable
+                    title={block.title}
+                    caption={block.caption}
+                    tableData={block.tableData}
+                    variant={block.variant}
+                  />
+                </div>
+              );
+            }
+            if (block.blockType === "recipe-scaler") {
+              return (
+                <div key={index} className="w-full">
+                  <RecipeScaler
+                    title={block.title}
+                    description={block.description}
+                    baseYield={block.baseYield}
+                    yieldUnit={block.yieldUnit}
+                    yieldLabel={block.yieldLabel}
+                    presets={block.presets} footnote={block.footnote}
+                    sections={block.sections || []}
                   />
                 </div>
               );

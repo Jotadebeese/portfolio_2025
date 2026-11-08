@@ -72,6 +72,43 @@ export function extractHeadingsFromBlocks(blocks: any[]): HeadingItem[] {
       });
     }
 
+    if (block.blockType === "recipe-scaler" && block.title?.trim()) {
+      const sectionText = block.title.trim();
+      const sectionId = slugifyHeading(sectionText);
+      currentH2Id = sectionId;
+
+      headings.push({
+        id: sectionId,
+        text: sectionText,
+        level: 2,
+      });
+
+      if (Array.isArray(block.sections)) {
+        block.sections.forEach((sec: any) => {
+          if (sec.sectionName?.trim()) {
+            headings.push({
+              id: slugifyHeading(sec.sectionName.trim()),
+              text: sec.sectionName.trim(),
+              level: 3,
+              parentId: sectionId,
+            });
+          }
+        });
+      }
+    }
+
+    if (block.blockType === "table" && block.title?.trim()) {
+      const sectionText = block.title.trim();
+      const sectionId = slugifyHeading(sectionText);
+      currentH2Id = sectionId;
+
+      headings.push({
+        id: sectionId,
+        text: sectionText,
+        level: 2,
+      });
+    }
+
     if (block.blockType === "tools-workbench") {
       const customHeading = block.heading?.trim();
       const sectionText =

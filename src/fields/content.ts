@@ -225,5 +225,223 @@ export const contentField: Field = {
         },
       ],
     },
+    {
+      slug: "table",
+      interfaceName: "TableBlock",
+      labels: {
+        singular: "Data Table",
+        plural: "Data Tables",
+      },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            {
+              name: "title",
+              type: "text",
+              label: "Table Title / Heading (Optional)",
+              admin: {
+                width: "40%",
+              },
+            },
+            {
+              name: "caption",
+              type: "text",
+              label: "Table Subtitle / Caption (Optional)",
+              admin: {
+                width: "40%",
+              },
+            },
+            {
+              name: "variant",
+              type: "select",
+              defaultValue: "standard",
+              label: "Visual Style",
+              admin: {
+                width: "20%",
+              },
+              options: [
+                {
+                  label: "Standard (Borders & Clean Spacing)",
+                  value: "standard",
+                },
+                {
+                  label: "Compact (Dense Nutrition & Specs)",
+                  value: "compact",
+                },
+                { label: "Striped (Alternating Row Tints)", value: "striped" },
+              ],
+            },
+          ],
+        },
+        {
+          name: "tableData",
+          type: "textarea",
+          label: "Table Data (Markdown or TSV)",
+          required: true,
+          admin: {
+            rows: 8,
+            description:
+              "Paste a markdown table (| Col 1 | Col 2 |) or tab-separated values copied directly from Google Sheets / Excel.",
+          },
+        },
+      ],
+    },
+    {
+      slug: "recipe-scaler",
+      interfaceName: "RecipeScalerBlock",
+      labels: {
+        singular: "Recipe Scaler",
+        plural: "Recipe Scalers",
+      },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            {
+              name: "title",
+              type: "text",
+              label: "Section Title",
+              defaultValue: "Interactive Recipe Scaler",
+              admin: {
+                width: "40%",
+              },
+            },
+            {
+              name: "description",
+              type: "text",
+              label: "Description (Optional)",
+              defaultValue:
+                "Adjust the target batch size to automatically recalculate all ingredient amounts.",
+              admin: {
+                width: "60%",
+              },
+            },
+          ],
+        },
+        {
+          type: "row",
+          fields: [
+            {
+              name: "baseYield",
+              type: "number",
+              label: "Base Batch Size",
+              defaultValue: 1000,
+              required: true,
+              admin: {
+                width: "20%",
+              },
+            },
+            {
+              name: "yieldUnit",
+              type: "text",
+              label: "Unit (g, kg, etc.)",
+              defaultValue: "g",
+              required: true,
+              admin: {
+                width: "20%",
+              },
+            },
+            {
+              name: "yieldLabel",
+              type: "text",
+              label: "Yield Input Label",
+              defaultValue: "Target Batch Size",
+              admin: {
+                width: "25%",
+              },
+            },
+            {
+              name: "presets",
+              type: "text",
+              label: "Presets (Comma-separated)",
+              defaultValue: "500, 1000, 2000, 5000",
+              admin: {
+                width: "35%",
+              },
+            },
+          ],
+        },
+        {
+          name: "footnote",
+          type: "text",
+          label: "Footnote / Ratio Note (Optional)",
+          admin: {
+            description:
+              "Optional note displayed below the ingredients (e.g. explaining baker's percentages for this recipe). Leave blank if not needed.",
+          },
+        },
+        {
+          name: "sections",
+          type: "array",
+          label: "Ingredient Sections",
+          minRows: 1,
+          required: true,
+          fields: [
+            {
+              name: "sectionName",
+              type: "text",
+              label: "Section Name",
+              required: true,
+            },
+            {
+              name: "ingredients",
+              type: "array",
+              label: "Ingredients",
+              minRows: 1,
+              required: true,
+              fields: [
+                {
+                  type: "row",
+                  fields: [
+                    {
+                      name: "name",
+                      type: "text",
+                      label: "Ingredient Name",
+                      required: true,
+                      admin: {
+                        width: "40%",
+                      },
+                    },
+                    {
+                      name: "amount",
+                      type: "number",
+                      label: "Base Amount",
+                      required: true,
+                      admin: {
+                        width: "20%",
+                      },
+                    },
+                    {
+                      name: "unit",
+                      type: "text",
+                      label: "Unit (g, ml, m)",
+                      defaultValue: "g",
+                      required: true,
+                      admin: {
+                        width: "20%",
+                      },
+                    },
+                    {
+                      name: "percentage",
+                      type: "number",
+                      label: "Baker's % (Opt.)",
+                      admin: {
+                        width: "20%",
+                      },
+                    },
+                  ],
+                },
+                {
+                  name: "notes",
+                  type: "text",
+                  label: "Preparation Notes / Sourcing (Optional)",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
   ],
 };
