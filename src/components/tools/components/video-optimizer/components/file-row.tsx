@@ -154,7 +154,7 @@ export default function FileRow({
             if (!isProcessing) onToggleSelect();
           }}
           className={clsx(
-            "flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-xs border transition-all",
+            "flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-sm border transition-all",
             isProcessing
               ? "border-border-color bg-utils-scent-gray-01/20 cursor-not-allowed opacity-40"
               : isSelected

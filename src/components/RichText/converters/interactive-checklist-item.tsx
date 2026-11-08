@@ -18,17 +18,20 @@ export default function InteractiveChecklistItem({
       <button
         onClick={() => setChecked(!checked)}
         className={clsx(
-          "mt-1 w-5 h-5 flex items-center justify-center rounded-xs border transition-all shrink-0 cursor-pointer",
+          "mt-1 flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-sm border transition-all",
           checked
             ? "bg-utils-scent-orange/60 border-utils-scent-orange text-white"
-            : "border-border-color bg-white hover:border-utils-scent-orange"
+            : "border-border-color bg-white hover:border-utils-scent-orange",
         )}
         aria-label={checked ? "Uncheck item" : "Check item"}
       >
         <Check
-          size={14}
+          size={12}
           strokeWidth={4}
-          className={clsx("transition-all", checked ? "scale-100 opacity-100" : "scale-50 opacity-0")}
+          className={clsx(
+            "transition-all duration-100",
+            checked ? "scale-100 opacity-100" : "scale-50 opacity-0",
+          )}
         />
       </button>
       <span

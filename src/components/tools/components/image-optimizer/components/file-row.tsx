@@ -65,7 +65,7 @@ export default function FileRow({
             onToggleSelect();
           }}
           className={clsx(
-            "flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-xs border transition-all",
+            "flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-sm border transition-all",
             isSelected
               ? "border-utils-scent-orange bg-utils-scent-orange/60 text-white"
               : "border-border-color hover:border-utils-scent-orange bg-white",
