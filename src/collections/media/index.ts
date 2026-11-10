@@ -127,7 +127,7 @@ export const Media: CollectionConfig = {
         },
       },
     ],
-    mimeTypes: ["image/*"],
+    mimeTypes: ["image/*", "video/mp4", "video/webm", "video/quicktime"],
     displayPreview: true,
     formatOptions: {
       format: "webp",

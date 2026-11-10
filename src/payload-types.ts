@@ -209,10 +209,15 @@ export interface Media {
  */
 export interface Project {
   id: number;
+  _order?: string;
   slug: string;
   projectType?: (number | Tag)[] | null;
   technologies?: (number | Tech)[] | null;
   stage?: ('indevelopment' | 'live') | null;
+  /**
+   * If enabled, this card spans full width (2 columns) in the Bento grid instead of half width.
+   */
+  fullWidth?: boolean | null;
   liveUrl?: string | null;
   githubUrl?: string | null;
   /**
@@ -236,7 +241,14 @@ export interface Project {
     };
     [k: string]: unknown;
   };
+  /**
+   * Upload a brand icon or logo (SVG/PNG/WebP) displayed at the right of the project title.
+   */
   icon?: (number | null) | Media;
+  /**
+   * Upload a short muted loop video (MP4/WebM) displayed inside the project card.
+   */
+  video?: (number | null) | Media;
   content: (
     | {
         text: {
@@ -396,7 +408,7 @@ export interface TableBlock {
   caption?: string | null;
   variant?: ('standard' | 'compact' | 'striped') | null;
   /**
-   * Paste a markdown table (| Col 1 | Col 2 |) or tab-separated values copied directly from Google Sheets / Excel.
+   * Edit visually in the grid or paste a markdown / TSV table copied from Google Sheets / Excel.
    */
   tableData: string;
   id?: string | null;
@@ -418,6 +430,9 @@ export interface RecipeScalerBlock {
    * Optional note displayed below the ingredients (e.g. explaining baker's percentages for this recipe). Leave blank if not needed.
    */
   footnote?: string | null;
+  /**
+   * Edit ingredients visually in the spreadsheet grid or paste from Google Sheets / Excel / recipe notes.
+   */
   sections: {
     sectionName: string;
     ingredients: {
@@ -692,10 +707,12 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "projects_select".
  */
 export interface ProjectsSelect<T extends boolean = true> {
+  _order?: T;
   slug?: T;
   projectType?: T;
   technologies?: T;
   stage?: T;
+  fullWidth?: T;
   liveUrl?: T;
   githubUrl?: T;
   individualPage?: T;
@@ -703,6 +720,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   title?: T;
   shortDescription?: T;
   icon?: T;
+  video?: T;
   content?:
     | T
     | {

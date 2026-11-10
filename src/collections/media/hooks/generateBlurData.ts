@@ -5,7 +5,12 @@ export const generateBlurData: CollectionBeforeChangeHook = async ({
   data,
   req,
 }) => {
-  if (req.file && req.file.data && data.mimeType.startsWith("image/")) {
+  if (
+    req.file &&
+    req.file.data &&
+    data.mimeType?.startsWith("image/") &&
+    !data.mimeType.includes("svg")
+  ) {
     try {
       const buffer = await sharp(req.file.data)
         .resize(20, null, { kernel: "lanczos3" })

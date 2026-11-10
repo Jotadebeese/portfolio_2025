@@ -5,6 +5,7 @@ import { contentField } from "@/fields/content";
 
 export const Projects: CollectionConfig = {
   slug: "projects",
+  orderable: true,
   labels: {
     singular: "Project",
     plural: "Projects",
@@ -12,6 +13,7 @@ export const Projects: CollectionConfig = {
   admin: {
     useAsTitle: "title",
     group: "Projects",
+    defaultColumns: ["title", "stage", "fullWidth", "publishedAt", "_status"],
   },
   versions: {
     drafts: true,
@@ -59,6 +61,17 @@ export const Projects: CollectionConfig = {
       defaultValue: "indevelopment",
       admin: {
         position: "sidebar",
+      },
+    },
+    {
+      name: "fullWidth",
+      type: "checkbox",
+      label: "Full Width Card",
+      defaultValue: false,
+      admin: {
+        position: "sidebar",
+        description:
+          "If enabled, this card spans full width (2 columns) in the Bento grid instead of half width.",
       },
     },
     {
@@ -119,47 +132,25 @@ export const Projects: CollectionConfig = {
             },
             {
               name: "icon",
+              label: "Logo / Icon",
               type: "upload",
               relationTo: "media",
+              admin: {
+                description:
+                  "Upload a brand icon or logo (SVG/PNG/WebP) displayed at the right of the project title.",
+              },
+            },
+            {
+              name: "video",
+              label: "Demo Loop Video",
+              type: "upload",
+              relationTo: "media",
+              admin: {
+                description:
+                  "Upload a short muted loop video (MP4/WebM) displayed inside the project card.",
+              },
             },
             contentField,
-
-            /* {
-              name: "content",
-              type: "blocks",
-              label: "Content",
-              required: true,
-              blocks: [
-                {
-                  slug: "text",
-                  fields: [
-                    {
-                      name: "text",
-                      type: "richText",
-                      label: "Text Content",
-                      required: true,
-                    },
-                  ],
-                },
-                {
-                  slug: "image",
-                  fields: [
-                    {
-                      name: "image",
-                      type: "upload",
-                      relationTo: "media",
-                      required: true,
-                      label: "Image",
-                    },
-                    {
-                      name: "caption",
-                      type: "text",
-                      label: "Caption",
-                    },
-                  ],
-                },
-              ],
-            }, */
           ],
         },
         {

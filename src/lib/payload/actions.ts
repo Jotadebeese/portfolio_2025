@@ -31,7 +31,7 @@ export const getAllProjects = devAwareCache(
       where: {
         _status: { equals: "published" },
       },
-      sort: "-publishedAt",
+      sort: ["_order", "-publishedAt"],
       depth: 1,
       select: {
         id: true,
@@ -39,7 +39,9 @@ export const getAllProjects = devAwareCache(
         slug: true,
         publishedAt: true,
         stage: true,
+        fullWidth: true,
         icon: true,
+        video: true,
         shortDescription: true,
         projectType: true,
         liveUrl: true,
