@@ -406,7 +406,6 @@ export interface ToolsWorkbenchBlock {
 export interface TableBlock {
   title?: string | null;
   caption?: string | null;
-  variant?: ('standard' | 'compact' | 'striped') | null;
   /**
    * Edit visually in the grid or paste a markdown / TSV table copied from Google Sheets / Excel.
    */
@@ -795,7 +794,6 @@ export interface ToolsWorkbenchBlockSelect<T extends boolean = true> {
 export interface TableBlockSelect<T extends boolean = true> {
   title?: T;
   caption?: T;
-  variant?: T;
   tableData?: T;
   id?: T;
   blockName?: T;

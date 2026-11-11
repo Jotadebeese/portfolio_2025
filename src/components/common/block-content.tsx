@@ -90,7 +90,6 @@ export default function BlockContent({
                     title={block.title}
                     caption={block.caption}
                     tableData={block.tableData}
-                    variant={block.variant}
                   />
                 </div>
               );

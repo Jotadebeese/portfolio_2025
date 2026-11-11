@@ -1,10 +1,47 @@
-import { Field } from "payload";
+import type { Field, FieldHook } from "payload";
+import crypto from "crypto";
+
+function ensureUniqueIds(items: any[], seen = new Set<string>()): any[] {
+  if (!Array.isArray(items)) return items;
+
+  return items.map((item) => {
+    if (!item || typeof item !== "object") return item;
+
+    const copy = { ...item };
+
+    // If item has an id, ensure it is unique
+    if ("id" in copy) {
+      if (!copy.id || seen.has(copy.id)) {
+        copy.id = crypto.randomBytes(12).toString("hex");
+      }
+      seen.add(copy.id);
+    }
+
+    // Recursively check all properties that might contain nested arrays of blocks/rows
+    for (const key of Object.keys(copy)) {
+      if (Array.isArray(copy[key])) {
+        copy[key] = ensureUniqueIds(copy[key], seen);
+      }
+    }
+
+    return copy;
+  });
+}
+
+const sanitizeBlockIdsHook: FieldHook = ({ value }) => {
+  if (!Array.isArray(value)) return value;
+  return ensureUniqueIds(value);
+};
 
 export const contentField: Field = {
   name: "content",
   type: "blocks",
   label: "Content",
   required: true,
+  hooks: {
+    beforeValidate: [sanitizeBlockIdsHook],
+    beforeChange: [sanitizeBlockIdsHook],
+  },
   blocks: [
     {
       slug: "text",
@@ -241,7 +278,7 @@ export const contentField: Field = {
               type: "text",
               label: "Table Title / Heading (Optional)",
               admin: {
-                width: "40%",
+                width: "50%",
               },
             },
             {
@@ -249,28 +286,8 @@ export const contentField: Field = {
               type: "text",
               label: "Table Subtitle / Caption (Optional)",
               admin: {
-                width: "40%",
+                width: "50%",
               },
-            },
-            {
-              name: "variant",
-              type: "select",
-              defaultValue: "standard",
-              label: "Visual Style",
-              admin: {
-                width: "20%",
-              },
-              options: [
-                {
-                  label: "Standard (Borders & Clean Spacing)",
-                  value: "standard",
-                },
-                {
-                  label: "Compact (Dense Nutrition & Specs)",
-                  value: "compact",
-                },
-                { label: "Striped (Alternating Row Tints)", value: "striped" },
-              ],
             },
           ],
         },
@@ -280,9 +297,12 @@ export const contentField: Field = {
           label: "Table Data (Markdown or TSV)",
           required: true,
           admin: {
+            components: {
+              Field: "@/fields/TableEditor",
+            },
             rows: 8,
             description:
-              "Paste a markdown table (| Col 1 | Col 2 |) or tab-separated values copied directly from Google Sheets / Excel.",
+              "Edit visually in the grid or paste a markdown / TSV table copied from Google Sheets / Excel.",
           },
         },
       ],
@@ -377,6 +397,13 @@ export const contentField: Field = {
           label: "Ingredient Sections",
           minRows: 1,
           required: true,
+          admin: {
+            components: {
+              Field: "@/fields/RecipeEditor",
+            },
+            description:
+              "Edit ingredients visually in the spreadsheet grid or paste from Google Sheets / Excel / recipe notes.",
+          },
           fields: [
             {
               name: "sectionName",

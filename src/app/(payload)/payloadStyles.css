@@ -75,12 +75,47 @@ h4 {
   font-weight: 200;
 }
 
-input,
-textarea {
-  @apply border-border-color text-foreground rounded-lg border bg-white p-2 shadow-none;
+@layer base {
+  input,
+  textarea {
+    @apply border-border-color text-foreground rounded-lg border bg-white p-2 shadow-none;
 
-  @variant dark {
-    @apply border-border-color text-foreground bg-background rounded-lg border p-2 shadow-none;
+    @variant dark {
+      @apply border-border-color text-foreground bg-background rounded-lg border p-2 shadow-none;
+    }
+  }
+
+  /* Scoped reset inside custom CMS editors since Tailwind Preflight is disabled */
+  .cms-editor-reset :is(button, input, textarea, select) {
+    font: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+    background-color: transparent;
+    border: 0 solid transparent;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    outline: none;
+  }
+
+  .cms-editor-reset button {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .cms-editor-reset button:disabled {
+    cursor: not-allowed;
+  }
+
+  .cms-editor-reset table {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  .cms-editor-reset :is(button, select, textarea):focus-visible {
+    outline: 2px solid var(--foreground);
+    outline-offset: 1px;
   }
 }
 
