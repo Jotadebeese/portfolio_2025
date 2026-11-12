@@ -339,8 +339,8 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
   return (
     <>
       <aside className="hidden max-w-3xl md:col-span-3 md:mt-5 md:block">
-        <div className="sticky top-24 bg-white p-2 sm:rounded-3xl sm:shadow-sm">
-          {content}
+        <div className="sticky top-24 border-border-color/50 rounded-3xl border bg-white/30 p-1 backdrop-blur-xs">
+          <div className="rounded-[20px] bg-white p-2">{content}</div>
         </div>
       </aside>
 

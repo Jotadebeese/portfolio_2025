@@ -9,7 +9,7 @@ export function ProjectsSkeleton() {
               i === 0 ? "md:col-span-2" : ""
             }`}
           >
-            <div className="flex flex-1 flex-col gap-5 rounded-lg bg-white p-4">
+            <div className="flex flex-1 flex-col gap-3 rounded-lg bg-white p-2 sm:gap-5 sm:p-4">
               <div className="flex items-center justify-between gap-2">
                 <div className="h-3.5 w-16 rounded bg-gray-200" />
                 <div className="flex items-center gap-1.5">
@@ -31,7 +31,7 @@ export function ProjectsSkeleton() {
                 </div>
               </div>
 
-              <div className="border-border-color mt-auto flex justify-end gap-4 border-t border-dashed pt-3">
+              <div className="border-border-color/50 mt-auto flex justify-end gap-4 border-t border-dashed pt-2 sm:pt-3">
                 <div className="h-5 w-16 rounded bg-gray-200" />
               </div>
             </div>

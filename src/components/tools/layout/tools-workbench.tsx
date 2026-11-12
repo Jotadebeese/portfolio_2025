@@ -181,8 +181,9 @@ export default function ToolsWorkbench({
       )}
 
       {!hideSelector && (
-        <div className="flex w-full flex-col gap-2 rounded-lg bg-white p-4 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="border-border-color/50 w-full rounded-xl border bg-white/30 p-1 backdrop-blur-xs">
+          <div className="flex w-full flex-col gap-2 rounded-lg bg-white p-2 sm:p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <SlidersHorizontal className="h-3.5 w-3.5" />
               <small>
@@ -250,6 +251,7 @@ export default function ToolsWorkbench({
                 </button>
               );
             })}
+          </div>
           </div>
         </div>
       )}

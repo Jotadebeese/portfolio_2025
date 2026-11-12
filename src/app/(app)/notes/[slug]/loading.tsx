@@ -28,21 +28,23 @@ export default function Loading() {
         </main>
 
         <aside className="hidden max-w-3xl md:col-span-3 md:mt-5 md:block animate-pulse">
-          <div className="sticky top-24 bg-white p-2 sm:rounded-3xl sm:shadow-sm">
-            <div className="flex flex-col gap-4 p-3">
-              <div className="w-4/5 h-6 bg-foreground/10 rounded-full" />
-              <div className="w-3/5 h-6 bg-foreground/5 rounded-full" />
-              <div className="w-2/3 h-6 bg-foreground/5 rounded-full" />
-              <div className="w-full h-6 bg-foreground/5 rounded-full" />
-              <div className="w-4/5 h-6 bg-foreground/5 rounded-full" />
+          <div className="sticky top-24 border-border-color/50 rounded-3xl border bg-white/30 p-1">
+            <div className="rounded-[20px] bg-white p-2">
+              <div className="flex flex-col gap-4 p-3">
+                <div className="w-4/5 h-6 bg-foreground/10 rounded-full" />
+                <div className="w-3/5 h-6 bg-foreground/5 rounded-full" />
+                <div className="w-2/3 h-6 bg-foreground/5 rounded-full" />
+                <div className="w-full h-6 bg-foreground/5 rounded-full" />
+                <div className="w-4/5 h-6 bg-foreground/5 rounded-full" />
 
-              <div className="border-border-color my-4 border-b border-dashed"></div>
+                <div className="border-border-color my-4 border-b border-dashed"></div>
 
-              <div className="w-16 h-3 bg-foreground/10 rounded mb-1" />
-              <div className="flex gap-2">
-                <div className="w-8 h-8 rounded-full bg-foreground/10" />
-                <div className="w-8 h-8 rounded-full bg-foreground/10" />
-                <div className="w-8 h-8 rounded-full bg-foreground/10" />
+                <div className="w-16 h-3 bg-foreground/10 rounded mb-1" />
+                <div className="flex gap-2">
+                  <div className="w-8 h-8 rounded-full bg-foreground/10" />
+                  <div className="w-8 h-8 rounded-full bg-foreground/10" />
+                  <div className="w-8 h-8 rounded-full bg-foreground/10" />
+                </div>
               </div>
             </div>
           </div>

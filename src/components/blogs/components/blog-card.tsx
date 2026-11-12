@@ -1,5 +1,5 @@
 import { Blog, BlogTag } from "@/payload-types";
-import { RichText } from "@payloadcms/richtext-lexical/react";
+import { RichText } from "@/components/RichText";
 import { ChevronRight, CircleDotDashed } from "lucide-react";
 import Link from "next/link";
 
@@ -35,8 +35,9 @@ export default function BlogCard(blog: Partial<Blog>) {
 
       {blog.shortDescription && (
         <RichText
+          variant="card"
           data={blog.shortDescription}
-          className="max-w-lg text-sm font-light"
+          className="max-w-lg font-light"
         />
       )}
 

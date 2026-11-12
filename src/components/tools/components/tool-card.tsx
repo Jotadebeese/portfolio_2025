@@ -37,13 +37,14 @@ export default function ToolCard({
     <article
       id={id}
       className={clsx(
-        "group border-border-color w-full scroll-mt-24 rounded-lg bg-white shadow-sm transition-all duration-200",
+        "group border-border-color/50 w-full scroll-mt-24 rounded-xl border bg-white/30 p-1 backdrop-blur-xs",
         className,
       )}
     >
-      <header
+      <div className="w-full rounded-lg bg-white">
+        <header
         className={clsx(
-          "border-border-color flex flex-wrap items-center justify-between gap-2 border-dashed px-4 py-2",
+          "border-border-color flex flex-wrap items-center justify-between gap-2 border-dashed px-2 py-2 sm:px-4",
           isCollapsed ? "border-none" : "border-b",
         )}
       >
@@ -93,7 +94,8 @@ export default function ToolCard({
         </div>
       </header>
 
-      <div className={clsx("p-4", isCollapsed && "hidden")}>{children}</div>
+      <div className={clsx("p-2 sm:p-4", isCollapsed && "hidden")}>{children}</div>
+      </div>
     </article>
   );
 }

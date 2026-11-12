@@ -1,5 +1,5 @@
 import { Media, Project, Tag } from "@/payload-types";
-import { RichText } from "@payloadcms/richtext-lexical/react";
+import { RichText } from "@/components/RichText";
 import clsx from "clsx";
 import { Scan } from "lucide-react";
 import Image from "next/image";
@@ -80,12 +80,12 @@ export default function ProjectCard({
 
         <div
           className={clsx(
-            "flex flex-1 flex-col gap-5 pt-4",
-            cardLinks.length === 0 && "pb-4",
+            "flex flex-1 flex-col gap-3 pt-2 sm:gap-5 sm:pt-4",
+            cardLinks.length === 0 && "pb-2 sm:pb-4",
             isFullWidth && hasVideo ? "lg:col-span-5" : "w-full",
           )}
         >
-          <div className="flex w-full items-center justify-between gap-2 px-4">
+          <div className="flex w-full items-center justify-between gap-2 px-2 sm:px-4">
             <small className="text-foreground/70">{formattedDate}</small>
             <div className="flex items-center gap-1.5">
               <small>
@@ -101,7 +101,7 @@ export default function ProjectCard({
             </div>
           </div>
 
-          <div className="flex w-full flex-col justify-center gap-1.5 px-4">
+          <div className="flex w-full flex-col justify-center gap-1.5 px-2 sm:px-4">
             <div className="flex w-full items-center justify-between gap-3">
               <h2>
                 {cardClickLink ? (
@@ -147,9 +147,10 @@ export default function ProjectCard({
 
             {project.shortDescription && (
               <RichText
+                variant="card"
                 className={clsx(
-                  "text-sm",
-                  cardClickLink && "[&_a]:relative [&_a]:z-1",
+                  cardClickLink &&
+                    "[&_a]:relative [&_a]:z-1 [&_button]:relative [&_button]:z-1",
                 )}
                 data={project.shortDescription}
               />
@@ -177,11 +178,11 @@ export default function ProjectCard({
           {cardLinks.length > 0 && (
             <footer
               className={clsx(
-                "mt-auto px-4 pb-4",
+                "mt-auto px-2 pb-2 sm:px-4 sm:pb-4",
                 cardClickLink && "relative z-1",
               )}
             >
-              <div className="border-border-color/50 flex flex-wrap items-center justify-end gap-4 border-t border-dashed pt-3">
+              <div className="border-border-color/50 flex flex-wrap items-center justify-end gap-4 border-t border-dashed pt-2 sm:pt-3">
                 {cardLinks.map((link, linkIndex) => {
                   const label = link.label.trim();
                   const url = link.url.trim();
