@@ -97,6 +97,7 @@ export default function ProjectLoopVideo({
     <video
       ref={videoRef}
       {...({ loading: "lazy" } as any)}
+      aria-hidden="true"
       autoPlay
       loop
       muted

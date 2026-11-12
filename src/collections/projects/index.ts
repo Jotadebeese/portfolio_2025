@@ -75,32 +75,6 @@ export const Projects: CollectionConfig = {
       },
     },
     {
-      name: "liveUrl",
-      type: "text",
-      label: "Live URL",
-      admin: {
-        position: "sidebar",
-      },
-    },
-    {
-      name: "githubUrl",
-      type: "text",
-      label: "GitHub URL",
-      admin: {
-        position: "sidebar",
-      },
-    },
-    {
-      name: "individualPage",
-      type: "checkbox",
-      label: "Individual Page",
-      defaultValue: false,
-      admin: {
-        position: "sidebar",
-        description: "If enabled, this project will have its own page",
-      },
-    },
-    {
       name: "publishedAt",
       type: "date",
       required: true,
@@ -149,6 +123,93 @@ export const Projects: CollectionConfig = {
                 description:
                   "Upload a short muted loop video (MP4/WebM) displayed inside the project card.",
               },
+            },
+            {
+              name: "links",
+              label: "Card Links",
+              type: "array",
+              maxRows: 5,
+              admin: {
+                description:
+                  "Add up to 5 links shown at the bottom of the card (drag rows to reorder). Check 'Open on card click' on one link to make the entire card clickable, or leave all unchecked.",
+                initCollapsed: false,
+              },
+              validate: (rows) => {
+                if (!Array.isArray(rows)) return true;
+                const cardClickCount = rows.filter((row) =>
+                  Boolean((row as { isCardLink?: boolean } | null)?.isCardLink),
+                ).length;
+                if (cardClickCount > 1) {
+                  return "Only one link can be checked for 'Open on card click'.";
+                }
+                return true;
+              },
+              fields: [
+                {
+                  type: "row",
+                  fields: [
+                    {
+                      name: "label",
+                      type: "text",
+                      required: true,
+                      label: "Label",
+                      admin: {
+                        width: "25%",
+                        placeholder: "Live, GitHub, Details...",
+                      },
+                    },
+                    {
+                      name: "url",
+                      type: "text",
+                      required: true,
+                      label: "URL / Path",
+                      validate: (val: string | null | undefined) => {
+                        if (!val || !val.trim()) {
+                          return "URL or path is required.";
+                        }
+                        const trimmed = val.trim();
+                        if (
+                          !trimmed.startsWith("/") &&
+                          !trimmed.startsWith("#") &&
+                          !/^https?:\/\//i.test(trimmed) &&
+                          !/^mailto:/i.test(trimmed)
+                        ) {
+                          return "Enter a relative path (/projects/...) or a valid URL (https://...).";
+                        }
+                        return true;
+                      },
+                      admin: {
+                        width: "45%",
+                        placeholder: "/projects/forthweb or https://...",
+                      },
+                    },
+                    {
+                      name: "linkType",
+                      type: "select",
+                      required: true,
+                      defaultValue: "internal",
+                      label: "Behavior",
+                      options: [
+                        { label: "Continue (Same tab →)", value: "internal" },
+                        { label: "External (New tab ↗)", value: "external" },
+                      ],
+                      admin: {
+                        width: "30%",
+                      },
+                    },
+                  ],
+                },
+                {
+                  name: "isCardLink",
+                  type: "checkbox",
+                  label: "Open on card click",
+                  defaultValue: false,
+                  admin: {
+                    description:
+                      "Optional: make the card itself navigate to this link on click (other footer links remain separately clickable).",
+                  },
+                },
+              ],
             },
             contentField,
           ],

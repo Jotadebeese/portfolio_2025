@@ -19,9 +19,23 @@ export async function GET() {
 
   const projectItems = projects
     .map((proj) => {
-      const url = proj.individualPage
-        ? `${baseUrl}/projects/${proj.slug}`
-        : proj.liveUrl || proj.githubUrl || `${baseUrl}/#projects`;
+      const cardLinks = Array.isArray(proj.links) ? proj.links : [];
+      const primaryCardLink = cardLinks.find(
+        (link) => link.isCardLink && link.url?.trim(),
+      );
+      const internalLink = cardLinks.find(
+        (link) => link.linkType === "internal" && link.url?.trim(),
+      );
+      const preferredLink =
+        primaryCardLink ||
+        internalLink ||
+        cardLinks.find((link) => link.url?.trim());
+      const rawUrl = preferredLink?.url?.trim();
+      const url = rawUrl
+        ? rawUrl.startsWith("/")
+          ? `${baseUrl}${rawUrl}`
+          : rawUrl
+        : `${baseUrl}/#projects`;
       const desc = proj.metaDescription ? `: ${proj.metaDescription}` : "";
       return `- [${proj.title}](${url})${desc}`;
     })

@@ -74,6 +74,7 @@ export interface Config {
     techs: Tech;
     blogTags: BlogTag;
     blog: Blog;
+    'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -87,6 +88,7 @@ export interface Config {
     techs: TechsSelect<false> | TechsSelect<true>;
     blogTags: BlogTagsSelect<false> | BlogTagsSelect<true>;
     blog: BlogSelect<false> | BlogSelect<true>;
+    'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -94,6 +96,7 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
+  fallbackLocale: null;
   globals: {
     about: About;
     blogPage: BlogPage;
@@ -105,9 +108,7 @@ export interface Config {
     homePage: HomePageSelect<false> | HomePageSelect<true>;
   };
   locale: null;
-  user: User & {
-    collection: 'users';
-  };
+  user: User;
   jobs: {
     tasks: unknown;
     workflows: unknown;
@@ -147,7 +148,15 @@ export interface User {
   hash?: string | null;
   loginAttempts?: number | null;
   lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
   password?: string | null;
+  collection: 'users';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -209,7 +218,7 @@ export interface Media {
  */
 export interface Project {
   id: number;
-  _order?: string;
+  _order?: string | null;
   slug: string;
   projectType?: (number | Tag)[] | null;
   technologies?: (number | Tech)[] | null;
@@ -218,19 +227,13 @@ export interface Project {
    * If enabled, this card spans full width (2 columns) in the Bento grid instead of half width.
    */
   fullWidth?: boolean | null;
-  liveUrl?: string | null;
-  githubUrl?: string | null;
-  /**
-   * If enabled, this project will have its own page
-   */
-  individualPage?: boolean | null;
   publishedAt: string;
   title: string;
   shortDescription: {
     root: {
       type: string;
       children: {
-        type: string;
+        type: any;
         version: number;
         [k: string]: unknown;
       }[];
@@ -249,13 +252,28 @@ export interface Project {
    * Upload a short muted loop video (MP4/WebM) displayed inside the project card.
    */
   video?: (number | null) | Media;
+  /**
+   * Add up to 5 links shown at the bottom of the card (drag rows to reorder). Check 'Open on card click' on one link to make the entire card clickable, or leave all unchecked.
+   */
+  links?:
+    | {
+        label: string;
+        url: string;
+        linkType: 'internal' | 'external';
+        /**
+         * Optional: make the card itself navigate to this link on click (other footer links remain separately clickable).
+         */
+        isCardLink?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
   content: (
     | {
         text: {
           root: {
             type: string;
             children: {
-              type: string;
+              type: any;
               version: number;
               [k: string]: unknown;
             }[];
@@ -474,7 +492,7 @@ export interface Blog {
     root: {
       type: string;
       children: {
-        type: string;
+        type: any;
         version: number;
         [k: string]: unknown;
       }[];
@@ -491,7 +509,7 @@ export interface Blog {
           root: {
             type: string;
             children: {
-              type: string;
+              type: any;
               version: number;
               [k: string]: unknown;
             }[];
@@ -544,6 +562,23 @@ export interface Blog {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-kv".
+ */
+export interface PayloadKv {
+  id: number;
+  key: string;
+  data:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -637,6 +672,13 @@ export interface UsersSelect<T extends boolean = true> {
   hash?: T;
   loginAttempts?: T;
   lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -712,14 +754,20 @@ export interface ProjectsSelect<T extends boolean = true> {
   technologies?: T;
   stage?: T;
   fullWidth?: T;
-  liveUrl?: T;
-  githubUrl?: T;
-  individualPage?: T;
   publishedAt?: T;
   title?: T;
   shortDescription?: T;
   icon?: T;
   video?: T;
+  links?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+        linkType?: T;
+        isCardLink?: T;
+        id?: T;
+      };
   content?:
     | T
     | {
@@ -916,6 +964,14 @@ export interface BlogSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-kv_select".
+ */
+export interface PayloadKvSelect<T extends boolean = true> {
+  key?: T;
+  data?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents_select".
  */
 export interface PayloadLockedDocumentsSelect<T extends boolean = true> {
@@ -957,7 +1013,7 @@ export interface About {
     root: {
       type: string;
       children: {
-        type: string;
+        type: any;
         version: number;
         [k: string]: unknown;
       }[];
@@ -975,7 +1031,7 @@ export interface About {
           root: {
             type: string;
             children: {
-              type: string;
+              type: any;
               version: number;
               [k: string]: unknown;
             }[];
@@ -1040,7 +1096,7 @@ export interface BlogPage {
     root: {
       type: string;
       children: {
-        type: string;
+        type: any;
         version: number;
         [k: string]: unknown;
       }[];
@@ -1078,7 +1134,7 @@ export interface HomePage {
     root: {
       type: string;
       children: {
-        type: string;
+        type: any;
         version: number;
         [k: string]: unknown;
       }[];
@@ -1093,7 +1149,7 @@ export interface HomePage {
     root: {
       type: string;
       children: {
-        type: string;
+        type: any;
         version: number;
         [k: string]: unknown;
       }[];
@@ -1108,7 +1164,7 @@ export interface HomePage {
     root: {
       type: string;
       children: {
-        type: string;
+        type: any;
         version: number;
         [k: string]: unknown;
       }[];

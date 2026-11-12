@@ -13,11 +13,10 @@ export default async function ProjectsSection() {
         </div>
       ) : (
         <ProjectsContainer>
-          {projects.map((project, index) => (
+          {projects.map((project) => (
             <ProjectCard
               key={project.id}
               project={project}
-              index={index + 1}
               featured={Boolean(project.fullWidth)}
             />
           ))}

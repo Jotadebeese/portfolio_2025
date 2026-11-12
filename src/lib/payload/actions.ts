@@ -44,9 +44,7 @@ export const getAllProjects = devAwareCache(
         video: true,
         shortDescription: true,
         projectType: true,
-        liveUrl: true,
-        githubUrl: true,
-        individualPage: true,
+        links: true,
       },
     });
     return res.docs;
