@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Download,
@@ -461,14 +462,16 @@ export default function CompareModal({
     } catch {}
   };
 
-  if (!isOpen || !item.compressedUrl) return null;
+  if (!isOpen || !item.compressedUrl || typeof document === "undefined") {
+    return null;
+  }
 
   const savings =
     item.compressedSize !== undefined
       ? calculateSavings(item.originalSize, item.compressedSize)
       : null;
 
-  return (
+  return createPortal(
     <div
       onClick={onClose}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 backdrop-blur-xs select-none sm:p-5"
@@ -873,6 +876,7 @@ export default function CompareModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

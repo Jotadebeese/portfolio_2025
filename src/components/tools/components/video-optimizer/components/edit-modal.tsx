@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Play,
@@ -848,7 +849,9 @@ export default function EditModal({
     }
   };
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -1481,6 +1484,7 @@ export default function EditModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

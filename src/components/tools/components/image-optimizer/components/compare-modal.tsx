@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Download,
@@ -115,14 +116,14 @@ export default function CompareModal({
     };
   }, [isOpen, onClose, viewMode]);
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === "undefined") return null;
 
   const savings =
     item.optimizedSize !== undefined
       ? calculateSavings(item.originalSize, item.optimizedSize)
       : null;
 
-  return (
+  return createPortal(
     <div
       onClick={onClose}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 backdrop-blur-xs sm:p-5"
@@ -397,6 +398,7 @@ export default function CompareModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
