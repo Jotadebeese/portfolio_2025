@@ -2,7 +2,11 @@
 @layer theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 /* @import "tailwindcss/preflight.css" layer(base);*/
-@import "tailwindcss/utilities.css" layer(utilities);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source ".";
+@source "../../components/payload";
+@source "../../fields";
+@source not inline("table");
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
@@ -76,8 +80,32 @@ h4 {
 }
 
 @layer base {
-  input,
-  textarea {
+  /* Target standard form inputs while excluding Payload's composite UI inputs */
+  :is(input, textarea):where(
+      :not(
+        .search-filter__input,
+        .search-bar *,
+        .combobox__search-input,
+        .block-search__input,
+        .section-title__input,
+        .checkbox-input__input,
+        .radio-input,
+        .toolbar-input,
+        .rs__input,
+        .react-datepicker__input-container input,
+        .cms-editor-reset *,
+        .code-field *,
+        [type="checkbox"],
+        [type="radio"],
+        [type="hidden"],
+        [type="range"],
+        [type="file"],
+        [type="color"],
+        [type="submit"],
+        [type="button"],
+        [type="reset"]
+      )
+    ) {
     @apply border-border-color text-foreground rounded-lg border bg-white p-2 shadow-none;
 
     @variant dark {
