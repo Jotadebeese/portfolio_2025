@@ -85,7 +85,10 @@ export default async function Home() {
           <RichText className="text-base" data={homePage.shortDescription} />
         </div>
       </div>
-      <h2 id="projects" className="mt-20 scroll-mt-24 font-extralight!">
+      <h2
+        id="projects"
+        className="border-border-color mt-12 scroll-mt-24 border-t border-dashed pt-6 font-extralight! sm:mt-14 sm:pt-8"
+      >
         Projects & Products
       </h2>
       <Suspense fallback={<ProjectsSkeleton />}>
