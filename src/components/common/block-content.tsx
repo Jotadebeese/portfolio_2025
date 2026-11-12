@@ -103,7 +103,8 @@ export default function BlockContent({
                     baseYield={block.baseYield}
                     yieldUnit={block.yieldUnit}
                     yieldLabel={block.yieldLabel}
-                    presets={block.presets} footnote={block.footnote}
+                    presets={block.presets}
+                    footnote={block.footnote}
                     sections={block.sections || []}
                   />
                 </div>
