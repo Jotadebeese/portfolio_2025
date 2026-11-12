@@ -1,0 +1,21 @@
+{
+  "name": "forthweb-demos",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "demo:all": "tsx scripts/render-all.ts",
+    "demo:bento": "tsx scripts/render-all.ts --only bento",
+    "demo:image": "tsx scripts/render-all.ts --only image-optimizer",
+    "demo:video": "tsx scripts/render-all.ts --only video-optimizer",
+    "demo:secrets": "tsx scripts/render-all.ts --only secret-generator"
+  },
+  "dependencies": {
+    "playwright": "^1.51.0",
+    "tsx": "^4.19.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

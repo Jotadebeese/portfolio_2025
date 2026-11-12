@@ -1,0 +1,11 @@
+node_modules/
+output/
+testreel-output/
+test-results/
+playwright-report/
+.cache/
+*.webm
+*.mp4
+*.gif
+!fixtures/*.mp4
+!fixtures/*.webm
