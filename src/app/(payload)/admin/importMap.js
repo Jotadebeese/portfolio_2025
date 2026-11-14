@@ -24,6 +24,7 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { default as default_97f944486225e73bf14c4150585f618d } from '@/fields/TableEditor'
 import { default as default_589feb9edab2a2994665126dd2e65edd } from '@/fields/RecipeEditor'
 import { default as default_602e470051be770e1d0b98b52dd6848e } from '@/fields/ColorPicker'
+import { default as default_cf8648b619a494a83a06cfcbdc74f3fd } from '@/fields/PrivateNoteTokenField'
 import { default as default_d8da7fb65c3e0713471071c7b388e733 } from '../../../components/payload/custom-avatar'
 import { default as default_abede1266a0d202441bb52ac6102d05c } from '../../../components/payload/icon'
 import { default as default_7c6ef851f3084cab2be74107c14f6ff2 } from '../../../components/payload/logo'
@@ -57,6 +58,7 @@ export const importMap = {
   "@/fields/TableEditor#default": default_97f944486225e73bf14c4150585f618d,
   "@/fields/RecipeEditor#default": default_589feb9edab2a2994665126dd2e65edd,
   "@/fields/ColorPicker#default": default_602e470051be770e1d0b98b52dd6848e,
+  "@/fields/PrivateNoteTokenField#default": default_cf8648b619a494a83a06cfcbdc74f3fd,
   "/components/payload/custom-avatar#default": default_d8da7fb65c3e0713471071c7b388e733,
   "/components/payload/icon#default": default_abede1266a0d202441bb52ac6102d05c,
   "/components/payload/logo#default": default_7c6ef851f3084cab2be74107c14f6ff2,

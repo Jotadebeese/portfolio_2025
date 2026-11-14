@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { formatSlugHook } from "@/fields/slug/formatSlug";
 import type { CollectionConfig } from "payload";
 import { revalidateBlog, revalidateDelete } from "./hooks/revalidateBlog";
@@ -8,6 +9,7 @@ export const Blog: CollectionConfig = {
   admin: {
     useAsTitle: "title",
     group: "Notes",
+    defaultColumns: ["title", "visibility", "publishedAt", "_status"],
   },
   versions: {
     drafts: true,
@@ -23,6 +25,46 @@ export const Blog: CollectionConfig = {
       },
       admin: {
         position: "sidebar",
+      },
+    },
+    {
+      name: "visibility",
+      type: "select",
+      defaultValue: "public",
+      required: true,
+      options: [
+        { label: "Public (Listed & Indexed)", value: "public" },
+        { label: "Private (Token Required, Noindex)", value: "private" },
+      ],
+      admin: {
+        position: "sidebar",
+        description:
+          "Private notes are hidden from /notes, sitemap, and search engines, and require an access token at /notes/p/[slug].",
+      },
+    },
+    {
+      name: "accessToken",
+      type: "text",
+      label: "Access Token",
+      hooks: {
+        beforeValidate: [
+          ({ siblingData, value }) => {
+            if (siblingData?.visibility === "private") {
+              if (typeof value === "string" && value.trim().length > 0) {
+                return value.trim();
+              }
+              return crypto.randomBytes(16).toString("hex");
+            }
+            return value;
+          },
+        ],
+      },
+      admin: {
+        position: "sidebar",
+        condition: (data) => data?.visibility === "private",
+        components: {
+          Field: "@/fields/PrivateNoteTokenField",
+        },
       },
     },
     {

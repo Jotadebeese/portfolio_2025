@@ -79,6 +79,9 @@ export const getProjectSlugs = devAwareCache(
     try {
       const projects = await payload.find({
         collection: "projects",
+        where: {
+          _status: { equals: "published" },
+        },
         depth: 0,
         limit: 1000,
         select: { slug: true },
@@ -114,6 +117,7 @@ export const getAllBlogs = devAwareCache(
   ): Promise<Partial<Blog>[]> => {
     const whereQuery: any = {
       _status: { equals: "published" },
+      visibility: { not_equals: "private" },
     };
 
     if (tagIds && tagIds.length > 0) {
@@ -150,6 +154,10 @@ export const getBlogSlugs = devAwareCache(
     try {
       const blogs = await payload.find({
         collection: "blog",
+        where: {
+          _status: { equals: "published" },
+          visibility: { not_equals: "private" },
+        },
         depth: 0,
         limit: 1000,
         select: { slug: true },
@@ -175,6 +183,9 @@ export const getBlogBySlug = devAwareCache(
         _status: {
           equals: "published",
         },
+        visibility: {
+          not_equals: "private",
+        },
       },
       limit: 1,
       depth: 2,
@@ -184,6 +195,27 @@ export const getBlogBySlug = devAwareCache(
   ["blog-by-slug"],
   { tags: ["blogs"] },
 );
+
+// Uncached lookup for token-gated private notes (never stored in shared ISR/Data Cache)
+export async function getPrivateBlogBySlug(slug: string): Promise<Blog | null> {
+  const res = await payload.find({
+    collection: "blog",
+    where: {
+      slug: {
+        equals: slug,
+      },
+      _status: {
+        equals: "published",
+      },
+      visibility: {
+        equals: "private",
+      },
+    },
+    limit: 1,
+    depth: 2,
+  });
+  return res.docs[0] || null;
+}
 
 // Globals
 export const getAboutPage = devAwareCache(

@@ -484,6 +484,11 @@ export interface BlogTag {
 export interface Blog {
   id: number;
   slug: string;
+  /**
+   * Private notes are hidden from /notes, sitemap, and search engines, and require an access token at /notes/p/[slug].
+   */
+  visibility: 'public' | 'private';
+  accessToken?: string | null;
   featuredImage?: (number | null) | Media;
   blogTags?: (number | BlogTag)[] | null;
   publishedAt: string;
@@ -913,6 +918,8 @@ export interface BlogTagsSelect<T extends boolean = true> {
  */
 export interface BlogSelect<T extends boolean = true> {
   slug?: T;
+  visibility?: T;
+  accessToken?: T;
   featuredImage?: T;
   blogTags?: T;
   publishedAt?: T;

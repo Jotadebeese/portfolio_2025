@@ -14,16 +14,20 @@ export const revalidateBlog: CollectionAfterChangeHook<Blog> = ({
       payload.logger.info(`Revalidating blog at ${path}`);
 
       revalidatePath(path);
+      if (previousDoc?.slug && previousDoc.slug !== doc.slug) {
+        revalidatePath(`/notes/${previousDoc.slug}`);
+      }
       revalidatePath("/notes");
       revalidateTag("blogs", { expire: 0 });
     }
 
-    if (previousDoc._status === "published" && doc._status !== "published") {
+    if (previousDoc?._status === "published" && doc._status !== "published") {
       const oldPath = `/notes/${previousDoc.slug}`;
 
       payload.logger.info(`Revalidating old blog at ${oldPath}`);
 
       revalidatePath(oldPath);
+      revalidatePath("/notes");
       revalidateTag("blogs", { expire: 0 });
     }
   }

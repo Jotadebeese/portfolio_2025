@@ -34,7 +34,22 @@ export function proxy(request: NextRequest) {
     return NextResponse.rewrite(new URL("/not-found", request.url));
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+
+  // Prevent search indexing, edge caching, and Referer token leakage on private notes
+  if (pathname === "/notes/p" || pathname.startsWith("/notes/p/")) {
+    response.headers.set(
+      "X-Robots-Tag",
+      "noindex, nofollow, noarchive, nosnippet",
+    );
+    response.headers.set(
+      "Cache-Control",
+      "private, no-store, no-cache, must-revalidate",
+    );
+    response.headers.set("Referrer-Policy", "no-referrer");
+  }
+
+  return response;
 }
 
 export const config = {
