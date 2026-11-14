@@ -32,7 +32,10 @@ export default function ProjectCard({
     year: "numeric",
   }).format(publishedAt);
 
-  const logoUrl = logoMedia?.sizes?.thumbnail?.url || logoMedia?.url || "";
+  const logoUrl = logoMedia?.url || logoMedia?.sizes?.thumbnail?.url || "";
+  const isSvgLogo =
+    logoMedia?.mimeType === "image/svg+xml" ||
+    logoUrl.toLowerCase().split("?")[0].endsWith(".svg");
 
   const projectTypes = (
     Array.isArray(project.projectType) ? project.projectType : []
@@ -103,7 +106,7 @@ export default function ProjectCard({
 
           <div className="flex w-full flex-col justify-center gap-1.5 px-2 sm:px-4">
             <div className="flex w-full items-center justify-between gap-3">
-              <h2>
+              <h3>
                 {cardClickLink ? (
                   <Link
                     href={cardClickUrl}
@@ -117,26 +120,27 @@ export default function ProjectCard({
                 ) : (
                   project.title || "Untitled Project"
                 )}
-              </h2>
+              </h3>
 
               {logoUrl && (
-                <div className="bg-background flex h-8 shrink-0 items-center justify-center rounded-lg px-2.5 py-1">
-                  {logoUrl.endsWith(".svg") ? (
+                <div className="border-border-color/50 size-9 shrink-0 overflow-hidden rounded-lg border">
+                  {isSvgLogo ? (
                     <img
                       src={logoUrl}
                       alt={logoMedia?.alt || `${project.title} logo`}
-                      width={72}
-                      height={20}
+                      width={36}
+                      height={36}
                       loading="lazy"
-                      className="max-h-5 w-auto object-contain"
+                      className="h-full w-full object-cover"
                     />
                   ) : (
                     <Image
                       src={logoUrl}
                       alt={logoMedia?.alt || `${project.title} logo`}
-                      width={72}
-                      height={20}
-                      className="max-h-5 w-auto object-contain"
+                      width={36}
+                      height={36}
+                      sizes="36px"
+                      className="h-full w-full object-cover"
                       placeholder={logoMedia?.blurData ? "blur" : "empty"}
                       blurDataURL={logoMedia?.blurData || undefined}
                     />
