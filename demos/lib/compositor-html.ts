@@ -239,7 +239,7 @@ export async function renderStudioPlates(
                 <span class="url-dot"></span>
                 <span>jotadebeese.com/projects/forthweb</span>
               </div>
-              <div class="right">${win.w >= 1100 ? escapeHtml(opts.barTitle) : "LOCAL-FIRST"}</div>
+              <div class="right"></div>
             </div>
           </div>
         </body>

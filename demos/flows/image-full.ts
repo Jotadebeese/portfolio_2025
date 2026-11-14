@@ -4,8 +4,8 @@ import type { SceneVariant } from "../lib/scene-runner.js";
 import type { StageRecorder } from "../lib/stage-capture.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const COVER_PNG = path.resolve(__dirname, "../fixtures/images/cover-art.png");
-const PHOTO_JPG = path.resolve(__dirname, "../fixtures/images/product-photo.jpg");
+const GTAVI_MARINA_PNG = path.resolve(__dirname, "../fixtures/images/gtavi-marina.png");
+const GTAVI_HEIST_PNG = path.resolve(__dirname, "../fixtures/images/gtavi-heist.png");
 
 /**
  * Full-feature X & Reddit walkthrough for Forthweb Image Optimizer:
@@ -26,8 +26,8 @@ export async function runImageFullScene(
   await rec.captureUIFrame(0);
   await rec.moveTo(dropzoneText, { durationSec: 0.3 });
 
-  // 1. Batch drop PNG + JPG
-  await fileInput.setInputFiles([COVER_PNG, PHOTO_JPG]);
+  // 1. Batch drop official GTA VI in-game 4K screenshots (PNG)
+  await fileInput.setInputFiles([GTAVI_MARINA_PNG, GTAVI_HEIST_PNG]);
   await firstCompareBtn.waitFor({ state: "visible", timeout: 20000 });
   await page.waitForTimeout(200);
   await rec.captureUIFrame(rec.elapsed());
@@ -56,6 +56,7 @@ export async function runImageFullScene(
 
   // 3. Visual Inspection Modal: Split Slider -> Dark / Light backdrops -> Side by Side
   rec.resetCamera(0.4);
+  await page.waitForTimeout(250);
   await rec.click(firstCompareBtn, { moveSec: 0.38, settleSec: 0.35 });
 
   const splitStage = page.locator("div.cursor-ew-resize").first();

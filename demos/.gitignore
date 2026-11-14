@@ -9,3 +9,4 @@ playwright-report/
 *.gif
 !fixtures/*.mp4
 !fixtures/*.webm
+fixtures/**/gtavi-*
