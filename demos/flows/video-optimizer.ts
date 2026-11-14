@@ -1,48 +1,66 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { DemoSession } from "../lib/studio-recorder.js";
+import type { SceneVariant } from "../lib/scene-runner.js";
+import type { StageRecorder } from "../lib/stage-capture.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const STUDIO_MP4 = path.resolve(__dirname, "../fixtures/videos/studio-clip.mp4");
 
-export async function runVideoOptimizerFlow({ page, cursor, camera }: DemoSession): Promise<void> {
+export async function runVideoOptimizerScene(
+  rec: StageRecorder,
+  variant: SceneVariant
+): Promise<void> {
+  const page = rec.page;
   const fileInput = page.locator('input[type="file"][accept*="video/mp4"]').first();
+  const dropzonePrompt = page.getByText(/Drop your videos here/i).first();
+  const editClipBtn = page.locator('button[aria-label="Edit clip"]').first();
+
   await fileInput.waitFor({ state: "attached", timeout: 20000 });
 
-  const dropzonePrompt = page.getByText(/Drop your videos here/i).first();
-  await cursor.scrollTo(dropzonePrompt, 400);
-  await cursor.moveTo(dropzonePrompt, { durationMs: 420, pauseAfterMs: 180 });
+  if (variant === "spotlight") {
+    await rec.captureUIFrame(0);
+    await rec.moveTo(dropzonePrompt, { durationSec: 0.32 });
+  }
+
   await fileInput.setInputFiles([STUDIO_MP4]);
-
-  // Wait for video metadata + thumbnail + Edit button
-  const editClipBtn = page.locator('button[aria-label="Edit clip"]').first();
   await editClipBtn.waitFor({ state: "visible", timeout: 25000 });
-  await cursor.wait(450);
+  await page.waitForTimeout(200);
 
-  // 1. Zoom towards row & open Studio Trim/Waveform Modal
-  await cursor.scrollTo(editClipBtn, 420);
-  await camera.focusWorkbench(editClipBtn, {
-    desktopScale: 1.44,
-    compactScale: 1.18,
-    transitionSec: 0.6,
+  if (variant === "trailer") {
+    // Open Trim Studio immediately after clip mounts
+    await rec.captureUIFrame(0);
+    await rec.hold(0.2);
+  } else {
+    await rec.captureUIFrame(rec.elapsed());
+    await rec.hold(0.3);
+  }
+
+  const isWide = rec.viewportWidth >= 900;
+  await rec.focusElement(editClipBtn, {
+    scale: isWide ? 1.16 : 1.04,
+    transitionSec: 0.48,
+    offsetX: isWide ? -100 : 0,
   });
-  await cursor.click(editClipBtn, { durationMs: 460, settleMs: 450 });
+  await rec.click(editClipBtn, { moveSec: 0.36, settleSec: 0.35 });
 
-  // 2. Inside EditModal: wait for timeline & waveform canvas
+  // Inside Trim/Waveform Studio modal
   const startTrimHandle = page.locator('[title="Drag to trim start"]').first();
   const endTrimHandle = page.locator('[title="Drag to trim end"]').first();
   const saveCompressBtn = page.locator('button:has-text("Save & Compress")').first();
   await startTrimHandle.waitFor({ state: "visible", timeout: 15000 });
-  await cursor.wait(650);
+  await page.waitForTimeout(350);
+  await rec.captureUIFrame(rec.elapsed());
 
-  // Zoom onto waveform timeline & trim handles on wide viewports; keep full width on 4:5 modals
-  const timelineContainer = startTrimHandle.locator("xpath=ancestor::div[contains(@class,'cursor-pointer')][1]");
-  await camera.focusModal(timelineContainer, {
-    desktopScale: 1.32,
-    transitionSec: 0.65,
+  const timelineContainer = startTrimHandle.locator(
+    "xpath=ancestor::div[contains(@class,'cursor-pointer')][1]"
+  );
+
+  // Zoom softly onto waveform track on desktop; keep full modal unclipped on 4x5
+  await rec.focusElement(timelineContainer, {
+    scale: isWide ? 1.15 : 1.0,
+    transitionSec: 0.48,
   });
 
-  // Drag trim start handle right by ~16% of timeline width
   const timelineBox = await timelineContainer.boundingBox();
   const startBox = await startTrimHandle.boundingBox();
   const endBox = await endTrimHandle.boundingBox();
@@ -50,57 +68,61 @@ export async function runVideoOptimizerFlow({ page, cursor, camera }: DemoSessio
   if (timelineBox && startBox) {
     const sx = startBox.x + startBox.width / 2;
     const sy = startBox.y + startBox.height / 2;
-    await cursor.drag(
+    await rec.dragSegment(
       { x: sx, y: sy },
       { x: sx + timelineBox.width * 0.16, y: sy },
-      { durationMs: 650, settleMs: 220 }
+      { durationSec: 0.48, moveSec: 0.28, releaseSettleSec: 0.14 }
     );
   }
 
-  // Drag trim end handle left by ~20% of timeline width
-  if (timelineBox && endBox) {
+  if (timelineBox && endBox && variant === "spotlight") {
     const ex = endBox.x + endBox.width / 2;
     const ey = endBox.y + endBox.height / 2;
-    await cursor.drag(
+    await rec.dragSegment(
       { x: ex, y: ey },
       { x: ex - timelineBox.width * 0.2, y: ey },
-      { durationMs: 650, settleMs: 280 }
+      { durationSec: 0.48, moveSec: 0.28, releaseSettleSec: 0.16 }
     );
   }
 
-  // Pull back cleanly to click "Save & Compress Now"
-  camera.reset({ transitionSec: 0.55 });
-  await cursor.click(saveCompressBtn, { durationMs: 480, settleMs: 350 });
+  rec.resetCamera(0.45);
+  await rec.click(saveCompressBtn, { moveSec: 0.38, settleSec: 0.2 });
 
-  // 3. Watch live hardware WebCodecs compression finish -> Compare button appears
+  // Reset scroll to top so toolbar + encoding queue stay cleanly unclipped inside frame
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+
+  // Live hardware WebCodecs encoding progress -> finished savings badge
   const compareVideoBtn = page.locator('button[aria-label="Compare video"]').first();
-  await cursor.scrollTo(editClipBtn, 380);
-  await camera.focusWorkbench(editClipBtn, {
-    desktopScale: 1.42,
-    compactScale: 1.16,
-    transitionSec: 0.65,
+  await rec.captureWhileWaiting(compareVideoBtn, {
+    maxWaitMs: 45000,
+    playbackCompressRatio: variant === "trailer" ? 0.55 : 0.75,
   });
+  await rec.hold(0.28);
 
-  await compareVideoBtn.waitFor({ state: "visible", timeout: 45000 });
-  await cursor.wait(550);
-
-  // 4. Open Video CompareModal -> switch to Split Slider view & sweep -> close
-  await cursor.click(compareVideoBtn, { durationMs: 440, settleMs: 450 });
-  camera.reset({ transitionSec: 0.55 });
-
+  // Open Video CompareModal & switch to Split Slider view
+  rec.resetCamera(0.35);
+  await rec.click(compareVideoBtn, { moveSec: 0.36, settleSec: 0.34 });
   const splitViewBtn = page.locator('button[title="Split slider view"]').first();
   await splitViewBtn.waitFor({ state: "visible", timeout: 15000 });
-  await cursor.click(splitViewBtn, { durationMs: 440, settleMs: 360 });
+  await rec.click(splitViewBtn, { moveSec: 0.34, settleSec: 0.26 });
 
   const compareSplit = page.locator("div.cursor-ew-resize").first();
   await compareSplit.waitFor({ state: "visible", timeout: 15000 });
+  await rec.sweepHorizontal(
+    compareSplit,
+    0.5,
+    variant === "trailer" ? [0.22, 0.76] : [0.2, 0.8, 0.45],
+    { legSec: 0.48, pauseAtStopSec: 0.1 }
+  );
 
-  await cursor.sweepHorizontal(compareSplit, 0.5, [0.22, 0.78, 0.45], {
-    legDurationMs: 620,
-    pauseAtStopMs: 140,
-  });
-
-  const closeModalBtn = page.locator('button[aria-label="Close modal"]').first();
-  await cursor.click(closeModalBtn, { durationMs: 420, settleMs: 320 });
-  await cursor.wait(500);
+  if (variant === "spotlight") {
+    const closeModalBtn = page.locator('button[aria-label="Close modal"]').first();
+    await rec.click(closeModalBtn, { moveSec: 0.34, settleSec: 0.28 });
+    await rec.hold(0.35);
+  } else {
+    await rec.moveToPoint(rec.viewportWidth * 0.5, rec.viewportHeight * 0.48, {
+      durationSec: 0.32,
+    });
+    await rec.hold(0.25);
+  }
 }

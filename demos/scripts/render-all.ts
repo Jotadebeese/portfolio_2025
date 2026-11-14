@@ -1,55 +1,186 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { runBentoLoopFlow } from "../flows/bento-loop.js";
-import { runImageOptimizerFlow } from "../flows/image-optimizer.js";
-import { runSecretGeneratorFlow } from "../flows/secret-generator.js";
-import { runVideoOptimizerFlow } from "../flows/video-optimizer.js";
-import type { VideoFormat } from "../lib/studio-frame.js";
-import { runRecordedDemo, type DemoSession } from "../lib/studio-recorder.js";
+import { chromium, type Browser } from "playwright";
+import { runBentoLoopScene } from "../flows/bento-loop.js";
+import { runImageFullScene } from "../flows/image-full.js";
+import { runImageOptimizerScene } from "../flows/image-optimizer.js";
+import { runSecretGeneratorScene } from "../flows/secret-generator.js";
+import { runVideoFullScene } from "../flows/video-full.js";
+import { runVideoOptimizerScene } from "../flows/video-optimizer.js";
+import { composeVideo } from "../lib/compositor.js";
+import { OUTPUT_LAYOUTS, type OutputFormat } from "../lib/compositor-html.js";
+import { captureToolScene, type SceneVariant } from "../lib/scene-runner.js";
+import type { RecordedScene } from "../lib/stage-capture.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEMOS_ROOT = path.resolve(__dirname, "..");
 const OUTPUT_ROOT = path.join(DEMOS_ROOT, "output");
 
-type DemoName = "bento" | "image-optimizer" | "video-optimizer" | "secret-generator";
-type SocialFormat = "16x9" | "4x5";
+type TargetName =
+  | "launch"
+  | "bento"
+  | "secret-generator"
+  | "image-optimizer"
+  | "video-optimizer"
+  | "image-full"
+  | "video-full";
 
-interface JobSpec {
-  name: DemoName;
-  toolQuery: string;
-  toolBadge: string;
-  formats: VideoFormat[];
-  flow: (session: DemoSession) => Promise<void>;
+interface RenderJobConfig {
+  name: TargetName;
+  formats: OutputFormat[];
+  eyebrow: string;
+  headline: string;
+  subline: string;
+  barTitle: string;
+  buildScenes: (
+    browser: Browser,
+    baseUrl: string,
+    layout: (typeof OUTPUT_LAYOUTS)[OutputFormat]
+  ) => Promise<RecordedScene[]>;
 }
 
-const ALL_JOBS: JobSpec[] = [
+const TOOL_SCRIPT_MAP = {
+  "secret-generator": {
+    pillSpotlight: "CRYPTOGRAPHIC KEYS & UUID V7 · WEB CRYPTO API",
+    pillTrailer: "01 / 03 · CRYPTOGRAPHIC KEYS & UUID V7",
+    run: runSecretGeneratorScene,
+  },
+  "image-optimizer": {
+    pillSpotlight: "WEB IMAGE OPTIMIZER · HTML5 CANVAS WEBP",
+    pillTrailer: "02 / 03 · IMAGE OPTIMIZER · -95% LOCALLY",
+    run: runImageOptimizerScene,
+  },
+  "video-optimizer": {
+    pillSpotlight: "WEBCODECS VIDEO STUDIO · ZERO UPLOADS",
+    pillTrailer: "03 / 03 · GPU WEBCODECS VIDEO STUDIO",
+    run: runVideoOptimizerScene,
+  },
+} as const;
+
+async function captureSingle(
+  browser: Browser,
+  baseUrl: string,
+  toolId: keyof typeof TOOL_SCRIPT_MAP,
+  layout: (typeof OUTPUT_LAYOUTS)[OutputFormat],
+  variant: SceneVariant
+): Promise<RecordedScene> {
+  const entry = TOOL_SCRIPT_MAP[toolId];
+  const pill = variant === "trailer" ? entry.pillTrailer : entry.pillSpotlight;
+  return captureToolScene(
+    { browser, baseUrl, toolId, pillLabel: pill, layout, variant },
+    (rec, v) => entry.run(rec, v)
+  );
+}
+
+const ALL_JOBS: RenderJobConfig[] = [
+  {
+    name: "launch",
+    formats: ["16x9", "4x5"],
+    eyebrow: "FORTHWEB · BROWSER-NATIVE SUITE",
+    headline: "3 privacy-first developer utilities.",
+    subline: "Web Crypto · HTML5 Canvas · GPU WebCodecs. Zero server uploads.",
+    barTitle: "ALL-IN-ONE LAUNCH",
+    buildScenes: async (browser, baseUrl, layout) => [
+      await captureSingle(browser, baseUrl, "secret-generator", layout, "trailer"),
+      await captureSingle(browser, baseUrl, "image-optimizer", layout, "trailer"),
+      await captureSingle(browser, baseUrl, "video-optimizer", layout, "trailer"),
+    ],
+  },
   {
     name: "secret-generator",
-    toolQuery: "secret-generator",
-    toolBadge: "CRYPTOGRAPHIC KEYS & UUID V7",
     formats: ["16x9", "4x5"],
-    flow: runSecretGeneratorFlow,
+    eyebrow: "FORTHWEB · WEB CRYPTO API",
+    headline: "Cryptographic keys & UUID v7.",
+    subline: "Generated locally via crypto.getRandomValues(). Zero network calls.",
+    barTitle: "KEYS & UUID V7",
+    buildScenes: async (browser, baseUrl, layout) => [
+      await captureSingle(browser, baseUrl, "secret-generator", layout, "spotlight"),
+    ],
   },
   {
     name: "image-optimizer",
-    toolQuery: "image-optimizer",
-    toolBadge: "IN-BROWSER IMAGE OPTIMIZER",
     formats: ["16x9", "4x5"],
-    flow: runImageOptimizerFlow,
+    eyebrow: "FORTHWEB · HTML5 CANVAS",
+    headline: "Cut 95% image weight locally.",
+    subline: "Batch WebP/JPEG compression with pixel-level split inspection.",
+    barTitle: "IMAGE OPTIMIZER",
+    buildScenes: async (browser, baseUrl, layout) => [
+      await captureSingle(browser, baseUrl, "image-optimizer", layout, "spotlight"),
+    ],
   },
   {
     name: "video-optimizer",
-    toolQuery: "video-optimizer",
-    toolBadge: "WEBCODECS VIDEO STUDIO",
     formats: ["16x9", "4x5"],
-    flow: runVideoOptimizerFlow,
+    eyebrow: "FORTHWEB · WEBCODECS API",
+    headline: "Trim & compress video in browser.",
+    subline: "Hardware-accelerated MP4 & WebM encoding. Nothing leaves your device.",
+    barTitle: "VIDEO STUDIO",
+    buildScenes: async (browser, baseUrl, layout) => [
+      await captureSingle(browser, baseUrl, "video-optimizer", layout, "spotlight"),
+    ],
+  },
+  {
+    name: "image-full",
+    formats: ["16x9", "4x5"],
+    eyebrow: "FORTHWEB · HTML5 CANVAS",
+    headline: "",
+    subline: "",
+    barTitle: "IMAGE OPTIMIZER",
+    buildScenes: async (browser, baseUrl, layout) => [
+      await captureToolScene(
+        {
+          browser,
+          baseUrl,
+          toolId: "image-optimizer",
+          pillLabel: "IMAGE OPTIMIZER",
+          layout,
+          variant: "spotlight",
+        },
+        (rec, v) => runImageFullScene(rec, v)
+      ),
+    ],
+  },
+  {
+    name: "video-full",
+    formats: ["16x9", "4x5"],
+    eyebrow: "FORTHWEB · WEBCODECS API",
+    headline: "",
+    subline: "",
+    barTitle: "VIDEO STUDIO",
+    buildScenes: async (browser, baseUrl, layout) => [
+      await captureToolScene(
+        {
+          browser,
+          baseUrl,
+          toolId: "video-optimizer",
+          pillLabel: "VIDEO STUDIO",
+          layout,
+          variant: "spotlight",
+        },
+        (rec, v) => runVideoFullScene(rec, v)
+      ),
+    ],
   },
   {
     name: "bento",
-    toolQuery: "image-optimizer",
-    toolBadge: "BENTO",
     formats: ["bento"],
-    flow: runBentoLoopFlow,
+    eyebrow: "FORTHWEB",
+    headline: "",
+    subline: "",
+    barTitle: "",
+    buildScenes: async (browser, baseUrl, layout) => [
+      await captureToolScene(
+        {
+          browser,
+          baseUrl,
+          toolId: "image-optimizer",
+          pillLabel: "BENTO",
+          layout,
+          variant: "spotlight",
+        },
+        (rec) => runBentoLoopScene(rec)
+      ),
+    ],
   },
 ];
 
@@ -83,8 +214,8 @@ async function assertServerReachable(baseUrl: string): Promise<void> {
 
 async function main(): Promise<void> {
   const baseUrl = (process.env.DEMO_BASE_URL || "http://localhost:3000").replace(/\/+$/, "");
-  const onlyArg = parseArg("--only") as DemoName | undefined;
-  const formatArg = parseArg("--format") as SocialFormat | "bento" | "all" | undefined;
+  const onlyArg = parseArg("--only") as TargetName | undefined;
+  const formatArg = parseArg("--format") as OutputFormat | "all" | undefined;
 
   await assertServerReachable(baseUrl);
 
@@ -95,66 +226,78 @@ async function main(): Promise<void> {
     );
   }
 
-  console.log(`\n[Forthweb Demos] Target base URL: ${baseUrl}`);
-  console.log(`[Forthweb Demos] Output directory: ${OUTPUT_ROOT}\n`);
+  console.log(`\n[Forthweb Studio v2] Base URL: ${baseUrl}`);
+  console.log(`[Forthweb Studio v2] Output: ${OUTPUT_ROOT}\n`);
+
+  const browser = await chromium.launch({
+    headless: true,
+    channel: "chrome",
+    args: [
+      "--disable-background-timer-throttling",
+      "--disable-renderer-backgrounding",
+      "--disable-backgrounding-occluded-windows",
+    ],
+  });
 
   const results: Array<{
     job: string;
-    format: VideoFormat;
+    format: OutputFormat;
     durationSec: number;
     frames: number;
     mp4: string;
-    webm?: string;
   }> = [];
 
-  for (const job of selectedJobs) {
-    const formats = job.formats.filter((fmt) => {
-      if (!formatArg || formatArg === "all") return true;
-      return fmt === formatArg;
-    });
+  try {
+    for (const job of selectedJobs) {
+      const formats = job.formats.filter((f) =>
+        !formatArg || formatArg === "all" ? true : f === formatArg
+      );
 
-    for (const format of formats) {
-      const url = `${baseUrl}/projects/forthweb?tools=${encodeURIComponent(job.toolQuery)}`;
-      const isBento = format === "bento";
-      const outDir = path.join(OUTPUT_ROOT, isBento ? "bento" : "social");
-      const baseFilename = isBento ? "forthweb-bento" : `forthweb-${job.name}-${format}`;
-      const outputMp4 = path.join(outDir, `${baseFilename}.mp4`);
-      const outputWebm = isBento ? path.join(outDir, `${baseFilename}.webm`) : undefined;
+      for (const format of formats) {
+        const layout = OUTPUT_LAYOUTS[format];
+        const isBento = format === "bento";
+        const outDir = path.join(OUTPUT_ROOT, isBento ? "bento" : "social");
+        const baseName = isBento ? "forthweb-bento" : `forthweb-${job.name}-${format}`;
+        const outputMp4 = path.join(outDir, `${baseName}.mp4`);
+        const outputWebm = isBento ? path.join(outDir, `${baseName}.webm`) : undefined;
 
-      console.log(`-> Rendering [${job.name}] (${format}) ...`);
-      const res = await runRecordedDemo(
-        {
-          url,
-          format,
-          toolBadge: job.toolBadge,
+        console.log(`-> Capturing + compositing [${job.name}] (${format}) ...`);
+        const scenes = await job.buildScenes(browser, baseUrl, layout);
+        const res = await composeVideo(browser, {
+          layout,
+          eyebrow: job.eyebrow,
+          headline: job.headline,
+          subline: job.subline,
+          barTitle: job.barTitle,
+          scenes,
           outputMp4,
           outputWebm,
-        },
-        job.flow
-      );
+        });
 
-      results.push({
-        job: job.name,
-        format,
-        durationSec: res.durationSec,
-        frames: res.frameCount,
-        mp4: res.outputMp4,
-        webm: res.outputWebm,
-      });
+        results.push({
+          job: job.name,
+          format,
+          durationSec: res.durationSec,
+          frames: res.frameCount,
+          mp4: res.outputMp4,
+        });
 
-      console.log(
-        `   done: ${res.durationSec}s (${res.frameCount} captured frames) -> ${path.relative(
-          DEMOS_ROOT,
-          res.outputMp4
-        )}${res.outputWebm ? ` + ${path.basename(res.outputWebm)}` : ""}`
-      );
+        console.log(
+          `   done: ${res.durationSec}s @ 60fps (${res.frameCount} frames) -> ${path.relative(
+            DEMOS_ROOT,
+            res.outputMp4
+          )}${res.outputWebm ? ` + ${path.basename(res.outputWebm)}` : ""}`
+        );
+      }
     }
+  } finally {
+    await browser.close().catch(() => {});
   }
 
-  console.log("\n=== Render Summary ===");
+  console.log("\n=== Forthweb Studio v2 Summary ===");
   for (const r of results) {
     console.log(
-      `- ${r.job} [${r.format}]: ${r.durationSec}s | ${r.frames} frames | ${path.relative(
+      `- ${r.job} [${r.format}]: ${r.durationSec}s (${r.frames} frames) -> ${path.relative(
         DEMOS_ROOT,
         r.mp4
       )}`
@@ -163,6 +306,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error("\n[Forthweb Demos] FAILED:", err);
+  console.error("\n[Forthweb Studio v2] FAILED:", err);
   process.exit(1);
 });

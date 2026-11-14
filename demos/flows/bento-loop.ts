@@ -1,74 +1,61 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { DemoSession } from "../lib/studio-recorder.js";
+import type { StageRecorder } from "../lib/stage-capture.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const COVER_PNG = path.resolve(__dirname, "../fixtures/images/cover-art.png");
 const PHOTO_JPG = path.resolve(__dirname, "../fixtures/images/product-photo.jpg");
 
 /**
- * Crisp ~12s borderless loop specifically crafted for the homepage ProjectCard Bento slot.
- * Zero padding, zero chrome bars — showcases instant WebP compression + before/after slider.
+ * Tight borderless loop for the homepage ProjectCard Bento slot (1200x750):
+ * starts cleanly in-action on Image Optimizer, shows -95% crunch + interactive Split Compare.
  */
-export async function runBentoLoopFlow({ page, cursor, camera }: DemoSession): Promise<void> {
+export async function runBentoLoopScene(rec: StageRecorder): Promise<void> {
+  const page = rec.page;
   const fileInput = page.locator('input[type="file"][accept*="image/png"]').first();
-  await fileInput.waitFor({ state: "attached", timeout: 20000 });
-
-  const workbenchHeader = page.locator("main").first();
-  await workbenchHeader.waitFor({ state: "visible", timeout: 15000 });
-
-  // Scroll right to toolbar/dropzone so loop opens cleanly inside the tool
-  const dropzone = page.getByText(/Drop your images here/i).first();
-  await cursor.scrollTo(dropzone, 250);
-  await cursor.wait(220);
-
-  await cursor.moveTo(dropzone, { durationMs: 360, pauseAfterMs: 120 });
-  await fileInput.setInputFiles([COVER_PNG, PHOTO_JPG]);
-
   const firstCompareBtn = page.locator('button[aria-label^="Compare "]').first();
+  const qualitySlider = page.getByLabel("Quality percentage").first();
+
+  await fileInput.waitFor({ state: "attached", timeout: 20000 });
+  await rec.captureUIFrame(0);
+  await rec.hold(0.25);
+
+  await fileInput.setInputFiles([COVER_PNG, PHOTO_JPG]);
   await firstCompareBtn.waitFor({ state: "visible", timeout: 20000 });
-  await cursor.wait(400);
+  await page.waitForTimeout(180);
+  await rec.captureUIFrame(rec.elapsed());
+  await rec.hold(0.35);
 
-  const qualitySlider = page.getByLabel("Quality percentage");
-  await camera.focusWorkbench(qualitySlider, {
-    desktopScale: 1.38,
-    compactScale: 1.2,
-    transitionSec: 0.6,
-    offsetY: 35,
+  await rec.focusElement(qualitySlider, {
+    scale: 1.24,
+    transitionSec: 0.5,
+    offsetX: -60,
+    offsetY: 30,
   });
-  await cursor.sweepHorizontal(qualitySlider, 0.778, [0.58], {
-    legDurationMs: 620,
-    pauseAtStopMs: 260,
+  await rec.sweepHorizontal(qualitySlider, 0.778, [0.56], {
+    legSec: 0.58,
+    pauseAtStopSec: 0.18,
   });
 
-  await camera.focusWorkbench(firstCompareBtn, {
-    desktopScale: 1.4,
-    compactScale: 1.2,
-    transitionSec: 0.55,
-  });
-  await cursor.click(firstCompareBtn, { durationMs: 420, settleMs: 360 });
-
+  await rec.click(firstCompareBtn, { moveSec: 0.36, settleSec: 0.32 });
   const splitStage = page.locator("div.cursor-ew-resize").first();
   await splitStage.waitFor({ state: "visible", timeout: 15000 });
-  await camera.focusElement(splitStage, {
-    scale: 1.24,
-    transitionSec: 0.55,
-  });
 
-  await cursor.sweepHorizontal(splitStage, 0.5, [0.16, 0.84, 0.45], {
-    legDurationMs: 640,
-    pauseAtStopMs: 120,
+  rec.focusPoint(0.5, 0.5, { scale: 1.12, transitionSec: 0.45 });
+  await rec.sweepHorizontal(splitStage, 0.5, [0.16, 0.84, 0.46], {
+    legSec: 0.54,
+    pauseAtStopSec: 0.1,
   });
 
   const darkBackdropBtn = page.getByLabel("dark backdrop");
   if (await darkBackdropBtn.isVisible().catch(() => false)) {
-    camera.reset({ transitionSec: 0.5 });
-    await cursor.click(darkBackdropBtn, { durationMs: 400, settleMs: 380 });
+    rec.resetCamera(0.4);
+    await rec.click(darkBackdropBtn, { moveSec: 0.34, settleSec: 0.34 });
   } else {
-    camera.reset({ transitionSec: 0.5 });
+    rec.resetCamera(0.4);
   }
 
   const closeBtn = page.getByRole("button", { name: "Close" }).first();
-  await cursor.click(closeBtn, { durationMs: 380, settleMs: 320 });
-  await cursor.wait(350);
+  await rec.click(closeBtn, { moveSec: 0.34, settleSec: 0.32 });
+  await rec.hold(0.35);
 }

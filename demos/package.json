@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "demo:all": "tsx scripts/render-all.ts",
+    "demo:launch": "tsx scripts/render-all.ts --only launch",
     "demo:bento": "tsx scripts/render-all.ts --only bento",
     "demo:image": "tsx scripts/render-all.ts --only image-optimizer",
     "demo:video": "tsx scripts/render-all.ts --only video-optimizer",
+    "demo:image-full": "tsx scripts/render-all.ts --only image-full",
+    "demo:video-full": "tsx scripts/render-all.ts --only video-full",
     "demo:secrets": "tsx scripts/render-all.ts --only secret-generator"
   },
   "dependencies": {

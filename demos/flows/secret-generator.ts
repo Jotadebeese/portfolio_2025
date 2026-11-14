@@ -1,54 +1,52 @@
-import type { DemoSession } from "../lib/studio-recorder.js";
+import type { SceneVariant } from "../lib/scene-runner.js";
+import type { StageRecorder } from "../lib/stage-capture.js";
 
-export async function runSecretGeneratorFlow({ page, cursor, camera }: DemoSession): Promise<void> {
+export async function runSecretGeneratorScene(
+  rec: StageRecorder,
+  variant: SceneVariant
+): Promise<void> {
+  const page = rec.page;
   const regenerateAll = page.getByRole("button", { name: "Regenerate All" });
-  await regenerateAll.waitFor({ state: "visible", timeout: 20000 });
-
   const copyUuidBtn = page.getByRole("button", { name: /Copy UUID v7/i });
   const copyApiKeyBtn = page.getByRole("button", { name: /Copy API Secret Key/i });
   const lengthSlider = page.locator('input[type="range"][min="12"][max="48"]');
-  const symbolsToggle = page.getByRole("checkbox");
   const regeneratePwdBtn = page.locator('button[title="Regenerate password"]');
   const copyPwdBtn = regeneratePwdBtn.locator("xpath=following-sibling::button[1]");
 
-  // Frame workbench neatly in viewport
-  await cursor.scrollTo(regenerateAll, 450);
-  await cursor.wait(450);
+  await regenerateAll.waitFor({ state: "visible", timeout: 20000 });
+  await rec.captureUIFrame(0);
+  await rec.hold(variant === "trailer" ? 0.2 : 0.35);
 
-  // 1. Wide overview click on Regenerate All
-  await cursor.click(regenerateAll, { durationMs: 520, settleMs: 360 });
-  await cursor.click(regenerateAll, { durationMs: 220, settleMs: 380 });
+  // Instant cryptographic regeneration scramble
+  await rec.click(regenerateAll, { moveSec: 0.36, settleSec: 0.25 });
 
-  // 2. Smooth zoom onto key rows & copy UUID v7 + API Key
-  await camera.focusWorkbench(copyApiKeyBtn, {
-    desktopScale: 1.42,
-    compactScale: 1.15,
-    transitionSec: 0.65,
-    offsetY: -10,
-  });
-  await cursor.click(copyApiKeyBtn, { durationMs: 460, settleMs: 350 });
-  await cursor.click(copyUuidBtn, { durationMs: 440, settleMs: 420 });
-
-  // 3. Pan/scroll gently to Password Generator, adjust length & symbols, copy password
-  await cursor.scrollTo(lengthSlider, 550);
-  await camera.focusWorkbench(lengthSlider, {
-    desktopScale: 1.42,
-    compactScale: 1.18,
-    transitionSec: 0.65,
-    offsetY: 15,
+  // Focus gently onto UUID v7 + 256-bit API Secret Key rows keeping card borders & copy icons unclipped
+  const isWide = rec.viewportWidth >= 900;
+  rec.focusPoint(0.5, 0.44, {
+    scale: isWide ? 1.12 : 1.04,
+    transitionSec: 0.5,
   });
 
-  // Initial value is 20 in [12..48] => fraction ~0.222
-  await cursor.sweepHorizontal(lengthSlider, 0.225, [0.76], {
-    legDurationMs: 780,
-    pauseAtStopMs: 240,
-  });
+  await rec.click(copyApiKeyBtn, { moveSec: 0.38, settleSec: 0.2 });
+  await rec.click(copyUuidBtn, { moveSec: 0.32, settleSec: 0.28 });
 
-  await cursor.click(symbolsToggle, { durationMs: 420, settleMs: 340 });
-  await cursor.click(symbolsToggle, { durationMs: 260, settleMs: 320 });
-  await cursor.click(copyPwdBtn, { durationMs: 420, settleMs: 450 });
-
-  // 4. Smoothly pull back to full view
-  camera.reset({ transitionSec: 0.65 });
-  await cursor.wait(700);
+  if (variant === "spotlight") {
+    // Showcase interactive password entropy slider & copy
+    await rec.focusElement(lengthSlider, {
+      scale: isWide ? 1.38 : 1.12,
+      transitionSec: 0.5,
+      offsetX: isWide ? -80 : 0,
+      offsetY: 10,
+    });
+    await rec.sweepHorizontal(lengthSlider, 0.225, [0.76], {
+      legSec: 0.65,
+      pauseAtStopSec: 0.14,
+    });
+    await rec.click(copyPwdBtn, { moveSec: 0.32, settleSec: 0.25 });
+    rec.resetCamera(0.5);
+    await rec.hold(0.45);
+  } else {
+    rec.resetCamera(0.45);
+    await rec.hold(0.3);
+  }
 }
