@@ -37,6 +37,7 @@ export const getAllProjects = devAwareCache(
         id: true,
         title: true,
         slug: true,
+        category: true,
         publishedAt: true,
         stage: true,
         fullWidth: true,
@@ -84,10 +85,12 @@ export const getProjectSlugs = devAwareCache(
         },
         depth: 0,
         limit: 1000,
-        select: { slug: true },
+        select: { slug: true, content: true },
       });
 
-      return projects.docs as { slug: string }[];
+      return projects.docs
+        .filter((doc) => Array.isArray(doc.content) && doc.content.length > 0)
+        .map((doc) => ({ slug: doc.slug }));
     } catch (error) {
       console.error("Error fetching project slugs:", error);
       return [];

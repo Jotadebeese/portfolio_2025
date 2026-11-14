@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import GalleryLightbox from "./gallery-lightbox";
 
 type GalleryBlock = Extract<
-  (Blog["content"] | Project["content"])[number],
+  NonNullable<Blog["content"] | Project["content"]>[number],
   { blockType: "gallery" }
 >;
 

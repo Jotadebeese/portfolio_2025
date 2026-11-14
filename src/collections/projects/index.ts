@@ -1,7 +1,7 @@
 import { formatSlugHook } from "@/fields/slug/formatSlug";
 import type { CollectionConfig } from "payload";
 import { revalidateDelete, revalidateProject } from "./hooks/revalidateProject";
-import { contentField } from "@/fields/content";
+import { optionalContentField } from "@/fields/content";
 
 export const Projects: CollectionConfig = {
   slug: "projects",
@@ -13,7 +13,14 @@ export const Projects: CollectionConfig = {
   admin: {
     useAsTitle: "title",
     group: "Projects",
-    defaultColumns: ["title", "stage", "fullWidth", "publishedAt", "_status"],
+    defaultColumns: [
+      "title",
+      "category",
+      "stage",
+      "fullWidth",
+      "publishedAt",
+      "_status",
+    ],
   },
   versions: {
     drafts: true,
@@ -29,6 +36,22 @@ export const Projects: CollectionConfig = {
       },
       admin: {
         position: "sidebar",
+      },
+    },
+    {
+      name: "category",
+      type: "select",
+      label: "Section",
+      options: [
+        { label: "Projects & Products", value: "product" },
+        { label: "Client Work", value: "client" },
+      ],
+      defaultValue: "product",
+      required: true,
+      admin: {
+        position: "sidebar",
+        description:
+          "Choose which homepage section this entry appears under.",
       },
     },
     {
@@ -211,7 +234,7 @@ export const Projects: CollectionConfig = {
                 },
               ],
             },
-            contentField,
+            optionalContentField,
           ],
         },
         {

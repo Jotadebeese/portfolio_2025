@@ -220,6 +220,10 @@ export interface Project {
   id: number;
   _order?: string | null;
   slug: string;
+  /**
+   * Choose which homepage section this entry appears under.
+   */
+  category: 'product' | 'client';
   projectType?: (number | Tag)[] | null;
   technologies?: (number | Tech)[] | null;
   stage?: ('indevelopment' | 'live') | null;
@@ -267,50 +271,52 @@ export interface Project {
         id?: string | null;
       }[]
     | null;
-  content: (
-    | {
-        text: {
-          root: {
-            type: string;
-            children: {
-              type: any;
-              version: number;
+  content?:
+    | (
+        | {
+            text: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
               [k: string]: unknown;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'text';
+          }
+        | {
+            image: number | Media;
+            caption?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'image';
+          }
+        | CodeBlock
+        | {
+            layout: 'grid' | 'carousel' | 'masonry';
+            images: {
+              image: number | Media;
+              caption?: string | null;
+              id?: string | null;
             }[];
-            direction: ('ltr' | 'rtl') | null;
-            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-            indent: number;
-            version: number;
-          };
-          [k: string]: unknown;
-        };
-        id?: string | null;
-        blockName?: string | null;
-        blockType: 'text';
-      }
-    | {
-        image: number | Media;
-        caption?: string | null;
-        id?: string | null;
-        blockName?: string | null;
-        blockType: 'image';
-      }
-    | CodeBlock
-    | {
-        layout: 'grid' | 'carousel' | 'masonry';
-        images: {
-          image: number | Media;
-          caption?: string | null;
-          id?: string | null;
-        }[];
-        id?: string | null;
-        blockName?: string | null;
-        blockType: 'gallery';
-      }
-    | ToolsWorkbenchBlock
-    | TableBlock
-    | RecipeScalerBlock
-  )[];
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'gallery';
+          }
+        | ToolsWorkbenchBlock
+        | TableBlock
+        | RecipeScalerBlock
+      )[]
+    | null;
   /**
    * Best to keep this under 60 characters.
    */
@@ -755,6 +761,7 @@ export interface MediaSelect<T extends boolean = true> {
 export interface ProjectsSelect<T extends boolean = true> {
   _order?: T;
   slug?: T;
+  category?: T;
   projectType?: T;
   technologies?: T;
   stage?: T;

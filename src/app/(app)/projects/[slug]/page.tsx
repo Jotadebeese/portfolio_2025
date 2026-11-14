@@ -3,7 +3,7 @@ import BlockContent from "@/components/common/block-content";
 import { getProjectBySlug, getProjectSlugs } from "@/lib/payload/actions";
 import { extractHeadingsFromBlocks } from "@/lib/payload/utils/extract-headings";
 import { extractTextFromRichText } from "@/lib/payload/utils/extract-text";
-import { Media } from "@/payload-types";
+import { Media, Project } from "@/payload-types";
 import clsx from "clsx";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -11,6 +11,12 @@ import { notFound } from "next/navigation";
 type Props = {
   params: Promise<{ slug: string }>;
 };
+
+function hasProjectContent(project: Project | null): project is Project {
+  return Boolean(
+    project && Array.isArray(project.content) && project.content.length > 0,
+  );
+}
 
 export async function generateStaticParams() {
   const projects = await getProjectSlugs();
@@ -22,7 +28,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const project = await getProjectBySlug(slug);
-  if (!project) {
+  if (!hasProjectContent(project)) {
     notFound();
   }
   const metaImage = project.metaImage as Media;
@@ -69,16 +75,16 @@ export default async function ProjectsPage({ params }: Props) {
   const { slug } = await params;
   const project = await getProjectBySlug(slug);
 
-  if (!project) {
+  if (!hasProjectContent(project)) {
     return notFound();
   }
 
-  const headings = extractHeadingsFromBlocks(project.content);
+  const content = project.content ?? [];
+  const headings = extractHeadingsFromBlocks(content);
   const hasWorkbench = Boolean(
-    Array.isArray(project.content) &&
-      project.content.some(
-        (b: any) => b.blockType === "tools-workbench" && !b.hideSelector,
-      ),
+    content.some(
+      (b: any) => b.blockType === "tools-workbench" && !b.hideSelector,
+    ),
   );
   const hasSidebar = headings.length > 0 || hasWorkbench;
   const publishedAt = project.publishedAt
@@ -152,7 +158,7 @@ export default async function ProjectsPage({ params }: Props) {
             hasSidebar ? "md:col-span-9" : "md:col-span-12",
           )}
         >
-          <BlockContent data={project.content} />
+          <BlockContent data={content} />
         </main>
         <TableOfContents headings={headings} />
       </div>

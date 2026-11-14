@@ -1,6 +1,33 @@
 import { getAllBlogs, getAllProjects } from "@/lib/payload/actions";
+import { Project } from "@/payload-types";
 
 export const revalidate = 3600;
+
+function formatProjectItem(
+  proj: Project,
+  baseUrl: string,
+  fallbackAnchor: string,
+): string {
+  const cardLinks = Array.isArray(proj.links) ? proj.links : [];
+  const primaryCardLink = cardLinks.find(
+    (link) => link.isCardLink && link.url?.trim(),
+  );
+  const internalLink = cardLinks.find(
+    (link) => link.linkType === "internal" && link.url?.trim(),
+  );
+  const preferredLink =
+    primaryCardLink ||
+    internalLink ||
+    cardLinks.find((link) => link.url?.trim());
+  const rawUrl = preferredLink?.url?.trim();
+  const url = rawUrl
+    ? rawUrl.startsWith("/")
+      ? `${baseUrl}${rawUrl}`
+      : rawUrl
+    : `${baseUrl}/${fallbackAnchor}`;
+  const desc = proj.metaDescription ? `: ${proj.metaDescription}` : "";
+  return `- [${proj.title}](${url})${desc}`;
+}
 
 export async function GET() {
   const baseUrl = process.env.NEXT_WEB_APP_PUBLIC_URL || "http://localhost:3000";
@@ -17,29 +44,19 @@ export async function GET() {
     })
     .join("\n");
 
-  const projectItems = projects
-    .map((proj) => {
-      const cardLinks = Array.isArray(proj.links) ? proj.links : [];
-      const primaryCardLink = cardLinks.find(
-        (link) => link.isCardLink && link.url?.trim(),
-      );
-      const internalLink = cardLinks.find(
-        (link) => link.linkType === "internal" && link.url?.trim(),
-      );
-      const preferredLink =
-        primaryCardLink ||
-        internalLink ||
-        cardLinks.find((link) => link.url?.trim());
-      const rawUrl = preferredLink?.url?.trim();
-      const url = rawUrl
-        ? rawUrl.startsWith("/")
-          ? `${baseUrl}${rawUrl}`
-          : rawUrl
-        : `${baseUrl}/#projects`;
-      const desc = proj.metaDescription ? `: ${proj.metaDescription}` : "";
-      return `- [${proj.title}](${url})${desc}`;
-    })
+  const productItems = projects
+    .filter((proj) => proj.category !== "client")
+    .map((proj) => formatProjectItem(proj, baseUrl, "#projects"))
     .join("\n");
+
+  const clientItems = projects
+    .filter((proj) => proj.category === "client")
+    .map((proj) => formatProjectItem(proj, baseUrl, "#client-work"))
+    .join("\n");
+
+  const clientSection = clientItems
+    ? `\n## Client Work\n${clientItems}\n`
+    : "";
 
   const content = `# Juan Bedoya
 
@@ -52,8 +69,8 @@ export async function GET() {
 ${blogItems || "- No articles published yet."}
 
 ## Projects & Products
-${projectItems || "- No public projects published yet."}
-
+${productItems || "- No public projects published yet."}
+${clientSection}
 ## Links & Socials
 - [GitHub](https://github.com/Jotadebeese): Open source projects, experiments, and code repositories.
 - [LinkedIn](https://www.linkedin.com/in/jotadebeese/): Work experience, career history, and professional connections.

@@ -33,16 +33,17 @@ const sanitizeBlockIdsHook: FieldHook = ({ value }) => {
   return ensureUniqueIds(value);
 };
 
-export const contentField: Field = {
-  name: "content",
-  type: "blocks",
-  label: "Content",
-  required: true,
-  hooks: {
-    beforeValidate: [sanitizeBlockIdsHook],
-    beforeChange: [sanitizeBlockIdsHook],
-  },
-  blocks: [
+export function createContentField(required = true): Field {
+  return {
+    name: "content",
+    type: "blocks",
+    label: "Content",
+    required,
+    hooks: {
+      beforeValidate: [sanitizeBlockIdsHook],
+      beforeChange: [sanitizeBlockIdsHook],
+    },
+    blocks: [
     {
       slug: "text",
       fields: [
@@ -471,4 +472,8 @@ export const contentField: Field = {
       ],
     },
   ],
-};
+  };
+}
+
+export const contentField: Field = createContentField(true);
+export const optionalContentField: Field = createContentField(false);
