@@ -134,7 +134,7 @@ export const Projects: CollectionConfig = {
               relationTo: "media",
               admin: {
                 description:
-                  "Upload a brand icon or logo (SVG/PNG/WebP) displayed at the right of the project title.",
+                  "Upload a 1:1 square brand icon or logo (SVG/PNG/WebP) displayed at the right of the project title.",
               },
             },
             {

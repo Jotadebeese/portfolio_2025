@@ -249,7 +249,7 @@ export interface Project {
     [k: string]: unknown;
   };
   /**
-   * Upload a brand icon or logo (SVG/PNG/WebP) displayed at the right of the project title.
+   * Upload a 1:1 square brand icon or logo (SVG/PNG/WebP) displayed at the right of the project title.
    */
   icon?: (number | null) | Media;
   /**
