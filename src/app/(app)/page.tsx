@@ -1,9 +1,11 @@
+import CTAButton from "@/components/common/cta-button";
 import ProjectsSection from "@/components/projects/layouts/projects-section";
 import { ProjectsSkeleton } from "@/components/projects/layouts/projects-section-skeleton";
 import { getHomePage } from "@/lib/payload/actions";
 import { extractTextFromRichText } from "@/lib/payload/utils/extract-text";
 import { Media } from "@/payload-types";
 import { RichText } from "@payloadcms/richtext-lexical/react";
+import { ArrowDown } from "lucide-react";
 import { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -42,7 +44,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Home() {
   const homePage = await getHomePage();
-  const baseUrl = process.env.NEXT_WEB_APP_PUBLIC_URL || "http://localhost:3000";
+  const baseUrl =
+    process.env.NEXT_WEB_APP_PUBLIC_URL || "http://localhost:3000";
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -83,6 +86,26 @@ export default async function Home() {
           <RichText className="text-xl md:text-2xl" data={homePage.subTitle} />
 
           <RichText className="text-base" data={homePage.shortDescription} />
+
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2 sm:justify-start">
+            <CTAButton href="#projects" variant="primary">
+              <span>Projects &amp; Products</span>
+              <ArrowDown
+                size={14}
+                aria-hidden="true"
+                className="text-background/80 transition-transform duration-150 ease-out group-hover:translate-y-0.5 group-hover:text-background group-focus-visible:translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none"
+              />
+            </CTAButton>
+
+            <CTAButton href="#client-work" variant="secondary">
+              <span>Client Work</span>
+              <ArrowDown
+                size={14}
+                aria-hidden="true"
+                className="text-foreground/70 transition-transform duration-150 ease-out group-hover:translate-y-0.5 group-hover:text-foreground group-focus-visible:translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none"
+              />
+            </CTAButton>
+          </div>
         </div>
       </div>
       <Suspense fallback={<ProjectsSkeleton />}>

@@ -3,6 +3,7 @@
 import React, { useActionState, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, Eye, EyeOff, Lock } from "lucide-react";
+import CTAButton from "@/components/common/cta-button";
 import {
   unlockPrivateNote,
   type UnlockState,
@@ -89,18 +90,19 @@ export default function PrivateNoteGate({ slug }: { slug: string }) {
               <span>Notes</span>
             </Link>
 
-            <button
+            <CTAButton
               type="submit"
               disabled={isPending}
-              className="group bg-utils-scent-gray-01/60 border-utils-scent-gray-01 hover:bg-utils-scent-gray-01 text-foreground inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-4 py-1.5 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50"
+              variant="secondary"
+              size="sm"
             >
               <span>{isPending ? "Verifying..." : "Unlock Note"}</span>
               <ArrowRight
                 size={14}
                 aria-hidden="true"
-                className="text-amber-600 transition-transform ease-in-out group-hover:translate-x-0.5"
+                className="text-amber-600 transition-transform ease-in-out group-hover:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none"
               />
-            </button>
+            </CTAButton>
           </div>
         </form>
       </div>
