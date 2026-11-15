@@ -26,12 +26,14 @@ import {
   getVideoFilenameWithExtension,
   getFormatLabel,
   formatDuration,
+  formatFps,
   getEffectiveVideoDuration,
   hasEffectiveTrim,
   hasSettingsChanged,
   getVideoOrientation,
   getAdaptedPresetForTargetSize,
   estimateVideoSize,
+  resolveTargetFps,
 } from "../utils/format";
 import { calculateTargetVideoDimensions } from "../utils/compress-video";
 
@@ -98,10 +100,23 @@ export default function DetailsSidebar({
     );
   }
 
+  const effectiveExportSpeed =
+    item.exportSpeed !== undefined
+      ? item.exportSpeed
+      : settings.exportSpeed ?? 1;
+  const effectiveTargetFpsSetting =
+    item.targetFps !== undefined ? item.targetFps : settings.targetFps;
+  const hasSpeedChange = Math.abs(effectiveExportSpeed - 1) > 0.01;
+  const resolvedTargetFps = resolveTargetFps(
+    effectiveTargetFpsSetting,
+    item.originalFps,
+  );
+
   const effectiveDuration = getEffectiveVideoDuration(
     item.duration,
     item.trim,
     item.sections,
+    effectiveExportSpeed,
   );
 
   const isTrimmed = hasEffectiveTrim(item.duration, item.trim, item.sections);
@@ -113,6 +128,9 @@ export default function DetailsSidebar({
     item.stripAudio,
     item.sections,
     item.duration,
+    item.exportSpeed,
+    item.originalFps,
+    item.targetFps,
   );
 
   const orientation = getVideoOrientation(
@@ -144,6 +162,8 @@ export default function DetailsSidebar({
   const effectiveItemSettings = {
     ...settings,
     stripAudio: isStrippedAudio,
+    exportSpeed: effectiveExportSpeed,
+    targetFps: effectiveTargetFpsSetting,
     sections: item.sections,
   };
 
@@ -155,6 +175,7 @@ export default function DetailsSidebar({
     item.originalDimensions.height,
     item.originalSize,
     item.sections,
+    item.originalFps,
   );
 
   const realSavings =
@@ -444,14 +465,46 @@ export default function DetailsSidebar({
             )}
           </span>
 
+          <span className="text-foreground">Frame Rate:</span>
+          <span className="text-foreground truncate text-right font-mono">
+            {item.originalFps ? `${formatFps(item.originalFps)}fps` : "—"}
+            {item.compressedFps &&
+              !itemSettingsChanged &&
+              item.originalFps &&
+              Math.abs(item.compressedFps - item.originalFps) > 0.5 && (
+                <span className="text-foreground/70 ml-1">
+                  → {formatFps(item.compressedFps)}fps
+                </span>
+              )}
+            {(!item.compressedFps || itemSettingsChanged) &&
+              resolvedTargetFps && (
+                <span className="text-foreground/70 ml-1">
+                  → {resolvedTargetFps}fps
+                </span>
+              )}
+            {item.targetFps !== undefined &&
+              item.targetFps !== (settings.targetFps ?? "original") && (
+                <span className="text-foreground/70 ml-1">(Custom)</span>
+              )}
+          </span>
+
           <span className="text-foreground">Duration:</span>
           <span className="text-foreground truncate text-right font-mono">
             {item.duration > 0 ? formatDuration(item.duration) : "—"}
-            {isTrimmed && (
+            {(isTrimmed || hasSpeedChange) && (
               <span className="text-foreground/70 ml-1">
                 → {formatDuration(effectiveDuration)}
               </span>
             )}
+          </span>
+
+          <span className="text-foreground">Output Speed:</span>
+          <span className="text-foreground truncate text-right font-mono">
+            {hasSpeedChange ? `${effectiveExportSpeed}x` : "1x (Normal)"}
+            {item.exportSpeed !== undefined &&
+              item.exportSpeed !== (settings.exportSpeed ?? 1) && (
+                <span className="text-foreground/70 ml-1">(Custom)</span>
+              )}
           </span>
 
           <span className="text-foreground">Audio Track:</span>

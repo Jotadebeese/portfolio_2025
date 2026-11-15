@@ -8,6 +8,8 @@ export type VideoResizePreset =
   | "360p"
   | "custom";
 
+export type VideoFpsOption = "original" | 60 | 30 | 24 | 15;
+
 export type CompressionMode = "quality" | "target-size" | "bitrate";
 
 export interface VideoSection {
@@ -25,6 +27,8 @@ export interface VideoOptimizerSettings {
   targetSizeMB: number;
   resizePreset: VideoResizePreset;
   customMaxDimension?: number;
+  targetFps?: VideoFpsOption;
+  exportSpeed?: number;
   stripAudio: boolean;
   trim?: {
     start: number;
@@ -43,6 +47,7 @@ export interface VideoFileItem {
   originalSize: number;
   originalType: string;
   originalDimensions: { width: number; height: number };
+  originalFps?: number;
   duration: number;
   thumbnailUrl: string;
   originalUrl: string;
@@ -53,6 +58,8 @@ export interface VideoFileItem {
   };
   sections?: VideoSection[];
   stripAudio?: boolean;
+  exportSpeed?: number;
+  targetFps?: VideoFpsOption;
 
   status: ProcessingStatus;
   progress: number;
@@ -64,5 +71,6 @@ export interface VideoFileItem {
   compressedDimensions?: { width: number; height: number };
   compressedFormat?: VideoOutputFormat;
   compressedDuration?: number;
+  compressedFps?: number;
   lastCompressedSettings?: VideoOptimizerSettings;
 }

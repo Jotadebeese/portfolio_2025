@@ -23,6 +23,7 @@ import {
   getAdaptedPresetForTargetSize,
   getEffectiveVideoDuration,
   getKeptRanges,
+  resolveTargetFps,
 } from "./format";
 
 export interface VideoCompressionResult {
@@ -33,11 +34,13 @@ export interface VideoCompressionResult {
   size: number;
   format: VideoOutputFormat;
   duration: number;
+  fps?: number;
 }
 
 export interface VideoMetadata {
   width: number;
   height: number;
+  fps?: number;
   duration: number;
   thumbnailUrl: string;
   hasAudio: boolean;
@@ -188,10 +191,21 @@ export async function getVideoMetadata(file: File): Promise<VideoMetadata> {
 
     let width = 1920;
     let height = 1080;
+    let fps: number | undefined;
 
     if (videoTrack) {
-      width = (await videoTrack.getDisplayWidth().catch(() => 1920)) || 1920;
-      height = (await videoTrack.getDisplayHeight().catch(() => 1080)) || 1080;
+      const [dw, dh, fpsMetrics] = await Promise.all([
+        videoTrack.getDisplayWidth().catch(() => 1920),
+        videoTrack.getDisplayHeight().catch(() => 1080),
+        videoTrack.computeFrameRateMetrics().catch(() => null),
+      ]);
+      width = dw || 1920;
+      height = dh || 1080;
+      const rawFps =
+        fpsMetrics?.bestGuessFrameRate || fpsMetrics?.averageFrameRate;
+      if (rawFps && rawFps > 0 && Number.isFinite(rawFps)) {
+        fps = Math.round(rawFps * 100) / 100;
+      }
     }
 
     const hasAudio = !!audioTrack;
@@ -200,6 +214,7 @@ export async function getVideoMetadata(file: File): Promise<VideoMetadata> {
     return {
       width,
       height,
+      fps,
       duration: duration || 0,
       thumbnailUrl,
       hasAudio,
@@ -252,13 +267,29 @@ export async function compressVideo(
       throw new Error("No video track found in input file.");
     }
 
-    const origW = await videoTrack.getDisplayWidth();
-    const origH = await videoTrack.getDisplayHeight();
-    const duration = await input.computeDuration();
+    const [origW, origH, duration, fpsMetrics] = await Promise.all([
+      videoTrack.getDisplayWidth(),
+      videoTrack.getDisplayHeight(),
+      input.computeDuration(),
+      videoTrack.computeFrameRateMetrics().catch(() => null),
+    ]);
+
+    const rawSourceFps =
+      fpsMetrics?.bestGuessFrameRate || fpsMetrics?.averageFrameRate;
+    const sourceFps =
+      rawSourceFps && rawSourceFps > 0 && Number.isFinite(rawSourceFps)
+        ? Math.round(rawSourceFps * 100) / 100
+        : undefined;
 
     if (signal?.aborted) {
       throw new ConversionCanceledError();
     }
+
+    const exportSpeed =
+      settings.exportSpeed && settings.exportSpeed > 0
+        ? settings.exportSpeed
+        : 1;
+    const hasSpeedChange = Math.abs(exportSpeed - 1) > 0.01;
 
     // Determine kept ranges from multi-cut sections or legacy trim
     const keptRanges = getKeptRanges(duration, settings.trim, settings.sections);
@@ -278,7 +309,29 @@ export async function compressVideo(
       duration,
       settings.trim,
       settings.sections,
+      exportSpeed,
     );
+
+    const resolvedTargetFps = resolveTargetFps(settings.targetFps, sourceFps);
+    const desiredOutputFps =
+      resolvedTargetFps ?? (sourceFps ? Math.min(60, sourceFps) : undefined);
+    const neededInputFps = desiredOutputFps
+      ? desiredOutputFps / exportSpeed
+      : undefined;
+    const mediabunnyFrameRate =
+      (resolvedTargetFps !== undefined || exportSpeed > 1) &&
+      neededInputFps &&
+      (!sourceFps || neededInputFps < sourceFps - 0.5)
+        ? Math.max(1, neededInputFps)
+        : undefined;
+
+    const outputFps = resolvedTargetFps
+      ? resolvedTargetFps
+      : sourceFps
+        ? exportSpeed < 1
+          ? Math.round(sourceFps * exportSpeed * 100) / 100
+          : Math.min(60, sourceFps)
+        : undefined;
 
     // Determine effective resolution preset (protects against physical codec floors in target-size mode)
     const effectivePreset =
@@ -319,9 +372,9 @@ export async function compressVideo(
       forceTranscode?: boolean;
     } | undefined = settings.stripAudio ? { discard: true } : undefined;
 
-    // When cuts or trims are applied, force audio to transcode so that audio samples
-    // can be filtered and retimestamped in exact lockstep with video (preventing packet-copy desync)
-    if (!settings.stripAudio && hasActiveTrimOrCut) {
+    // When cuts, trims, or speed changes are applied, force audio to transcode so that audio samples
+    // can be filtered, resampled, and retimestamped in lockstep with video (preventing packet-copy desync)
+    if (!settings.stripAudio && (hasActiveTrimOrCut || hasSpeedChange)) {
       audioConfig = {
         ...audioConfig,
         forceTranscode: true,
@@ -362,42 +415,94 @@ export async function compressVideo(
     }
 
     /**
-     * Sample processor for frame/audio cutting and timestamp normalization.
-     *
-     * NOTE: When `trim.start` is passed to Mediabunny's `Conversion.init()`, Mediabunny
-     * fast-seeks to `trim.start` and shifts decoded samples by `-trimStart`.
-     * Therefore, inside this process callback:
-     *   sample.timestamp === originalSourceTime - trimStart
-     *   true originalSourceTime === sample.timestamp + trimStart
+     * Maps decoded source sample time (shifted by -trimStart) to final output time,
+     * applying cut-range filtering and exportSpeed time scaling.
      */
-    const createSampleProcessor = <T extends VideoSample | AudioSample>() => {
-      return (sample: T): T | null => {
-        const origTime = sample.timestamp + trimStart;
+    const mapSampleOutputTime = (sampleTimestamp: number): number | null => {
+      const origTime = sampleTimestamp + trimStart;
+      let timelineTime = origTime;
 
-        // Find which kept range this sample falls into
+      if (hasActiveTrimOrCut) {
         const currentRange = keptRanges.find(
           (r) => origTime >= r.start - 0.005 && origTime < r.end + 0.005,
         );
         if (!currentRange) {
-          return null; // frame/audio in cut region or out of bounds is dropped!
+          return null;
         }
 
-        // Calculate cumulative duration of all preceding kept ranges
         let cumulative = 0;
         for (const r of keptRanges) {
           if (r === currentRange) break;
           cumulative += r.end - r.start;
         }
 
-        // Clamp origTime within currentRange bounds so timestamps remain monotonically sound
         const boundedTime = Math.max(
           currentRange.start,
           Math.min(currentRange.end, origTime),
         );
-        sample.setTimestamp(cumulative + (boundedTime - currentRange.start));
-        return sample;
-      };
+        timelineTime = cumulative + (boundedTime - currentRange.start);
+      }
+
+      return Math.max(0, timelineTime / exportSpeed);
     };
+
+    const processVideoSample = (sample: VideoSample): VideoSample | null => {
+      const outTime = mapSampleOutputTime(sample.timestamp);
+      if (outTime === null) return null;
+
+      sample.setTimestamp(outTime);
+      if (hasSpeedChange && sample.duration > 0) {
+        sample.setDuration(sample.duration / exportSpeed);
+      }
+      return sample;
+    };
+
+    // Tracks fractional PCM samples across chunks so sped-up/slowed audio stays drift-free
+    let audioFrameRemainder = 0;
+
+    const processAudioSample = (
+      sample: AudioSample,
+    ): AudioSample | AudioSample[] | null => {
+      const outTime = mapSampleOutputTime(sample.timestamp);
+      if (outTime === null) return null;
+
+      if (!hasSpeedChange) {
+        sample.setTimestamp(outTime);
+        return sample;
+      }
+
+      const srcBuffer = sample.toAudioBuffer();
+      const srcLength = srcBuffer.length;
+      const numChannels = srcBuffer.numberOfChannels;
+      const sampleRate = srcBuffer.sampleRate;
+
+      audioFrameRemainder += srcLength / exportSpeed;
+      const outLength = Math.max(1, Math.round(audioFrameRemainder));
+      audioFrameRemainder -= outLength;
+
+      const outBuffer = new AudioBuffer({
+        numberOfChannels: numChannels,
+        length: outLength,
+        sampleRate,
+      });
+
+      // Linear PCM interpolation scales chunk duration by 1 / exportSpeed cleanly
+      for (let ch = 0; ch < numChannels; ch++) {
+        const srcData = srcBuffer.getChannelData(ch);
+        const dstData = outBuffer.getChannelData(ch);
+        for (let i = 0; i < outLength; i++) {
+          const srcPos = Math.min(srcLength - 1, i * exportSpeed);
+          const idx0 = Math.floor(srcPos);
+          const idx1 = Math.min(srcLength - 1, idx0 + 1);
+          const frac = srcPos - idx0;
+          dstData[i] = srcData[idx0] * (1 - frac) + srcData[idx1] * frac;
+        }
+      }
+
+      return AudioSample.fromAudioBuffer(outBuffer, outTime);
+    };
+
+    const needsSampleProcess = hasActiveTrimOrCut || hasSpeedChange;
 
     const conversion = await Conversion.init({
       input,
@@ -408,18 +513,15 @@ export async function compressVideo(
         fit: "contain",
         codec: isMp4 ? "avc" : "vp9",
         quality: videoQuality,
+        frameRate: mediabunnyFrameRate,
         forceTranscode: true,
-        process: hasActiveTrimOrCut
-          ? createSampleProcessor<VideoSample>()
-          : undefined,
+        process: needsSampleProcess ? processVideoSample : undefined,
       },
       audio:
         audioConfig && !audioConfig.discard
           ? {
               ...audioConfig,
-              process: hasActiveTrimOrCut
-                ? createSampleProcessor<AudioSample>()
-                : undefined,
+              process: needsSampleProcess ? processAudioSample : undefined,
             }
           : audioConfig,
       trim: hasActiveTrimOrCut
@@ -477,6 +579,7 @@ export async function compressVideo(
       size: blob.size,
       format: settings.format,
       duration: effectiveDuration,
+      fps: outputFps,
     };
   } finally {
     try {

@@ -1,5 +1,6 @@
 import {
   CompressionMode,
+  VideoFpsOption,
   VideoOptimizerSettings,
   VideoOutputFormat,
   VideoResizePreset,
@@ -210,18 +211,48 @@ export function getKeptRanges(
 }
 
 /**
+ * Resolves the effective output FPS cap without ever upsampling above source FPS.
+ * Returns `undefined` when original frame rate should be preserved.
+ */
+export function resolveTargetFps(
+  targetFps?: VideoFpsOption,
+  originalFps?: number,
+): number | undefined {
+  if (!targetFps || targetFps === "original") return undefined;
+  if (originalFps && originalFps > 0 && targetFps >= originalFps - 0.5) {
+    return undefined;
+  }
+  return targetFps;
+}
+
+/**
+ * Formats detected FPS cleanly (e.g. 29.97 -> "30", 59.94 -> "60", 23.98 -> "24").
+ */
+export function formatFps(fps?: number): string {
+  if (!fps || fps <= 0) return "—";
+  const roundedInt = Math.round(fps);
+  if (Math.abs(fps - roundedInt) < 0.15) {
+    return `${roundedInt}`;
+  }
+  return `${Math.round(fps * 10) / 10}`;
+}
+
+/**
  * Maps a playback timestamp in the compressed/edited video back to the exact source timestamp in the original video.
  */
 export function mapCompTimeToOrigTime(
   compTime: number,
   keptRanges: { start: number; end: number }[],
+  exportSpeed = 1,
 ): number {
   if (keptRanges.length === 0) return compTime;
+  const speed = exportSpeed > 0 ? exportSpeed : 1;
+  const sourceTimelineTime = compTime * speed;
   let accumulated = 0;
   for (const range of keptRanges) {
     const rangeDuration = range.end - range.start;
-    if (compTime <= accumulated + rangeDuration) {
-      const offset = Math.max(0, compTime - accumulated);
+    if (sourceTimelineTime <= accumulated + rangeDuration) {
+      const offset = Math.max(0, sourceTimelineTime - accumulated);
       return range.start + offset;
     }
     accumulated += rangeDuration;
@@ -235,22 +266,24 @@ export function mapCompTimeToOrigTime(
 export function mapOrigTimeToCompTime(
   origTime: number,
   keptRanges: { start: number; end: number }[],
+  exportSpeed = 1,
 ): { compTime: number; isInside: boolean } {
-  if (keptRanges.length === 0) return { compTime: origTime, isInside: true };
+  const speed = exportSpeed > 0 ? exportSpeed : 1;
+  if (keptRanges.length === 0) return { compTime: origTime / speed, isInside: true };
 
   let accumulated = 0;
   for (const range of keptRanges) {
     const rangeDuration = range.end - range.start;
     if (origTime >= range.start && origTime <= range.end) {
       return {
-        compTime: accumulated + (origTime - range.start),
+        compTime: (accumulated + (origTime - range.start)) / speed,
         isInside: true,
       };
     }
     if (origTime < range.start) {
       // Before this kept range, outside cut
       return {
-        compTime: accumulated,
+        compTime: accumulated / speed,
         isInside: false,
       };
     }
@@ -259,20 +292,22 @@ export function mapOrigTimeToCompTime(
 
   // After all kept ranges
   return {
-    compTime: accumulated,
+    compTime: accumulated / speed,
     isInside: false,
   };
 }
 
 /**
- * Calculates effective playback/output duration accounting for multiple cut sections or standard trim.
+ * Calculates effective playback/output duration accounting for cut sections, trim, and export speed.
  */
 export function getEffectiveVideoDuration(
   durationSeconds: number,
   trim?: { start: number; end: number },
   sections?: VideoSection[],
+  exportSpeed = 1,
 ): number {
   if (durationSeconds <= 0) return 0;
+  const speed = exportSpeed > 0 ? exportSpeed : 1;
   if (sections && sections.length > 0) {
     const kept = sections
       .filter((s) => !s.isDeleted && s.end > s.start)
@@ -283,14 +318,17 @@ export function getEffectiveVideoDuration(
       (sections[0] &&
         (sections[0].start > 0.05 || sections[0].end < durationSeconds - 0.05))
     ) {
-      return Math.max(0, Math.min(durationSeconds, kept));
+      return Math.max(0, Math.min(durationSeconds, kept)) / speed;
     }
   }
   const normalized = normalizeTrim(durationSeconds, trim);
   if (normalized && normalized.end > normalized.start) {
-    return Math.max(0, Math.min(durationSeconds, normalized.end - normalized.start));
+    return (
+      Math.max(0, Math.min(durationSeconds, normalized.end - normalized.start)) /
+      speed
+    );
   }
-  return durationSeconds;
+  return durationSeconds / speed;
 }
 
 /**
@@ -309,12 +347,16 @@ export function estimateVideoSize(
   height: number = 1080,
   originalSize?: number,
   sections?: VideoSection[],
+  originalFps?: number,
 ): number {
   if (durationSeconds <= 0) return 0;
+  const exportSpeed =
+    settings.exportSpeed && settings.exportSpeed > 0 ? settings.exportSpeed : 1;
   const effectiveDuration = getEffectiveVideoDuration(
     durationSeconds,
     trim || settings.trim,
     sections || settings.sections,
+    exportSpeed,
   );
 
   // 1. Calculate target dimensions based on preset (adapting for target-size floor if needed)
@@ -355,6 +397,12 @@ export function estimateVideoSize(
   const referencePixels = 1920 * 1080;
 
   let videoBps: number;
+  const resolvedFps = resolveTargetFps(settings.targetFps, originalFps);
+  const fpsEfficiency =
+    resolvedFps && originalFps && originalFps > 0 && resolvedFps < originalFps
+      ? Math.pow(resolvedFps / originalFps, 0.35)
+      : 1;
+
   if (settings.mode === "quality") {
     const q = (settings.qualityPercent ?? 80) / 100;
     const factor = 0.3 * Math.exp(2.5538 * q);
@@ -362,7 +410,7 @@ export function estimateVideoSize(
     const scaleFactor = Math.pow(pixels / referencePixels, 0.92);
     const codecEfficiency = settings.format === "video/webm" ? 0.75 : 1.0;
     videoBps = Math.round(
-      referenceBitrate * scaleFactor * factor * codecEfficiency,
+      referenceBitrate * scaleFactor * factor * codecEfficiency * fpsEfficiency,
     );
   } else if (settings.mode === "target-size") {
     videoBps = calculateBitrateForTargetSize(
@@ -436,6 +484,9 @@ export function hasSettingsChanged(
   itemStripAudio?: boolean,
   itemSections?: VideoSection[],
   duration?: number,
+  itemExportSpeed?: number,
+  originalFps?: number,
+  itemTargetFps?: VideoFpsOption,
 ): boolean {
   if (!lastSettings) return false;
 
@@ -467,6 +518,19 @@ export function hasSettingsChanged(
   ) {
     return true;
   }
+
+  const effectiveTargetFps =
+    itemTargetFps !== undefined ? itemTargetFps : currentSettings.targetFps;
+  const curFps = resolveTargetFps(effectiveTargetFps, originalFps);
+  const lastFps = resolveTargetFps(lastSettings.targetFps, originalFps);
+  if (curFps !== lastFps) return true;
+
+  const effectiveExportSpeed =
+    itemExportSpeed !== undefined
+      ? itemExportSpeed
+      : currentSettings.exportSpeed ?? 1;
+  const lastExportSpeed = lastSettings.exportSpeed ?? 1;
+  if (Math.abs(effectiveExportSpeed - lastExportSpeed) > 0.01) return true;
 
   const effectiveStripAudio =
     itemStripAudio !== undefined ? itemStripAudio : currentSettings.stripAudio;

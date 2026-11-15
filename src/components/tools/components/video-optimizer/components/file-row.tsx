@@ -19,6 +19,7 @@ import { VideoFileItem, VideoOptimizerSettings } from "../types";
 import {
   formatBytes,
   formatDuration,
+  formatFps,
   calculateSavings,
   estimateVideoSize,
   getVideoOrientation,
@@ -27,6 +28,7 @@ import {
   hasEffectiveTrim,
   getAdaptedPresetForTargetSize,
   getVideoFilenameWithExtension,
+  resolveTargetFps,
 } from "../utils/format";
 import { calculateTargetVideoDimensions } from "../utils/compress-video";
 
@@ -71,19 +73,43 @@ export default function FileRow({
 
   const effectiveStripAudio =
     item.stripAudio !== undefined ? item.stripAudio : settings.stripAudio;
+  const effectiveExportSpeed =
+    item.exportSpeed !== undefined
+      ? item.exportSpeed
+      : settings.exportSpeed ?? 1;
+  const effectiveTargetFpsSetting =
+    item.targetFps !== undefined ? item.targetFps : settings.targetFps;
+  const hasSpeedChange = Math.abs(effectiveExportSpeed - 1) > 0.01;
+  const resolvedTargetFps = resolveTargetFps(
+    effectiveTargetFpsSetting,
+    item.originalFps,
+  );
 
   const isTrimmed = hasEffectiveTrim(item.duration, item.trim, item.sections);
+
+  const effectiveDuration = getEffectiveVideoDuration(
+    item.duration,
+    item.trim,
+    item.sections,
+    effectiveExportSpeed,
+  );
 
   const estimatedBytes =
     item.duration > 0
       ? estimateVideoSize(
           item.duration,
-          { ...settings, stripAudio: effectiveStripAudio },
+          {
+            ...settings,
+            stripAudio: effectiveStripAudio,
+            exportSpeed: effectiveExportSpeed,
+            targetFps: effectiveTargetFpsSetting,
+          },
           item.trim,
           item.originalDimensions.width,
           item.originalDimensions.height,
           item.originalSize,
           item.sections,
+          item.originalFps,
         )
       : 0;
 
@@ -99,12 +125,9 @@ export default function FileRow({
     item.stripAudio,
     item.sections,
     item.duration,
-  );
-
-  const effectiveDuration = getEffectiveVideoDuration(
-    item.duration,
-    item.trim,
-    item.sections,
+    item.exportSpeed,
+    item.originalFps,
+    item.targetFps,
   );
 
   const effectivePreset =
@@ -193,13 +216,7 @@ export default function FileRow({
 
           {item.duration > 0 && (
             <span className="py-0.2 bg-utils-scent-gray-01 border-border-color text-foreground absolute right-0.5 bottom-0.5 rounded-xs border px-0.5 font-mono text-[9px] leading-none">
-              {formatDuration(
-                getEffectiveVideoDuration(
-                  item.duration,
-                  item.trim,
-                  item.sections,
-                ),
-              )}
+              {formatDuration(effectiveDuration)}
             </span>
           )}
         </div>
@@ -248,6 +265,15 @@ export default function FileRow({
               </span>
             )}
 
+            {hasSpeedChange && (
+              <span
+                className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-foreground flex shrink-0 items-center rounded-xs border px-1 font-mono text-[9px]"
+                title={`Output speed set to ${effectiveExportSpeed}x`}
+              >
+                {effectiveExportSpeed}x
+              </span>
+            )}
+
             {effectiveStripAudio || !item.hasAudio ? (
               <span className="py-0.2 border-border-color bg-utils-scent-gray-01/30 text-code-rust flex shrink-0 items-center gap-0.5 rounded-xs border px-1 font-mono text-[9px]">
                 <VolumeX size={9} />
@@ -286,6 +312,24 @@ export default function FileRow({
                     </>
                   )}
                 </span>
+              )}
+
+              {item.originalFps && item.originalFps > 0 && (
+                <>
+                  <span className="text-foreground">&bull;</span>
+                  <span className="font-mono">
+                    {resolvedTargetFps ? (
+                      <>
+                        {formatFps(item.originalFps)}&rarr;
+                        <span className="text-foreground">
+                          {resolvedTargetFps}fps
+                        </span>
+                      </>
+                    ) : (
+                      <>{formatFps(item.originalFps)}fps</>
+                    )}
+                  </span>
+                </>
               )}
 
               <span className="text-foreground">&bull;</span>
@@ -386,7 +430,11 @@ export default function FileRow({
                   "border-border-color flex h-6 w-6 shrink-0 items-center justify-center rounded-xs border transition-all",
                   isTrimmed ||
                     (item.stripAudio !== undefined &&
-                      item.stripAudio !== settings.stripAudio)
+                      item.stripAudio !== settings.stripAudio) ||
+                    (item.exportSpeed !== undefined &&
+                      item.exportSpeed !== (settings.exportSpeed ?? 1)) ||
+                    (item.targetFps !== undefined &&
+                      item.targetFps !== (settings.targetFps ?? "original"))
                     ? "border-border-color text-code-rust hover:bg-utils-scent-gray-01/30"
                     : "text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground",
                   isProcessing

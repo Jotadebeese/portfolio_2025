@@ -18,11 +18,12 @@ import {
   X,
 } from "lucide-react";
 import {
+  VideoFpsOption,
   VideoOptimizerSettings,
   VideoOutputFormat,
   VideoResizePreset,
 } from "../types";
-import { formatBytes, calculateSavings } from "../utils/format";
+import { formatBytes, calculateSavings, formatFps } from "../utils/format";
 import clsx from "clsx";
 
 type Props = {
@@ -50,8 +51,19 @@ type Props = {
   hasPendingChanges?: boolean;
   uncompressedCount?: number;
   pendingChangesCount?: number;
+  maxSourceFps?: number;
   maxFiles?: number;
 };
+
+const FPS_OPTIONS: { label: string; value: VideoFpsOption }[] = [
+  { label: "Original", value: "original" },
+  { label: "60", value: 60 },
+  { label: "30", value: 30 },
+  { label: "24", value: 24 },
+  { label: "15", value: 15 },
+];
+
+const EXPORT_SPEED_OPTIONS = [0.5, 1, 1.25, 1.5, 2];
 
 const FORMATS: { label: string; value: VideoOutputFormat; badge: string }[] = [
   { label: "MP4", value: "video/mp4", badge: "H.264" },
@@ -96,6 +108,7 @@ export default function Toolbar({
   hasPendingChanges = false,
   uncompressedCount,
   pendingChangesCount,
+  maxSourceFps,
   maxFiles = 10,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -288,39 +301,118 @@ export default function Toolbar({
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-foreground shrink-0">Audio:</span>
-            <button
-              type="button"
-              disabled={isProcessing}
-              onClick={() =>
-                onSettingsChange({
-                  ...settings,
-                  stripAudio: !settings.stripAudio,
-                })
-              }
-              className={clsx(
-                "border-border-color flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1 text-xs transition-all",
-                settings.stripAudio ? "text-code-rust" : "text-foreground",
-              )}
-              title={
-                settings.stripAudio
-                  ? "Audio track stripped for lightweight web hero loops"
-                  : "Audio track will be preserved"
-              }
-            >
-              {settings.stripAudio ? (
-                <>
-                  <VolumeX className="h-3.5 w-3.5" />
-                  <span>Mute</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 className="h-3.5 w-3.5" />
-                  <span>Keep </span>
-                </>
-              )}
-            </button>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-foreground shrink-0">Audio:</span>
+              <button
+                type="button"
+                disabled={isProcessing}
+                onClick={() =>
+                  onSettingsChange({
+                    ...settings,
+                    stripAudio: !settings.stripAudio,
+                  })
+                }
+                className={clsx(
+                  "border-border-color flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1 text-xs transition-all",
+                  settings.stripAudio ? "text-code-rust" : "text-foreground",
+                )}
+                title={
+                  settings.stripAudio
+                    ? "Audio track stripped for lightweight web hero loops"
+                    : "Audio track will be preserved"
+                }
+              >
+                {settings.stripAudio ? (
+                  <>
+                    <VolumeX className="h-3.5 w-3.5" />
+                    <span>Mute</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="h-3.5 w-3.5" />
+                    <span>Keep </span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-foreground shrink-0">Speed:</span>
+              <div
+                className="border-border-color flex items-center rounded-md border bg-white p-0.5 font-mono"
+                title="Output playback speed multiplier baked into exported video"
+              >
+                {EXPORT_SPEED_OPTIONS.map((spd) => {
+                  const activeSpeed = settings.exportSpeed ?? 1;
+                  const isActive = Math.abs(activeSpeed - spd) < 0.01;
+                  return (
+                    <button
+                      key={spd}
+                      type="button"
+                      disabled={isProcessing}
+                      onClick={() =>
+                        onSettingsChange({ ...settings, exportSpeed: spd })
+                      }
+                      className={clsx(
+                        "cursor-pointer rounded px-1.5 py-0.5 text-[11px] transition-all",
+                        isActive
+                          ? "bg-foreground text-background font-medium"
+                          : "text-foreground/70 hover:text-foreground",
+                      )}
+                      title={`Export video at ${spd}x speed`}
+                    >
+                      {spd}x
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-foreground shrink-0">FPS:</span>
+            <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
+              {FPS_OPTIONS.filter(
+                (opt) =>
+                  opt.value === "original" ||
+                  maxSourceFps === undefined ||
+                  maxSourceFps <= 0 ||
+                  opt.value < maxSourceFps - 0.5,
+              ).map((opt) => {
+                const isSelected =
+                  (settings.targetFps ?? "original") === opt.value;
+                return (
+                  <button
+                    key={String(opt.value)}
+                    type="button"
+                    disabled={isProcessing}
+                    onClick={() =>
+                      onSettingsChange({ ...settings, targetFps: opt.value })
+                    }
+                    className={clsx(
+                      "cursor-pointer rounded px-2 py-0.5 text-xs transition-all",
+                      opt.value !== "original" && "font-mono",
+                      isSelected
+                        ? "bg-foreground text-background font-medium"
+                        : "text-foreground/70 hover:text-foreground",
+                    )}
+                    title={
+                      opt.value === "original"
+                        ? "Keep original frame rate"
+                        : `Downsample output to ${opt.value}fps`
+                    }
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            {maxSourceFps !== undefined && maxSourceFps > 0 && (
+              <span className="text-foreground/60 hidden font-mono text-[10px] sm:inline">
+                (Source: {formatFps(maxSourceFps)}fps)
+              </span>
+            )}
           </div>
 
           <div className="flex min-w-0 flex-col gap-2">

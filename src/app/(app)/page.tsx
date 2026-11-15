@@ -87,13 +87,13 @@ export default async function Home() {
 
           <RichText className="text-base" data={homePage.shortDescription} />
 
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2 sm:justify-start">
+          <div className="flex flex-wrap items-center justify-start gap-3 pt-2">
             <CTAButton href="#projects" variant="primary">
               <span>Projects &amp; Products</span>
               <ArrowDown
                 size={14}
                 aria-hidden="true"
-                className="text-background/80 transition-transform duration-150 ease-out group-hover:translate-y-0.5 group-hover:text-background group-focus-visible:translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none"
+                className="text-background/80 group-hover:text-background transition-transform duration-150 ease-out group-hover:translate-y-0.5 group-focus-visible:translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none"
               />
             </CTAButton>
 
@@ -102,7 +102,7 @@ export default async function Home() {
               <ArrowDown
                 size={14}
                 aria-hidden="true"
-                className="text-foreground/70 transition-transform duration-150 ease-out group-hover:translate-y-0.5 group-hover:text-foreground group-focus-visible:translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none"
+                className="text-foreground/70 group-hover:text-foreground transition-transform duration-150 ease-out group-hover:translate-y-0.5 group-focus-visible:translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none"
               />
             </CTAButton>
           </div>

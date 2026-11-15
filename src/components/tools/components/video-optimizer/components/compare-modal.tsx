@@ -60,6 +60,10 @@ export default function CompareModal({
     ? item.lastCompressedSettings.sections
     : item.sections;
 
+  const effectiveExportSpeed =
+    item.lastCompressedSettings?.exportSpeed ?? item.exportSpeed ?? 1;
+  const hasSpeedChange = Math.abs(effectiveExportSpeed - 1) > 0.01;
+
   const isTrimmedOrCut = hasEffectiveTrim(
     item.duration,
     effectiveTrim,
@@ -83,6 +87,7 @@ export default function CompareModal({
         item.duration,
         effectiveTrim,
         effectiveSections,
+        effectiveExportSpeed,
       ) ||
       item.duration ||
       0,
@@ -106,13 +111,18 @@ export default function CompareModal({
     if (origVideoRef.current) origVideoRef.current.currentTime = startOrig;
   }, [isOpen, item.id, isTrimmedOrCut, keptRanges]);
 
-  const isCutSync = isTrimmedOrCut && syncMode === "cut-range";
+  const isCutSync = (isTrimmedOrCut || hasSpeedChange) && syncMode === "cut-range";
   const masterDuration = isCutSync ? compDuration : origDuration || 1;
   const masterCurrentTime = isCutSync ? compCurrentTime : origCurrentTime;
 
   const origCutStatus = useMemo(
-    () => mapOrigTimeToCompTime(origCurrentTime, keptRanges),
-    [origCurrentTime, keptRanges],
+    () =>
+      mapOrigTimeToCompTime(
+        origCurrentTime,
+        keptRanges,
+        effectiveExportSpeed,
+      ),
+    [origCurrentTime, keptRanges, effectiveExportSpeed],
   );
 
   const togglePlayPause = useCallback(() => {
@@ -126,14 +136,22 @@ export default function CompareModal({
       v1.playbackRate = 1;
       v2.playbackRate = 1;
       if (isCutSync) {
-        const exactOrig = mapCompTimeToOrigTime(v2.currentTime, keptRanges);
+        const exactOrig = mapCompTimeToOrigTime(
+          v2.currentTime,
+          keptRanges,
+          effectiveExportSpeed,
+        );
         if (Math.abs(v1.currentTime - exactOrig) > 0.004) {
           v1.currentTime = exactOrig;
         }
         setOrigCurrentTime(exactOrig);
         setCompCurrentTime(v2.currentTime);
       } else {
-        const { compTime } = mapOrigTimeToCompTime(v1.currentTime, keptRanges);
+        const { compTime } = mapOrigTimeToCompTime(
+          v1.currentTime,
+          keptRanges,
+          effectiveExportSpeed,
+        );
         if (Math.abs(v2.currentTime - compTime) > 0.004) {
           v2.currentTime = compTime;
         }
@@ -142,11 +160,15 @@ export default function CompareModal({
       }
       setIsPlaying(false);
     } else {
-      v1.playbackRate = 1;
+      v1.playbackRate = effectiveExportSpeed;
       v2.playbackRate = 1;
       if (isCutSync) {
         const tc = v2.currentTime >= compDuration - 0.05 ? 0 : v2.currentTime;
-        const targetOrig = mapCompTimeToOrigTime(tc, keptRanges);
+        const targetOrig = mapCompTimeToOrigTime(
+          tc,
+          keptRanges,
+          effectiveExportSpeed,
+        );
         v2.currentTime = tc;
         v1.currentTime = targetOrig;
         setCompCurrentTime(tc);
@@ -154,9 +176,15 @@ export default function CompareModal({
         v2.play().catch(() => {});
         v1.play().catch(() => {});
       } else {
+        v1.playbackRate = 1;
+        v2.playbackRate = 1 / effectiveExportSpeed;
         const to = v1.currentTime >= origDuration - 0.05 ? 0 : v1.currentTime;
         v1.currentTime = to;
-        const { compTime, isInside } = mapOrigTimeToCompTime(to, keptRanges);
+        const { compTime, isInside } = mapOrigTimeToCompTime(
+          to,
+          keptRanges,
+          effectiveExportSpeed,
+        );
         v2.currentTime = compTime;
         setOrigCurrentTime(to);
         setCompCurrentTime(compTime);
@@ -169,7 +197,14 @@ export default function CompareModal({
       }
       setIsPlaying(true);
     }
-  }, [isPlaying, isCutSync, keptRanges, compDuration, origDuration]);
+  }, [
+    isPlaying,
+    isCutSync,
+    keptRanges,
+    compDuration,
+    origDuration,
+    effectiveExportSpeed,
+  ]);
 
   useEffect(() => {
     if (!isOpen || !isPlaying) return;
@@ -181,36 +216,51 @@ export default function CompareModal({
       if (v1 && v2) {
         if (isCutSync) {
           const tc = v2.currentTime;
-          const targetOrig = mapCompTimeToOrigTime(tc, keptRanges);
+          const targetOrig = mapCompTimeToOrigTime(
+            tc,
+            keptRanges,
+            effectiveExportSpeed,
+          );
           const drift = targetOrig - v1.currentTime;
           if (!v1.seeking) {
             if (Math.abs(drift) > 0.35) {
-              v1.playbackRate = 1;
+              v1.playbackRate = effectiveExportSpeed;
               v1.currentTime = targetOrig;
             } else if (Math.abs(drift) > 0.012) {
-              const rate = Math.max(0.85, Math.min(1.18, 1 + drift * 1.5));
+              const rate = Math.max(
+                0.25,
+                Math.min(4, effectiveExportSpeed + drift * 1.5),
+              );
               if (Math.abs(v1.playbackRate - rate) > 0.01) {
                 v1.playbackRate = rate;
               }
-            } else if (v1.playbackRate !== 1) {
-              v1.playbackRate = 1;
+            } else if (Math.abs(v1.playbackRate - effectiveExportSpeed) > 0.01) {
+              v1.playbackRate = effectiveExportSpeed;
             }
           }
         } else {
           const to = v1.currentTime;
-          const { compTime, isInside } = mapOrigTimeToCompTime(to, keptRanges);
+          const { compTime, isInside } = mapOrigTimeToCompTime(
+            to,
+            keptRanges,
+            effectiveExportSpeed,
+          );
+          const baseCompRate = 1 / effectiveExportSpeed;
           if (isInside && !v2.seeking) {
             const drift = compTime - v2.currentTime;
             if (Math.abs(drift) > 0.35) {
-              v2.playbackRate = 1;
+              v2.playbackRate = baseCompRate;
               v2.currentTime = compTime;
             } else if (Math.abs(drift) > 0.012) {
-              const rate = Math.max(0.85, Math.min(1.18, 1 + drift * 1.5));
+              const rate = Math.max(
+                0.25,
+                Math.min(4, baseCompRate + drift * 1.5),
+              );
               if (Math.abs(v2.playbackRate - rate) > 0.01) {
                 v2.playbackRate = rate;
               }
-            } else if (v2.playbackRate !== 1) {
-              v2.playbackRate = 1;
+            } else if (Math.abs(v2.playbackRate - baseCompRate) > 0.01) {
+              v2.playbackRate = baseCompRate;
             }
           }
         }
@@ -224,7 +274,7 @@ export default function CompareModal({
       if (origVideoRef.current) origVideoRef.current.playbackRate = 1;
       if (compVideoRef.current) compVideoRef.current.playbackRate = 1;
     };
-  }, [isOpen, isPlaying, isCutSync, keptRanges]);
+  }, [isOpen, isPlaying, isCutSync, keptRanges, effectiveExportSpeed]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -284,7 +334,11 @@ export default function CompareModal({
 
     if (isCutSync) {
       setCompCurrentTime(tc);
-      const targetOrig = mapCompTimeToOrigTime(tc, keptRanges);
+      const targetOrig = mapCompTimeToOrigTime(
+        tc,
+        keptRanges,
+        effectiveExportSpeed,
+      );
       setOrigCurrentTime(targetOrig);
       if (origVideoRef.current) {
         if (isPlaying && origVideoRef.current.paused) {
@@ -303,7 +357,11 @@ export default function CompareModal({
 
     if (!isCutSync) {
       setOrigCurrentTime(to);
-      const { compTime, isInside } = mapOrigTimeToCompTime(to, keptRanges);
+      const { compTime, isInside } = mapOrigTimeToCompTime(
+        to,
+        keptRanges,
+        effectiveExportSpeed,
+      );
       setCompCurrentTime(compTime);
       if (compVideoRef.current) {
         if (isInside) {
@@ -368,13 +426,21 @@ export default function CompareModal({
     if (isCutSync) {
       setCompCurrentTime(t);
       if (v2) v2.currentTime = t;
-      const targetOrig = mapCompTimeToOrigTime(t, keptRanges);
+      const targetOrig = mapCompTimeToOrigTime(
+        t,
+        keptRanges,
+        effectiveExportSpeed,
+      );
       setOrigCurrentTime(targetOrig);
       if (v1) v1.currentTime = targetOrig;
     } else {
       setOrigCurrentTime(t);
       if (v1) v1.currentTime = t;
-      const { compTime } = mapOrigTimeToCompTime(t, keptRanges);
+      const { compTime } = mapOrigTimeToCompTime(
+        t,
+        keptRanges,
+        effectiveExportSpeed,
+      );
       setCompCurrentTime(compTime);
       if (v2) v2.currentTime = compTime;
     }
@@ -398,10 +464,18 @@ export default function CompareModal({
     if (!v1 || !v2) return;
 
     if (newMode === "cut-range") {
-      const { compTime } = mapOrigTimeToCompTime(v1.currentTime, keptRanges);
+      const { compTime } = mapOrigTimeToCompTime(
+        v1.currentTime,
+        keptRanges,
+        effectiveExportSpeed,
+      );
       const targetComp =
         compTime >= compDuration - 0.05 ? 0 : Math.max(0, compTime);
-      const targetOrig = mapCompTimeToOrigTime(targetComp, keptRanges);
+      const targetOrig = mapCompTimeToOrigTime(
+        targetComp,
+        keptRanges,
+        effectiveExportSpeed,
+      );
       v2.currentTime = targetComp;
       v1.currentTime = targetOrig;
       setCompCurrentTime(targetComp);
@@ -411,10 +485,15 @@ export default function CompareModal({
         v1.play().catch(() => {});
       }
     } else {
-      const targetOrig = mapCompTimeToOrigTime(v2.currentTime, keptRanges);
+      const targetOrig = mapCompTimeToOrigTime(
+        v2.currentTime,
+        keptRanges,
+        effectiveExportSpeed,
+      );
       const { compTime, isInside } = mapOrigTimeToCompTime(
         targetOrig,
         keptRanges,
+        effectiveExportSpeed,
       );
       v1.currentTime = targetOrig;
       v2.currentTime = compTime;

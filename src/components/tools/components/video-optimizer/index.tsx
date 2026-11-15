@@ -26,6 +26,8 @@ const DEFAULT_SETTINGS: VideoOptimizerSettings = {
   bitrateMbps: 2.5,
   targetSizeMB: 8,
   resizePreset: "1080p",
+  targetFps: "original",
+  exportSpeed: 1,
   stripAudio: true,
 };
 
@@ -145,6 +147,7 @@ export default function VideoOptimizer() {
                       width: meta.width,
                       height: meta.height,
                     },
+                    originalFps: meta.fps,
                     duration: meta.duration,
                     thumbnailUrl: meta.thumbnailUrl,
                     hasAudio: meta.hasAudio,
@@ -223,6 +226,8 @@ export default function VideoOptimizer() {
       newTrim?: { start: number; end: number },
       newStripAudio?: boolean,
       newSections?: VideoSection[],
+      newExportSpeed?: number,
+      newTargetFps?: VideoFileItem["targetFps"],
     ) => {
       setItems((prev) =>
         prev.map((it) =>
@@ -232,6 +237,8 @@ export default function VideoOptimizer() {
                 trim: newTrim,
                 stripAudio: newStripAudio,
                 sections: newSections,
+                exportSpeed: newExportSpeed,
+                targetFps: newTargetFps,
               }
             : it,
         ),
@@ -280,6 +287,14 @@ export default function VideoOptimizer() {
             item.stripAudio !== undefined
               ? item.stripAudio
               : baseSettings.stripAudio,
+          exportSpeed:
+            item.exportSpeed !== undefined
+              ? item.exportSpeed
+              : baseSettings.exportSpeed ?? 1,
+          targetFps:
+            item.targetFps !== undefined
+              ? item.targetFps
+              : baseSettings.targetFps ?? "original",
         };
 
         try {
@@ -318,6 +333,7 @@ export default function VideoOptimizer() {
                 compressedDimensions: result.dimensions,
                 compressedFormat: result.format,
                 compressedDuration: result.duration,
+                compressedFps: result.fps,
                 lastCompressedSettings: { ...itemSettings },
               };
             }),
@@ -366,6 +382,9 @@ export default function VideoOptimizer() {
           it.stripAudio,
           it.sections,
           it.duration,
+          it.exportSpeed,
+          it.originalFps,
+          it.targetFps,
         ),
     );
     if (itemsNeedingWork.length === 0) return;
@@ -385,6 +404,9 @@ export default function VideoOptimizer() {
             it.stripAudio,
             it.sections,
             it.duration,
+            it.exportSpeed,
+            it.originalFps,
+            it.targetFps,
           )),
     );
     if (selectedItemsNeedingWork.length === 0) return;
@@ -622,11 +644,23 @@ export default function VideoOptimizer() {
       (i.compressedSize !== undefined ? i.compressedSize : i.originalSize),
     0,
   );
+  const fpsValues = items
+    .map((i) => i.originalFps)
+    .filter((f): f is number => typeof f === "number" && f > 0);
+  const maxSourceFps =
+    fpsValues.length > 0 ? Math.max(...fpsValues) : undefined;
+
   const totalEstimatedBytes = items.reduce((acc, item) => {
     const effectiveItemSettings = {
       ...settings,
       stripAudio:
         item.stripAudio !== undefined ? item.stripAudio : settings.stripAudio,
+      exportSpeed:
+        item.exportSpeed !== undefined
+          ? item.exportSpeed
+          : settings.exportSpeed ?? 1,
+      targetFps:
+        item.targetFps !== undefined ? item.targetFps : settings.targetFps,
       sections: item.sections,
     };
     const est = estimateVideoSize(
@@ -637,6 +671,7 @@ export default function VideoOptimizer() {
       item.originalDimensions.height,
       item.originalSize,
       item.sections,
+      item.originalFps,
     );
     return acc + (est > 0 ? est : item.originalSize);
   }, 0);
@@ -651,6 +686,9 @@ export default function VideoOptimizer() {
         i.stripAudio,
         i.sections,
         i.duration,
+        i.exportSpeed,
+        i.originalFps,
+        i.targetFps,
       ),
   ).length;
   const selectedPendingCount = items.filter(
@@ -664,6 +702,9 @@ export default function VideoOptimizer() {
           i.stripAudio,
           i.sections,
           i.duration,
+          i.exportSpeed,
+          i.originalFps,
+          i.targetFps,
         )),
   ).length;
   const selectedDoneCount = items.filter(
@@ -706,6 +747,7 @@ export default function VideoOptimizer() {
         hasPendingChanges={hasPendingChanges}
         uncompressedCount={uncompressedCount}
         pendingChangesCount={pendingChangesCount}
+        maxSourceFps={maxSourceFps}
         maxFiles={10}
       />
 
@@ -832,13 +874,29 @@ export default function VideoOptimizer() {
           settings={settings}
           onClose={() => setEditingItem(null)}
           onApply={handleApplyEdit}
-          onCompressNow={(targetItem, newTrim, newStripAudio, newSections) => {
-            handleApplyEdit(targetItem, newTrim, newStripAudio, newSections);
+          onCompressNow={(
+            targetItem,
+            newTrim,
+            newStripAudio,
+            newSections,
+            newExportSpeed,
+            newTargetFps,
+          ) => {
+            handleApplyEdit(
+              targetItem,
+              newTrim,
+              newStripAudio,
+              newSections,
+              newExportSpeed,
+              newTargetFps,
+            );
             handleCompressSingle({
               ...targetItem,
               trim: newTrim,
               stripAudio: newStripAudio,
               sections: newSections,
+              exportSpeed: newExportSpeed,
+              targetFps: newTargetFps,
             });
             setEditingItem(null);
           }}
