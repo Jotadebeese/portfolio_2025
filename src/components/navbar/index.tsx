@@ -23,7 +23,8 @@ export default function Navbar() {
               </li>
               <li>
                 <NavLink
-                  className="rounded-full bg-white px-1.5 py-0.5 text-emerald-700"
+                  dimInactive={false}
+                  className="rounded-full bg-white px-1.5 py-0.5 text-emerald-700 hover:text-amber-700"
                   href="/notes"
                 >
                   #self.log()

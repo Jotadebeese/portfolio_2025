@@ -27,6 +27,7 @@ if (typeof window !== "undefined") {
       capture_pageview: false,
       capture_pageleave: true,
       disable_session_recording: process.env.NODE_ENV === "development",
+      disable_surveys: true,
       autocapture: process.env.NODE_ENV !== "development",
       capture_exceptions: process.env.NODE_ENV !== "development",
     });

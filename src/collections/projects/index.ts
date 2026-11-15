@@ -139,12 +139,32 @@ export const Projects: CollectionConfig = {
             },
             {
               name: "video",
-              label: "Demo Loop Video",
+              label: "Demo Loop Video (MP4 Fallback)",
               type: "upload",
               relationTo: "media",
               admin: {
                 description:
-                  "Upload a short muted loop video (MP4/WebM) displayed inside the project card.",
+                  "Upload a short muted MP4 loop video (used as fallback when WebM is not supported or omitted).",
+              },
+            },
+            {
+              name: "videoWebm",
+              label: "Demo Loop Video (WebM Preferred)",
+              type: "upload",
+              relationTo: "media",
+              admin: {
+                description:
+                  "Optional: upload a VP9/AV1 WebM version. Browsers that support WebM load this instead of the MP4.",
+              },
+            },
+            {
+              name: "videoPoster",
+              label: "Demo Video Poster",
+              type: "upload",
+              relationTo: "media",
+              admin: {
+                description:
+                  "Optional: lightweight WebP/image of frame 1 shown while the video buffers or when reduced motion is enabled.",
               },
             },
             {

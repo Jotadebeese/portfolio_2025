@@ -1,22 +1,34 @@
 "use client";
 
 import clsx from "clsx";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type ProjectLoopVideoProps = {
-  src: string;
+  src?: string | null;
   mimeType?: string | null;
-  poster?: string;
+  webmSrc?: string | null;
+  webmMimeType?: string | null;
+  poster?: string | null;
   className?: string;
 };
 
+/**
+ * Lazily attaches video sources (WebM first, MP4 fallback) and begins muted
+ * playback only when approaching the viewport, preventing eager SSR fetches
+ * across all browsers while reserving aspect-ratio layout space.
+ */
 export default function ProjectLoopVideo({
   src,
   mimeType,
+  webmSrc,
+  webmMimeType,
   poster,
   className,
 }: ProjectLoopVideoProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const isIntersectingRef = useRef(false);
+  const shouldLoadRef = useRef(false);
+  const [shouldLoad, setShouldLoad] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -26,92 +38,93 @@ export default function ProjectLoopVideo({
       "(prefers-reduced-motion: reduce)",
     );
 
-    const syncReducedMotion = (prefersReducedMotion: boolean) => {
-      if (prefersReducedMotion) {
-        video.removeAttribute("autoplay");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          isIntersectingRef.current = entry.isIntersecting;
+
+          if (entry.isIntersecting) {
+            if (!shouldLoadRef.current) {
+              shouldLoadRef.current = true;
+              setShouldLoad(true);
+            } else if (!reducedMotionQuery.matches && video.paused) {
+              video.play().catch(() => {});
+            }
+          } else if (!video.paused) {
+            video.pause();
+          }
+        }
+      },
+      { rootMargin: "150px 0px" },
+    );
+
+    observer.observe(video);
+
+    const handleMotionChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
         video.pause();
-      } else if (video.paused && video.readyState >= 2) {
+      } else if (
+        shouldLoadRef.current &&
+        isIntersectingRef.current &&
+        video.paused
+      ) {
         video.play().catch(() => {});
       }
     };
 
-    syncReducedMotion(reducedMotionQuery.matches);
-    const handleMotionChange = (event: MediaQueryListEvent) => {
-      syncReducedMotion(event.matches);
-    };
     reducedMotionQuery.addEventListener("change", handleMotionChange);
 
-    // IntersectionObserver fallback when native HTMLMediaElement.prototype.loading is unsupported
-    const supportsLazyMedia = Object.hasOwn(
-      HTMLMediaElement.prototype,
-      "loading",
-    );
-    let observer: IntersectionObserver | null = null;
-
-    if (!supportsLazyMedia) {
-      if (video.hasAttribute("poster")) {
-        video.dataset.poster = video.getAttribute("poster") || "";
-        video.removeAttribute("poster");
-      }
-      video.dataset.preload = video.getAttribute("preload") || "metadata";
-      video.preload = "none";
-
-      observer = new IntersectionObserver(
-        (entries, obs) => {
-          for (const entry of entries) {
-            if (!entry.isIntersecting) continue;
-            const media = entry.target as HTMLVideoElement;
-
-            if (media.dataset.poster) {
-              media.poster = media.dataset.poster;
-              delete media.dataset.poster;
-            }
-            if (media.dataset.preload) {
-              media.preload = media.dataset.preload as
-                | ""
-                | "none"
-                | "metadata"
-                | "auto";
-              delete media.dataset.preload;
-            }
-            media.load();
-            if (!reducedMotionQuery.matches) {
-              media.play().catch(() => {});
-            }
-            obs.unobserve(media);
-          }
-        },
-        { rootMargin: "200px 0px" },
-      );
-
-      observer.observe(video);
-    }
-
     return () => {
+      observer.disconnect();
       reducedMotionQuery.removeEventListener("change", handleMotionChange);
-      observer?.disconnect();
     };
-  }, [src]);
+  }, [src, webmSrc]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !shouldLoad) return;
+
+    const reducedMotionQuery = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
+
+    video.preload = reducedMotionQuery.matches ? "metadata" : "auto";
+    video.load();
+    if (!reducedMotionQuery.matches && isIntersectingRef.current) {
+      video.play().catch(() => {});
+    }
+  }, [shouldLoad, src, webmSrc]);
 
   return (
     <video
       ref={videoRef}
-      {...({ loading: "lazy" } as any)}
       aria-hidden="true"
-      autoPlay
       loop
       muted
       playsInline
-      preload="metadata"
+      preload="none"
       width={960}
       height={540}
-      poster={poster}
-      className={clsx(
-        "aspect-video w-full object-cover",
-        className,
-      )}
+      poster={shouldLoad && poster ? poster : undefined}
+      onCanPlay={() => {
+        const video = videoRef.current;
+        if (
+          video &&
+          isIntersectingRef.current &&
+          !window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
+          video.paused
+        ) {
+          video.play().catch(() => {});
+        }
+      }}
+      className={clsx("aspect-video w-full object-cover", className)}
     >
-      <source src={src} type={mimeType || "video/mp4"} />
+      {shouldLoad && webmSrc && (
+        <source src={webmSrc} type={webmMimeType || "video/webm"} />
+      )}
+      {shouldLoad && src && (
+        <source src={src} type={mimeType || "video/mp4"} />
+      )}
     </video>
   );
 }

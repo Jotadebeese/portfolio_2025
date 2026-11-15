@@ -253,9 +253,17 @@ export interface Project {
    */
   icon?: (number | null) | Media;
   /**
-   * Upload a short muted loop video (MP4/WebM) displayed inside the project card.
+   * Upload a short muted MP4 loop video (used as fallback when WebM is not supported or omitted).
    */
   video?: (number | null) | Media;
+  /**
+   * Optional: upload a VP9/AV1 WebM version. Browsers that support WebM load this instead of the MP4.
+   */
+  videoWebm?: (number | null) | Media;
+  /**
+   * Optional: lightweight WebP/image of frame 1 shown while the video buffers or when reduced motion is enabled.
+   */
+  videoPoster?: (number | null) | Media;
   /**
    * Add up to 5 links shown at the bottom of the card (drag rows to reorder). Check 'Open on card click' on one link to make the entire card clickable, or leave all unchecked.
    */
@@ -771,6 +779,8 @@ export interface ProjectsSelect<T extends boolean = true> {
   shortDescription?: T;
   icon?: T;
   video?: T;
+  videoWebm?: T;
+  videoPoster?: T;
   links?:
     | T
     | {

@@ -24,6 +24,16 @@ export default function ProjectCard({
       ? (project.video as Media)
       : null;
 
+  const videoWebmMedia =
+    project.videoWebm && typeof project.videoWebm === "object"
+      ? (project.videoWebm as Media)
+      : null;
+
+  const videoPosterMedia =
+    project.videoPoster && typeof project.videoPoster === "object"
+      ? (project.videoPoster as Media)
+      : null;
+
   const publishedAt = project.publishedAt
     ? new Date(project.publishedAt)
     : new Date();
@@ -42,7 +52,9 @@ export default function ProjectCard({
   ) as Tag[];
 
   const isFullWidth = featured || Boolean(project.fullWidth);
-  const hasVideo = Boolean(videoMedia?.url);
+  const hasVideo = Boolean(videoMedia?.url || videoWebmMedia?.url);
+  const posterUrl =
+    videoPosterMedia?.sizes?.tablet?.url || videoPosterMedia?.url || null;
   const cardLinks = (Array.isArray(project.links) ? project.links : []).filter(
     (link): link is NonNullable<Project["links"]>[number] =>
       Boolean(link?.label?.trim() && link?.url?.trim()),
@@ -66,7 +78,7 @@ export default function ProjectCard({
           isFullWidth && hasVideo && "lg:grid lg:grid-cols-12 lg:items-stretch",
         )}
       >
-        {videoMedia?.url && (
+        {hasVideo && (
           <div
             className={clsx(
               "overflow-hidden",
@@ -74,8 +86,11 @@ export default function ProjectCard({
             )}
           >
             <ProjectLoopVideo
-              src={videoMedia.url}
-              mimeType={videoMedia.mimeType}
+              src={videoMedia?.url}
+              mimeType={videoMedia?.mimeType}
+              webmSrc={videoWebmMedia?.url}
+              webmMimeType={videoWebmMedia?.mimeType}
+              poster={posterUrl}
               className="h-full w-full object-cover"
             />
           </div>

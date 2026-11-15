@@ -7,20 +7,24 @@ type NavLinkProps = {
   href: string;
   children: React.ReactNode;
   className?: string;
+  dimInactive?: boolean;
 };
 
-export default function NavLink({ href, children, className }: NavLinkProps) {
+export default function NavLink({
+  href,
+  children,
+  className,
+  dimInactive = true,
+}: NavLinkProps) {
   const path = usePathname();
   const isActive = path === href;
   return (
     <Link
       href={href}
       className={clsx(
-        "flex text-sm font-medium opacity-70 transition-all ease-in-out hover:text-amber-600 hover:opacity-100",
+        "flex text-sm font-medium transition-all ease-in-out hover:text-amber-600",
+        dimInactive && !isActive ? "opacity-70 hover:opacity-100" : "opacity-100",
         className,
-        {
-          "opacity-100": isActive,
-        },
       )}
     >
       {children}

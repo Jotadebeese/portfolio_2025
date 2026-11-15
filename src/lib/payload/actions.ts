@@ -43,6 +43,8 @@ export const getAllProjects = devAwareCache(
         fullWidth: true,
         icon: true,
         video: true,
+        videoWebm: true,
+        videoPoster: true,
         shortDescription: true,
         projectType: true,
         links: true,

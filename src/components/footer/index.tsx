@@ -11,6 +11,7 @@ import clsx from "clsx";
 
 export default function Footer() {
   const [open, setOpen] = useState(false);
+  const [hasOpened, setHasOpened] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -58,6 +59,8 @@ export default function Footer() {
           <div className="border-border-color relative grid w-full grid-cols-3 items-center border-t border-dashed py-4">
             <div
               ref={cardRef}
+              inert={!open}
+              aria-hidden={!open}
               className={clsx(
                 "fixed inset-0 z-90 flex flex-col overflow-hidden bg-white transition-all duration-300 ease-out",
                 "sm:border-border-color sm:absolute sm:top-auto sm:right-0 sm:bottom-full sm:left-auto sm:z-50 sm:mb-3 sm:flex sm:h-auto sm:max-h-[80vh] sm:w-full sm:max-w-md sm:origin-bottom-right sm:flex-col sm:overflow-y-auto sm:rounded-2xl sm:border sm:bg-white sm:p-2.5 sm:shadow-lg",
@@ -79,7 +82,7 @@ export default function Footer() {
 
               <div className="flex flex-1 flex-col items-center overflow-y-auto px-4 py-6 sm:p-0">
                 <div className="w-full max-w-md">
-                  <ContactForm />
+                  {hasOpened ? <ContactForm /> : null}
                 </div>
               </div>
             </div>
@@ -122,7 +125,11 @@ export default function Footer() {
               <span className="hidden text-sm sm:inline">send message</span>
               <button
                 ref={buttonRef}
-                onClick={() => setOpen(!open)}
+                onClick={() => {
+                  if (!open) setHasOpened(true);
+                  setOpen((prev) => !prev);
+                }}
+                aria-expanded={open}
                 aria-label={open ? "Close contact form" : "Open contact form"}
                 className="bg-foreground text-background group hover:bg-utils-scent-orange relative z-10 flex h-7 w-7 cursor-pointer items-center justify-center overflow-hidden rounded-lg transition-all duration-300 ease-in-out"
               >
