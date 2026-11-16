@@ -854,7 +854,7 @@ export default function CompareModal({
               {isPlaying ? (
                 <Pause className="h-3.5 w-3.5 fill-current" />
               ) : (
-                <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />
+                <Play className="h-3.5 w-3.5 fill-current" />
               )}
             </button>
 

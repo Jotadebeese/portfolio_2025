@@ -344,15 +344,26 @@ export default function EditModal({
       const h = rect.height;
       ctx.clearRect(0, 0, w, h);
 
+      const splitBoundaryXs =
+        sections.length > 1
+          ? sections.slice(1).map((s) => (s.start / duration) * w)
+          : [];
+
       if (waveformStyle === "bars") {
         const barCount = waveformPeaks.length;
-        const barWidth = Math.max(1.8, (w / barCount) * 0.65);
-        const gap = (w - barCount * barWidth) / (barCount - 1);
+        const barWidth = Math.min(2, Math.max(1.4, (w / barCount) * 0.44));
+        const gap = barCount > 1 ? (w - barCount * barWidth) / (barCount - 1) : 0;
 
         for (let i = 0; i < barCount; i++) {
           const peak = waveformPeaks[i];
           const barHeight = Math.max(3, peak * (h - 14));
           const x = i * (barWidth + gap);
+          const barCenterX = x + barWidth / 2;
+
+          if (splitBoundaryXs.some((bx) => Math.abs(barCenterX - bx) < 2.2)) {
+            continue;
+          }
+
           const y = (h - barHeight) / 2;
 
           const barTime = (i / barCount) * duration;
@@ -361,15 +372,15 @@ export default function EditModal({
           );
 
           if (isCut) {
-            ctx.fillStyle = "#cecece"; // Signature neutral border gray
+            ctx.fillStyle = "#dedede"; // Dimmed light gray for cut regions
           } else if (isMuted) {
-            ctx.fillStyle = "#8a8177"; // Muted slate gray when audio is stripped
+            ctx.fillStyle = "#a39b93"; // Softened warm gray when audio is stripped
           } else {
-            ctx.fillStyle = "#181411"; // Signature foreground charcoal
+            ctx.fillStyle = "#4b453f"; // Balanced warm charcoal so trim handles & playhead stay crisp
           }
 
           ctx.beginPath();
-          ctx.roundRect(x, y, barWidth, barHeight, 1);
+          ctx.roundRect(x, y, barWidth, barHeight, barWidth / 2);
           ctx.fill();
         }
       } else {
@@ -420,12 +431,12 @@ export default function EditModal({
           ctx.closePath();
         };
 
-        // 1. Draw entire waveform in signature neutral gray (#cecece)
+        // 1. Draw entire waveform in dimmed light gray (#dedede)
         drawWaveformEnvelope();
-        ctx.fillStyle = "#cecece";
+        ctx.fillStyle = "#dedede";
         ctx.fill();
 
-        // 2. Draw vibrant waveform over kept sections using clipping masks
+        // 2. Draw kept waveform over kept sections using clipping masks
         const keptSections = sections.filter(
           (s) => !s.isDeleted && s.end > s.start,
         );
@@ -442,9 +453,9 @@ export default function EditModal({
 
             drawWaveformEnvelope();
             if (isMuted) {
-              ctx.fillStyle = "#8a8177";
+              ctx.fillStyle = "#a39b93";
             } else {
-              ctx.fillStyle = "#181411"; // Signature foreground charcoal
+              ctx.fillStyle = "#4b453f"; // Balanced warm charcoal
             }
             ctx.fill();
             ctx.restore();
@@ -550,22 +561,110 @@ export default function EditModal({
         Math.min(duration * 0.25, Number((duration * 0.03).toFixed(2))),
       );
 
-      // If handles are close together at a timeline wall, auto-switch boundary to match drag direction
+      // If kept-section handles are close together at a timeline wall, auto-switch boundary to match drag direction
       let activeBoundary = draggingBoundary.boundary;
-      if (
-        activeBoundary === "end" &&
-        sec.end >= duration - 0.05 &&
-        newT < sec.start
-      ) {
-        activeBoundary = "start";
-        setDraggingBoundary({ sectionId: sec.id, boundary: "start" });
-      } else if (
-        activeBoundary === "start" &&
-        sec.start <= 0.05 &&
-        newT > sec.end
-      ) {
-        activeBoundary = "end";
-        setDraggingBoundary({ sectionId: sec.id, boundary: "end" });
+      if (!sec.isDeleted) {
+        if (
+          activeBoundary === "end" &&
+          sec.end >= duration - 0.05 &&
+          newT < sec.start
+        ) {
+          activeBoundary = "start";
+          setDraggingBoundary({ sectionId: sec.id, boundary: "start" });
+        } else if (
+          activeBoundary === "start" &&
+          sec.start <= 0.05 &&
+          newT > sec.end
+        ) {
+          activeBoundary = "end";
+          setDraggingBoundary({ sectionId: sec.id, boundary: "end" });
+        }
+      }
+
+      if (sec.isDeleted) {
+        if (activeBoundary === "start" && idx > 0) {
+          const prevSec = sections[idx - 1];
+          const prevMinDur = prevSec.isDeleted ? 0.15 : minSectionDuration;
+          const minBound = prevSec.start + prevMinDur;
+          const isTrailingEdge = idx === sections.length - 1;
+          const maxBound = isTrailingEdge
+            ? duration
+            : Math.max(minBound, sec.end - 0.15);
+          const rawClamped = Math.max(minBound, Math.min(newT, maxBound));
+          const clamped =
+            isTrailingEdge && rawClamped >= duration - 0.05
+              ? duration
+              : rawClamped;
+
+          if (isTrailingEdge && clamped === duration) {
+            const keptNeighbor = sections[idx - 1];
+            setSections((prev) => {
+              if (prev.length < 2) return prev;
+              const updated = [...prev];
+              updated.pop();
+              updated[updated.length - 1] = {
+                ...updated[updated.length - 1],
+                end: duration,
+              };
+              return updated;
+            });
+            if (keptNeighbor) setSelectedSectionId(keptNeighbor.id);
+            setDraggingBoundary(null);
+          } else {
+            setSections((prev) => {
+              const curIdx = prev.findIndex(
+                (s) => s.id === draggingBoundary.sectionId,
+              );
+              if (curIdx <= 0) return prev;
+              const updated = [...prev];
+              updated[curIdx - 1] = { ...updated[curIdx - 1], end: clamped };
+              updated[curIdx] = { ...updated[curIdx], start: clamped };
+              return updated;
+            });
+          }
+
+          if (videoRef.current) videoRef.current.currentTime = clamped;
+          setCurrentTime(clamped);
+        } else if (activeBoundary === "end" && idx < sections.length - 1) {
+          const nextSec = sections[idx + 1];
+          const nextMinDur = nextSec.isDeleted ? 0.15 : minSectionDuration;
+          const maxBound = nextSec.end - nextMinDur;
+          const isLeadingEdge = idx === 0;
+          const minBound = isLeadingEdge
+            ? 0
+            : Math.min(maxBound, sec.start + 0.15);
+          const rawClamped = Math.max(minBound, Math.min(newT, maxBound));
+          const clamped =
+            isLeadingEdge && rawClamped <= 0.05 ? 0 : rawClamped;
+
+          if (isLeadingEdge && clamped === 0) {
+            const keptNeighbor = sections[1];
+            setSections((prev) => {
+              if (prev.length < 2) return prev;
+              const updated = [...prev];
+              updated.shift();
+              updated[0] = { ...updated[0], start: 0 };
+              return updated;
+            });
+            if (keptNeighbor) setSelectedSectionId(keptNeighbor.id);
+            setDraggingBoundary(null);
+          } else {
+            setSections((prev) => {
+              const curIdx = prev.findIndex(
+                (s) => s.id === draggingBoundary.sectionId,
+              );
+              if (curIdx === -1 || curIdx >= prev.length - 1) return prev;
+              const updated = [...prev];
+              updated[curIdx + 1] = { ...updated[curIdx + 1], start: clamped };
+              updated[curIdx] = { ...updated[curIdx], end: clamped };
+              return updated;
+            });
+          }
+
+          if (videoRef.current) videoRef.current.currentTime = clamped;
+          setCurrentTime(clamped);
+        }
+        return;
       }
 
       if (activeBoundary === "start") {
@@ -955,6 +1054,31 @@ export default function EditModal({
     }
   };
 
+  const renderTrimHandle = (
+    sectionId: string,
+    boundary: "start" | "end",
+    positionClass: string,
+    title: string,
+  ) => (
+    <div
+      onPointerDown={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          trackRef.current?.setPointerCapture(e.pointerId);
+        } catch {}
+        setDraggingBoundary({ sectionId, boundary });
+      }}
+      className={clsx(
+        "group bg-foreground pointer-events-auto absolute top-1/2 flex h-7 w-3 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-sm shadow-xs transition-transform hover:scale-105 active:scale-95",
+        positionClass,
+      )}
+      title={title}
+    >
+      <div className="pointer-events-none h-2.5 w-[1px] rounded-full bg-white" />
+    </div>
+  );
+
   if (typeof document === "undefined") return null;
 
   return createPortal(
@@ -973,7 +1097,7 @@ export default function EditModal({
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h3
+                <div
                   id="edit-studio-title"
                   className="text-foreground truncate text-xs font-medium sm:text-sm"
                 >
@@ -981,8 +1105,8 @@ export default function EditModal({
                     Edit Studio &bull;{" "}
                   </span>
                   {item.customName || item.name}
-                </h3>
-                <span className="border-border-color bg-background text-foreground/70 hidden shrink-0 rounded-md border px-1.5 py-0.5 font-mono text-[10px] sm:inline-block">
+                </div>
+                <span className="border-border-color bg-background text-foreground/70 hidden h-5 shrink-0 items-center rounded border px-1.5 font-mono text-[10px] leading-none sm:inline-flex">
                   {orientation.label} ({orientation.ratio})
                 </span>
               </div>
@@ -1007,7 +1131,7 @@ export default function EditModal({
             <button
               type="button"
               onClick={onClose}
-              className="text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/30 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md transition-all"
+              className="border-border-color text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/30 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border bg-white transition-all"
               title="Close without applying (Esc)"
               aria-label="Close"
             >
@@ -1038,7 +1162,7 @@ export default function EditModal({
                 className="bg-foreground/80 hover:bg-foreground absolute flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-white/20 text-white shadow-md backdrop-blur-xs transition-all active:scale-95 sm:h-12 sm:w-12"
                 aria-label="Play video"
               >
-                <Play size={20} className="ml-0.5" />
+                <Play size={20} />
               </button>
             )}
           </div>
@@ -1057,14 +1181,14 @@ export default function EditModal({
               {isPlaying ? (
                 <Pause size={13} className="fill-current" />
               ) : (
-                <Play size={13} className="ml-0.5 fill-current" />
+                <Play size={13} className="fill-current" />
               )}
             </button>
 
             <button
               type="button"
               onClick={() => jumpTime(-5)}
-              className="text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/30 hidden h-7 cursor-pointer items-center gap-0.5 rounded-md px-1.5 font-mono text-[11px] leading-none transition-colors sm:flex"
+              className="border-border-color text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/30 hidden h-7 cursor-pointer items-center gap-1 rounded-md border bg-white px-2 font-mono text-xs leading-none transition-all sm:flex"
               title="Jump back 5s"
             >
               <RotateCcw size={12} />
@@ -1074,7 +1198,7 @@ export default function EditModal({
             <button
               type="button"
               onClick={() => jumpTime(5)}
-              className="text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/30 hidden h-7 cursor-pointer items-center gap-0.5 rounded-md px-1.5 font-mono text-[11px] leading-none transition-colors sm:flex"
+              className="border-border-color text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/30 hidden h-7 cursor-pointer items-center gap-1 rounded-md border bg-white px-2 font-mono text-xs leading-none transition-all sm:flex"
               title="Jump forward 5s"
             >
               <RotateCw size={12} />
@@ -1106,7 +1230,7 @@ export default function EditModal({
                     type="button"
                     onClick={() => handleSetPlaybackRate(rate)}
                     className={clsx(
-                      "h-full cursor-pointer items-center rounded px-1.5 text-[11px] leading-none transition-all",
+                      "h-full cursor-pointer items-center rounded px-2 text-xs leading-none transition-all",
                       rate === 1.25 ? "hidden sm:flex" : "flex",
                       playbackRate === rate
                         ? "bg-foreground text-background"
@@ -1199,10 +1323,10 @@ export default function EditModal({
                 disabled={!canSplitAtPlayhead}
                 onClick={handleSplitAtPlayhead}
                 className={clsx(
-                  "flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs leading-none transition-all",
+                  "border-border-color flex h-7 items-center gap-1.5 rounded-md border bg-white px-2.5 text-xs leading-none transition-all",
                   canSplitAtPlayhead
-                    ? "border-foreground bg-foreground text-background hover:bg-foreground/90 cursor-pointer"
-                    : "border-border-color text-foreground/45 cursor-not-allowed bg-white",
+                    ? "text-foreground hover:bg-utils-scent-gray-01/30 cursor-pointer"
+                    : "text-foreground/45 cursor-not-allowed opacity-50",
                 )}
                 title={
                   canSplitAtPlayhead
@@ -1310,10 +1434,9 @@ export default function EditModal({
                 </span>
               </span>
               {totalCutDuration > 0.05 && (
-                <span className="border-border-color text-foreground/70 rounded-md border bg-white px-1.5 py-0.5 font-mono text-[11px]">
-                  Cut -{formatStatDuration(totalCutDuration)}
+                <span className="border-border-color text-foreground/70 flex h-7 items-center gap-1 rounded-md border bg-white px-2 font-mono text-xs leading-none">
+                  <span>Cut -{formatStatDuration(totalCutDuration)}</span>
                   <span className="hidden sm:inline">
-                    {" "}
                     (-{Math.round((totalCutDuration / duration) * 100)}%)
                   </span>
                 </span>
@@ -1396,15 +1519,10 @@ export default function EditModal({
               </div>
 
               {/* Section Capsules & Handles */}
-              {sections.map((sec, idx) => {
+              {sections.map((sec) => {
                 const leftPct = (sec.start / duration) * 100;
                 const widthPct = ((sec.end - sec.start) / duration) * 100;
                 const isSelected = sec.id === selectedSectionId;
-                const prevSec = idx > 0 ? sections[idx - 1] : null;
-                const hasLeftSeam = idx > 0;
-                const isDashedSeam =
-                  hasLeftSeam &&
-                  (sec.isDeleted || Boolean(prevSec?.isDeleted));
 
                 if (sec.isDeleted) {
                   return (
@@ -1415,19 +1533,52 @@ export default function EditModal({
                         setSelectedSectionId(sec.id);
                       }}
                       className={clsx(
-                        "pointer-events-auto absolute inset-y-0 z-10 cursor-pointer transition-colors",
-                        hasLeftSeam && "border-l",
-                        isDashedSeam && "border-dashed border-foreground/25",
+                        "pointer-events-auto absolute inset-y-0 flex cursor-pointer items-center justify-center transition-colors",
+                        isSelected ? "z-30" : "z-10",
                         isSelected
-                          ? "bg-utils-scent-gray-01/55"
-                          : "bg-utils-scent-gray-01/25 hover:bg-utils-scent-gray-01/40",
+                          ? "bg-utils-scent-gray-01/50"
+                          : "bg-utils-scent-gray-01/30 hover:bg-utils-scent-gray-01/40",
                       )}
                       style={{
                         left: `${leftPct}%`,
                         width: `${widthPct}%`,
+                        backgroundImage:
+                          "repeating-linear-gradient(-45deg, rgba(24, 20, 17, 0.04) 0px, rgba(24, 20, 17, 0.04) 1px, transparent 1px, transparent 6px)",
                       }}
                       title={`Cut section: ${formatStatDuration(sec.end - sec.start)} (Click to select/restore)`}
-                    />
+                    >
+                      {widthPct >= 6 && (
+                        <span
+                          className={clsx(
+                            "pointer-events-none relative z-20 flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[10px] leading-none backdrop-blur-[1px]",
+                            isSelected
+                              ? "border-foreground/50 bg-white text-foreground shadow-xs"
+                              : "border-border-color bg-white/85 text-foreground/60",
+                          )}
+                        >
+                          <Scissors size={9} />
+                          {widthPct >= 11 && <span>Cut</span>}
+                        </span>
+                      )}
+
+                      {isSelected &&
+                        sec.start > 0.05 &&
+                        renderTrimHandle(
+                          sec.id,
+                          "start",
+                          "-left-1.5 z-30",
+                          "Drag to adjust cut start",
+                        )}
+
+                      {isSelected &&
+                        sec.end < duration - 0.05 &&
+                        renderTrimHandle(
+                          sec.id,
+                          "end",
+                          "-right-1.5 z-30",
+                          "Drag to adjust cut end",
+                        )}
+                    </div>
                   );
                 }
 
@@ -1439,73 +1590,81 @@ export default function EditModal({
                       setSelectedSectionId(sec.id);
                     }}
                     className={clsx(
-                      "pointer-events-auto absolute inset-y-0 z-20 cursor-pointer",
+                      "pointer-events-auto absolute inset-y-0 cursor-pointer bg-transparent",
+                      isSelected ? "z-30" : "z-20",
                       !draggingBoundary && "transition-colors",
-                      hasLeftSeam && "border-l",
-                      hasLeftSeam &&
-                        (isDashedSeam
-                          ? "border-dashed border-foreground/25"
-                          : "border-foreground/20"),
-                      isSelected && sections.length > 1
-                        ? "bg-foreground/[0.03]"
-                        : "bg-transparent hover:bg-foreground/[0.015]",
+                      !isSelected &&
+                        sections.length > 1 &&
+                        "hover:bg-foreground/[0.025]",
                     )}
                     style={{
                       left: `${leftPct}%`,
                       width: `${widthPct}%`,
                     }}
                   >
-                    {/* Pill Drag Handle - LEFT */}
-                    {isSelected && (
-                      <div
-                        onPointerDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          try {
-                            trackRef.current?.setPointerCapture(e.pointerId);
-                          } catch {}
-                          setDraggingBoundary({
-                            sectionId: sec.id,
-                            boundary: "start",
-                          });
-                        }}
-                        className={clsx(
-                          "group bg-foreground pointer-events-auto absolute top-1/2 flex h-7 w-3 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-sm shadow-xs transition-transform hover:scale-105 active:scale-95",
-                          sec.start <= 0.05 ? "left-1" : "-left-1.5",
+                    {isSelected &&
+                      renderTrimHandle(
+                        sec.id,
+                        "start",
+                        clsx(
+                          sec.start <= 0.05 ? "left-0" : "-left-1.5",
                           sec.end >= duration - 0.1 ? "z-40" : "z-30",
-                        )}
-                        title="Drag to trim start"
-                      >
-                        <div className="pointer-events-none h-2.5 w-[1px] rounded-full bg-white" />
-                      </div>
-                    )}
+                        ),
+                        "Drag to trim start",
+                      )}
 
-                    {/* Pill Drag Handle - RIGHT */}
-                    {isSelected && (
-                      <div
-                        onPointerDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          try {
-                            trackRef.current?.setPointerCapture(e.pointerId);
-                          } catch {}
-                          setDraggingBoundary({
-                            sectionId: sec.id,
-                            boundary: "end",
-                          });
-                        }}
-                        className={clsx(
-                          "group bg-foreground pointer-events-auto absolute top-1/2 flex h-7 w-3 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-sm shadow-xs transition-transform hover:scale-105 active:scale-95",
-                          sec.end >= duration - 0.05
-                            ? "right-1"
-                            : "-right-1.5",
+                    {isSelected &&
+                      renderTrimHandle(
+                        sec.id,
+                        "end",
+                        clsx(
+                          sec.end >= duration - 0.05 ? "right-0" : "-right-1.5",
                           sec.start <= 0.1 ? "z-40" : "z-30",
-                        )}
-                        title="Drag to trim end"
-                      >
-                        <div className="pointer-events-none h-2.5 w-[1px] rounded-full bg-white" />
-                      </div>
+                        ),
+                        "Drag to trim end",
+                      )}
+                  </div>
+                );
+              })}
+
+              {/* Unified Section Split & Cut Seams */}
+              {sections.slice(1).map((sec, i) => {
+                const prevSec = sections[i];
+                const isDashedSeam =
+                  sec.isDeleted || Boolean(prevSec?.isDeleted);
+                const seamLeftPct = (sec.start / duration) * 100;
+
+                return (
+                  <div
+                    key={`${sec.id}-seam`}
+                    className="pointer-events-none absolute inset-y-0 z-20 flex w-[7px] -translate-x-1/2 flex-col items-center justify-between"
+                    style={{ left: `${seamLeftPct}%` }}
+                    aria-hidden="true"
+                  >
+                    {!isDashedSeam && (
+                      <div className="absolute inset-y-0 left-1/2 w-[3px] -translate-x-1/2 bg-white" />
                     )}
+                    <svg
+                      width="7"
+                      height="4"
+                      viewBox="0 0 7 4"
+                      className="text-foreground/65 relative z-10 shrink-0 fill-current"
+                    >
+                      <polygon points="0,0 7,0 3.5,4" />
+                    </svg>
+                    {isDashedSeam ? (
+                      <div className="border-foreground/45 relative z-10 w-px flex-1 border-l border-dashed" />
+                    ) : (
+                      <div className="bg-foreground/50 relative z-10 w-px flex-1" />
+                    )}
+                    <svg
+                      width="7"
+                      height="4"
+                      viewBox="0 0 7 4"
+                      className="text-foreground/65 relative z-10 shrink-0 fill-current"
+                    >
+                      <polygon points="3.5,0 7,4 0,4" />
+                    </svg>
                   </div>
                 );
               })}
@@ -1514,21 +1673,35 @@ export default function EditModal({
             {/* Hover Ghost Needle */}
             {hoverTime !== null && !isDraggingPlayhead && (
               <div
-                className="pointer-events-none absolute top-0 bottom-0 z-30 -ml-2 flex w-4 flex-col items-center"
+                className="pointer-events-none absolute top-0 bottom-0 z-30 flex w-[9px] -translate-x-1/2 flex-col items-center"
                 style={{ left: `${(hoverTime / duration) * 100}%` }}
               >
-                <div className="border-t-foreground/40 h-0 w-0 border-t-[5px] border-r-[4px] border-l-[4px] border-r-transparent border-l-transparent" />
+                <svg
+                  width="9"
+                  height="5"
+                  viewBox="0 0 9 5"
+                  className="text-foreground/45 shrink-0 fill-current"
+                >
+                  <polygon points="0,0 9,0 4.5,5" />
+                </svg>
                 <div className="border-foreground/30 w-px flex-1 border-l border-dashed" />
               </div>
             )}
 
             {/* Active Playhead Needle (Signature Orange Accent) */}
             <div
-              className="pointer-events-none absolute top-0 bottom-0 z-40 -ml-2 flex w-4 flex-col items-center"
+              className="pointer-events-none absolute top-0 bottom-0 z-40 flex w-[9px] -translate-x-1/2 flex-col items-center"
               style={{ left: `${(currentTime / duration) * 100}%` }}
             >
-              <div className="border-t-utils-scent-orange h-0 w-0 border-t-[6px] border-r-[4px] border-l-[4px] border-r-transparent border-l-transparent" />
-              <div className="bg-utils-scent-orange w-[1px] flex-1" />
+              <svg
+                width="9"
+                height="6"
+                viewBox="0 0 9 6"
+                className="text-utils-scent-orange shrink-0 fill-current"
+              >
+                <polygon points="0,0 9,0 4.5,6" />
+              </svg>
+              <div className="bg-utils-scent-orange w-px flex-1" />
             </div>
           </div>
 
@@ -1586,7 +1759,7 @@ export default function EditModal({
                       >
                         <span>{opt.label}</span>
                         {opt.value === "original" && item.originalFps && (
-                          <span className="font-mono text-[10px] opacity-75">
+                          <span className="font-mono text-xs opacity-75">
                             ({formatFps(item.originalFps)})
                           </span>
                         )}
@@ -1609,7 +1782,7 @@ export default function EditModal({
                       type="button"
                       onClick={() => setExportSpeed(spd)}
                       className={clsx(
-                        "flex h-full cursor-pointer items-center rounded px-1.5 text-[11px] leading-none transition-all",
+                        "flex h-full cursor-pointer items-center rounded px-2 text-xs leading-none transition-all",
                         Math.abs(exportSpeed - spd) < 0.01
                           ? "bg-foreground text-background"
                           : "text-foreground/70 hover:text-foreground",
@@ -1668,7 +1841,7 @@ export default function EditModal({
               {formatBytes(estimatedBytes)}
             </span>
             {estimatedSavings && estimatedSavings.percentSaved > 0 && (
-              <span className="text-code-green bg-utils-scent-gray-01/40 border-border-color rounded-md border px-2 py-0.5 font-mono text-[11px]">
+              <span className="text-code-green bg-utils-scent-gray-01/40 border-border-color inline-flex h-7 items-center rounded-md border px-2 font-mono text-xs leading-none">
                 Est. -{estimatedSavings.percentSaved}%
               </span>
             )}
@@ -1678,14 +1851,14 @@ export default function EditModal({
             <button
               type="button"
               onClick={onClose}
-              className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex h-8 cursor-pointer items-center rounded-md border bg-white px-3 text-xs leading-none transition-all"
+              className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex h-7 cursor-pointer items-center rounded-md border bg-white px-3 text-xs leading-none transition-all"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleApply}
-              className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex h-8 cursor-pointer items-center gap-1.5 rounded-md border bg-white px-3 text-xs leading-none transition-all"
+              className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex h-7 cursor-pointer items-center gap-1.5 rounded-md border bg-white px-3 text-xs leading-none transition-all"
               title="Save trim and cut edits to queue item"
             >
               <Check size={13} />
@@ -1696,7 +1869,7 @@ export default function EditModal({
             <button
               type="button"
               onClick={handleApplyAndCompress}
-              className="bg-foreground text-background hover:bg-foreground/90 flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-3 text-xs font-medium leading-none transition-all active:scale-95 sm:px-3.5"
+              className="bg-foreground text-background hover:bg-foreground/90 flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-3 text-xs font-medium leading-none transition-all active:scale-95 sm:px-3.5"
               title="Save edits and immediately start compressing this video"
             >
               <Zap size={13} className="fill-current" />
