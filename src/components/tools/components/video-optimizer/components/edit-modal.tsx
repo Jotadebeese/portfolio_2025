@@ -1590,9 +1590,12 @@ export default function EditModal({
                       setSelectedSectionId(sec.id);
                     }}
                     className={clsx(
-                      "pointer-events-auto absolute inset-y-0 cursor-pointer bg-transparent",
+                      "pointer-events-auto absolute inset-y-0 cursor-pointer",
                       isSelected ? "z-30" : "z-20",
                       !draggingBoundary && "transition-colors",
+                      isSelected && sections.length > 1
+                        ? "bg-foreground/[0.045]"
+                        : "bg-transparent",
                       !isSelected &&
                         sections.length > 1 &&
                         "hover:bg-foreground/[0.025]",
