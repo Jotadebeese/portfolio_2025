@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Check, Copy, RefreshCw, ShieldCheck, KeyRound } from "lucide-react";
 import clsx from "clsx";
 
@@ -50,19 +50,23 @@ function generatePassword(length = 20, includeSymbols = true): string {
 }
 
 export default function SecretGenerator() {
-  const [uuidV7, setUuidV7] = useState<string>(() => generateUuidV7());
-  const [uuidV4, setUuidV4] = useState<string>(() => crypto.randomUUID());
-  const [apiKey, setApiKey] = useState<string>(
-    () => `sk_live_${generateHexKey(24)}`,
-  );
-  const [password, setPassword] = useState<string>(() =>
-    generatePassword(20, true),
-  );
+  const [uuidV7, setUuidV7] = useState<string>("");
+  const [uuidV4, setUuidV4] = useState<string>("");
+  const [apiKey, setApiKey] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [passwordLength, setPasswordLength] = useState<number>(20);
   const [includeSymbols, setIncludeSymbols] = useState<boolean>(true);
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [isRotating, setIsRotating] = useState(false);
+
+  // Generate cryptographic values after mount so SSR and initial hydration stay deterministic
+  useEffect(() => {
+    setUuidV7(generateUuidV7());
+    setUuidV4(crypto.randomUUID());
+    setApiKey(`sk_live_${generateHexKey(24)}`);
+    setPassword(generatePassword(20, true));
+  }, []);
 
   const copyToClipboard = (text: string, keyId: string) => {
     navigator.clipboard.writeText(text);

@@ -24,6 +24,13 @@ const DEFAULT_SETTINGS: OptimizerSettings = {
   resizePreset: "original",
 };
 
+const DEFAULT_DEVICE_LIMITS: DeviceLimits = {
+  tier: "desktop",
+  maxFiles: 50,
+  maxFileSizeMb: 50,
+  label: "Desktop",
+};
+
 export default function ImageOptimizer() {
   const [items, setItems] = useState<ImageFileItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -33,11 +40,14 @@ export default function ImageOptimizer() {
   const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
   const [isDownloadingZip, setIsDownloadingZip] = useState<boolean>(false);
   const [comparingId, setComparingId] = useState<string | null>(null);
-  const [deviceLimits] = useState<DeviceLimits>(() => getDeviceLimits());
+  const [deviceLimits, setDeviceLimits] = useState<DeviceLimits>(
+    DEFAULT_DEVICE_LIMITS,
+  );
   const [warningNotice, setWarningNotice] = useState<string | null>(null);
 
-  // Detect if the browser canvas genuinely supports WebP encoding (fails silently on iOS WebKit)
+  // Detect device limits and WebP canvas encoding support after mount to avoid SSR hydration mismatches
   useEffect(() => {
+    setDeviceLimits(getDeviceLimits());
     const hasWebp = checkWebPEncodingSupport();
     setSupportsWebP(hasWebp);
     if (!hasWebp) {
@@ -424,13 +434,7 @@ export default function ImageOptimizer() {
     document.body.removeChild(a);
   };
 
-  const handleDownloadSelected = async () => {
-    const toDownload = items.filter(
-      (item) =>
-        selectedIds.has(item.id) &&
-        item.status === "done" &&
-        item.optimizedBlob,
-    );
+  const downloadImageBatch = async (toDownload: ImageFileItem[]) => {
     if (toDownload.length === 0) return;
 
     if (toDownload.length === 1) {
@@ -482,6 +486,23 @@ export default function ImageOptimizer() {
     } finally {
       setIsDownloadingZip(false);
     }
+  };
+
+  const handleDownloadSelected = async () => {
+    const toDownload = items.filter(
+      (item) =>
+        selectedIds.has(item.id) &&
+        item.status === "done" &&
+        item.optimizedBlob,
+    );
+    await downloadImageBatch(toDownload);
+  };
+
+  const handleDownloadAll = async () => {
+    const toDownload = items.filter(
+      (item) => item.status === "done" && item.optimizedBlob,
+    );
+    await downloadImageBatch(toDownload);
   };
 
   const handleDeleteItem = (id: string) => {
@@ -582,6 +603,9 @@ export default function ImageOptimizer() {
       acc + (i.optimizedSize !== undefined ? i.optimizedSize : i.originalSize),
     0,
   );
+  const doneCount = items.filter(
+    (i) => i.status === "done" && i.optimizedBlob,
+  ).length;
 
   return (
     <div
@@ -597,10 +621,12 @@ export default function ImageOptimizer() {
         onSettingsChange={handleSettingsChange}
         onFilesSelected={handleFilesSelected}
         selectedCount={selectedIds.size}
+        doneCount={doneCount}
         totalCount={items.length}
         onToggleSelectAll={handleToggleSelectAll}
         onDeleteSelected={handleDeleteSelected}
         onDownloadSelected={handleDownloadSelected}
+        onDownloadAll={handleDownloadAll}
         isDownloadingZip={isDownloadingZip}
         totalOriginalBytes={totalOriginalBytes}
         totalOptimizedBytes={totalOptimizedBytes}

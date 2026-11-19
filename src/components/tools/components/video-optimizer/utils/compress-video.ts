@@ -24,6 +24,7 @@ import {
   getEffectiveVideoDuration,
   getKeptRanges,
   resolveTargetFps,
+  stepDownResolutionPreset,
 } from "./format";
 
 export interface VideoCompressionResult {
@@ -35,6 +36,7 @@ export interface VideoCompressionResult {
   format: VideoOutputFormat;
   duration: number;
   fps?: number;
+  exceededTargetCap?: boolean;
 }
 
 export interface VideoMetadata {
@@ -334,7 +336,7 @@ export async function compressVideo(
         : undefined;
 
     // Determine effective resolution preset (protects against physical codec floors in target-size mode)
-    const effectivePreset =
+    let currentPreset: VideoResizePreset =
       settings.mode === "target-size"
         ? getAdaptedPresetForTargetSize(
             settings.targetSizeMB ?? 8,
@@ -348,29 +350,21 @@ export async function compressVideo(
     const targetDims = calculateTargetVideoDimensions(
       origW,
       origH,
-      effectivePreset,
+      currentPreset,
       settings.customMaxDimension,
     );
 
     onProgress?.(15);
 
     const isMp4 = settings.format === "video/mp4";
-    const outputFormat = isMp4
-      ? new Mp4OutputFormat({ fastStart: "in-memory" })
-      : new WebMOutputFormat();
 
-    const targetBuffer = new BufferTarget();
-    const output = new Output({
-      format: outputFormat,
-      target: targetBuffer,
-    });
-
-    let videoQuality: Quality;
-    let audioConfig: {
-      discard?: boolean;
-      quality?: Quality;
-      forceTranscode?: boolean;
-    } | undefined = settings.stripAudio ? { discard: true } : undefined;
+    let audioConfig:
+      | {
+          discard?: boolean;
+          quality?: Quality;
+          forceTranscode?: boolean;
+        }
+      | undefined = settings.stripAudio ? { discard: true } : undefined;
 
     // When cuts, trims, or speed changes are applied, force audio to transcode so that audio samples
     // can be filtered, resampled, and retimestamped in lockstep with video (preventing packet-copy desync)
@@ -381,13 +375,16 @@ export async function compressVideo(
       };
     }
 
+    let targetBitrate = 0;
+    let videoQuality: Quality;
+
     if (settings.mode === "quality") {
       videoQuality = new Quality({
         quality: (settings.qualityPercent || 80) / 100,
       });
     } else if (settings.mode === "target-size") {
       const targetMB = settings.targetSizeMB ?? 8;
-      const targetBitrate = calculateBitrateForTargetSize(
+      targetBitrate = calculateBitrateForTargetSize(
         targetMB,
         effectiveDuration,
         Boolean(settings.stripAudio),
@@ -405,7 +402,7 @@ export async function compressVideo(
 
       videoQuality = new Quality({
         bitrate: targetBitrate,
-        bitrateMode: "variable",
+        bitrateMode: "constant",
       });
     } else {
       videoQuality = new Quality({
@@ -446,140 +443,298 @@ export async function compressVideo(
       return Math.max(0, timelineTime / exportSpeed);
     };
 
-    const processVideoSample = (sample: VideoSample): VideoSample | null => {
-      const outTime = mapSampleOutputTime(sample.timestamp);
-      if (outTime === null) return null;
+    const needsSampleProcess = hasActiveTrimOrCut || hasSpeedChange;
 
-      sample.setTimestamp(outTime);
-      if (hasSpeedChange && sample.duration > 0) {
-        sample.setDuration(sample.duration / exportSpeed);
-      }
-      return sample;
-    };
-
-    // Tracks fractional PCM samples across chunks so sped-up/slowed audio stays drift-free
-    let audioFrameRemainder = 0;
-
-    const processAudioSample = (
-      sample: AudioSample,
-    ): AudioSample | AudioSample[] | null => {
-      const outTime = mapSampleOutputTime(sample.timestamp);
-      if (outTime === null) return null;
-
-      if (!hasSpeedChange) {
-        sample.setTimestamp(outTime);
-        return sample;
-      }
-
-      const srcBuffer = sample.toAudioBuffer();
-      const srcLength = srcBuffer.length;
-      const numChannels = srcBuffer.numberOfChannels;
-      const sampleRate = srcBuffer.sampleRate;
-
-      audioFrameRemainder += srcLength / exportSpeed;
-      const outLength = Math.max(1, Math.round(audioFrameRemainder));
-      audioFrameRemainder -= outLength;
-
-      const outBuffer = new AudioBuffer({
-        numberOfChannels: numChannels,
-        length: outLength,
-        sampleRate,
+    const encodeSinglePass = async (
+      passInput: Input,
+      passDims: { width: number; height: number },
+      passVideoQuality: Quality,
+      progressStart: number,
+      progressEnd: number,
+    ): Promise<Blob> => {
+      const outputFormat = isMp4
+        ? new Mp4OutputFormat({ fastStart: "in-memory" })
+        : new WebMOutputFormat();
+      const targetBuffer = new BufferTarget();
+      const output = new Output({
+        format: outputFormat,
+        target: targetBuffer,
       });
 
-      // Linear PCM interpolation scales chunk duration by 1 / exportSpeed cleanly
-      for (let ch = 0; ch < numChannels; ch++) {
-        const srcData = srcBuffer.getChannelData(ch);
-        const dstData = outBuffer.getChannelData(ch);
-        for (let i = 0; i < outLength; i++) {
-          const srcPos = Math.min(srcLength - 1, i * exportSpeed);
-          const idx0 = Math.floor(srcPos);
-          const idx1 = Math.min(srcLength - 1, idx0 + 1);
-          const frac = srcPos - idx0;
-          dstData[i] = srcData[idx0] * (1 - frac) + srcData[idx1] * frac;
+      const processVideoSample = (sample: VideoSample): VideoSample | null => {
+        const outTime = mapSampleOutputTime(sample.timestamp);
+        if (outTime === null) return null;
+
+        sample.setTimestamp(outTime);
+        if (hasSpeedChange && sample.duration > 0) {
+          sample.setDuration(sample.duration / exportSpeed);
+        }
+        return sample;
+      };
+
+      // Tracks fractional PCM samples across chunks so sped-up/slowed audio stays drift-free
+      let audioFrameRemainder = 0;
+
+      const processAudioSample = (
+        sample: AudioSample,
+      ): AudioSample | AudioSample[] | null => {
+        const outTime = mapSampleOutputTime(sample.timestamp);
+        if (outTime === null) return null;
+
+        if (!hasSpeedChange) {
+          sample.setTimestamp(outTime);
+          return sample;
+        }
+
+        const srcBuffer = sample.toAudioBuffer();
+        const srcLength = srcBuffer.length;
+        const numChannels = srcBuffer.numberOfChannels;
+        const sampleRate = srcBuffer.sampleRate;
+
+        audioFrameRemainder += srcLength / exportSpeed;
+        const outLength = Math.max(1, Math.round(audioFrameRemainder));
+        audioFrameRemainder -= outLength;
+
+        const outBuffer = new AudioBuffer({
+          numberOfChannels: numChannels,
+          length: outLength,
+          sampleRate,
+        });
+
+        // Linear PCM interpolation scales chunk duration by 1 / exportSpeed cleanly
+        for (let ch = 0; ch < numChannels; ch++) {
+          const srcData = srcBuffer.getChannelData(ch);
+          const dstData = outBuffer.getChannelData(ch);
+          for (let i = 0; i < outLength; i++) {
+            const srcPos = Math.min(srcLength - 1, i * exportSpeed);
+            const idx0 = Math.floor(srcPos);
+            const idx1 = Math.min(srcLength - 1, idx0 + 1);
+            const frac = srcPos - idx0;
+            dstData[i] = srcData[idx0] * (1 - frac) + srcData[idx1] * frac;
+          }
+        }
+
+        return AudioSample.fromAudioBuffer(outBuffer, outTime);
+      };
+
+      const conversion = await Conversion.init({
+        input: passInput,
+        output,
+        video: {
+          width: passDims.width,
+          height: passDims.height,
+          fit: "contain",
+          codec: isMp4 ? "avc" : "vp9",
+          quality: passVideoQuality,
+          frameRate: mediabunnyFrameRate,
+          forceTranscode: true,
+          process: needsSampleProcess ? processVideoSample : undefined,
+        },
+        audio:
+          audioConfig && !audioConfig.discard
+            ? {
+                ...audioConfig,
+                process: needsSampleProcess ? processAudioSample : undefined,
+              }
+            : audioConfig,
+        trim: hasActiveTrimOrCut
+          ? {
+              start: trimStart,
+              end: trimEnd,
+            }
+          : undefined,
+      });
+
+      if (signal?.aborted) {
+        await conversion.cancel().catch(() => {});
+        throw new ConversionCanceledError();
+      }
+
+      const handleAbort = () => {
+        conversion.cancel().catch(() => {});
+      };
+      signal?.addEventListener("abort", handleAbort, { once: true });
+
+      conversion.onProgress = (pct) => {
+        if (signal?.aborted) return;
+        const span = Math.max(1, progressEnd - progressStart);
+        const mapped = Math.round(progressStart + pct * span);
+        onProgress?.(Math.min(progressEnd, mapped));
+      };
+
+      try {
+        await conversion.execute();
+      } finally {
+        signal?.removeEventListener("abort", handleAbort);
+      }
+
+      if (signal?.aborted) {
+        throw new ConversionCanceledError();
+      }
+
+      const buffer = targetBuffer.buffer;
+      if (!buffer) {
+        throw new Error("Failed to produce output video buffer.");
+      }
+
+      return new Blob([buffer], { type: settings.format });
+    };
+
+    const runWithBitrateModeFallback = async (
+      passInput: Input,
+      passDims: { width: number; height: number },
+      bps: number,
+      progressStart: number,
+      progressEnd: number,
+    ): Promise<Blob> => {
+      try {
+        return await encodeSinglePass(
+          passInput,
+          passDims,
+          new Quality({ bitrate: bps, bitrateMode: "constant" }),
+          progressStart,
+          progressEnd,
+        );
+      } catch (err) {
+        if (
+          signal?.aborted ||
+          (err instanceof Error && err.name === "ConversionCanceledError")
+        ) {
+          throw err;
+        }
+        // Some hardware encoders reject CBR; cleanly fall back to VBR on a fresh input
+        const fallbackInput = new Input({
+          source: new BlobSource(file),
+          formats: ALL_FORMATS,
+        });
+        try {
+          return await encodeSinglePass(
+            fallbackInput,
+            passDims,
+            new Quality({ bitrate: bps, bitrateMode: "variable" }),
+            progressStart,
+            progressEnd,
+          );
+        } finally {
+          try {
+            fallbackInput.dispose();
+          } catch {}
+        }
+      }
+    };
+
+    let bestBlob: Blob;
+    let bestDims = targetDims;
+    let exceededTargetCap = false;
+
+    if (settings.mode === "target-size") {
+      const targetCapBytes = (settings.targetSizeMB ?? 8) * 1024 * 1024;
+      let currentBitrate = targetBitrate;
+      let currentDims = targetDims;
+
+      bestBlob = await runWithBitrateModeFallback(
+        input,
+        currentDims,
+        currentBitrate,
+        15,
+        75,
+      );
+
+      // Closed-loop correction: if hardware VBR/CBR still overshot the MB cap
+      // (e.g. high-entropy noise hitting QP floors), re-encode with scaled bitrate
+      // and stepped-down resolution until it fits (max 2 correction passes).
+      // Skip retries when pass 1 was already floored at minimum bitrate and 360p.
+      const maxRetries = 2;
+      const isAlreadyAtFloor =
+        currentBitrate <= 60_000 && currentPreset === "360p";
+
+      if (!isAlreadyAtFloor) {
+        for (
+          let retry = 0;
+          retry < maxRetries && bestBlob.size > targetCapBytes;
+          retry++
+        ) {
+          if (signal?.aborted) {
+            throw new ConversionCanceledError();
+          }
+
+          const overshootRatio = bestBlob.size / targetCapBytes;
+          // Scale down proportionally with an extra 14% safety margin
+          const nextBitrate = Math.max(
+            50_000,
+            Math.round((currentBitrate * 0.86) / overshootRatio),
+          );
+
+          // Step down resolution when overshoot is significant so the codec
+          // doesn't hit minimum-QP ceilings on 1080p high-entropy frames
+          const stepped =
+            overshootRatio > 1.12 || retry > 0
+              ? stepDownResolutionPreset(currentPreset)
+              : null;
+
+          if (nextBitrate >= currentBitrate * 0.95 && !stepped) {
+            break;
+          }
+
+          currentBitrate = nextBitrate;
+          if (stepped) {
+            currentPreset = stepped;
+            currentDims = calculateTargetVideoDimensions(
+              origW,
+              origH,
+              currentPreset,
+              settings.customMaxDimension,
+            );
+          }
+
+          const retryInput = new Input({
+            source: new BlobSource(file),
+            formats: ALL_FORMATS,
+          });
+          const pStart = retry === 0 ? 75 : 86;
+          const pEnd = retry === 0 ? 86 : 96;
+
+          try {
+            const retryBlob = await runWithBitrateModeFallback(
+              retryInput,
+              currentDims,
+              currentBitrate,
+              pStart,
+              pEnd,
+            );
+            if (retryBlob.size < bestBlob.size) {
+              bestBlob = retryBlob;
+              bestDims = currentDims;
+            }
+          } finally {
+            try {
+              retryInput.dispose();
+            } catch {}
+          }
         }
       }
 
-      return AudioSample.fromAudioBuffer(outBuffer, outTime);
-    };
-
-    const needsSampleProcess = hasActiveTrimOrCut || hasSpeedChange;
-
-    const conversion = await Conversion.init({
-      input,
-      output,
-      video: {
-        width: targetDims.width,
-        height: targetDims.height,
-        fit: "contain",
-        codec: isMp4 ? "avc" : "vp9",
-        quality: videoQuality,
-        frameRate: mediabunnyFrameRate,
-        forceTranscode: true,
-        process: needsSampleProcess ? processVideoSample : undefined,
-      },
-      audio:
-        audioConfig && !audioConfig.discard
-          ? {
-              ...audioConfig,
-              process: needsSampleProcess ? processAudioSample : undefined,
-            }
-          : audioConfig,
-      trim: hasActiveTrimOrCut
-        ? {
-            start: trimStart,
-            end: trimEnd,
-          }
-        : undefined,
-    });
-
-    if (signal?.aborted) {
-      await conversion.cancel().catch(() => {});
-      throw new ConversionCanceledError();
-    }
-
-    const handleAbort = () => {
-      conversion.cancel().catch(() => {});
-    };
-    signal?.addEventListener("abort", handleAbort, { once: true });
-
-    conversion.onProgress = (pct) => {
-      if (signal?.aborted) return;
-      // Map conversion progress from 15% to 95%
-      const mapped = Math.round(15 + pct * 80);
-      onProgress?.(Math.min(95, mapped));
-    };
-
-    try {
-      await conversion.execute();
-    } finally {
-      signal?.removeEventListener("abort", handleAbort);
-    }
-
-    if (signal?.aborted) {
-      throw new ConversionCanceledError();
+      exceededTargetCap = bestBlob.size > targetCapBytes;
+    } else {
+      bestBlob = await encodeSinglePass(input, targetDims, videoQuality, 15, 95);
     }
 
     onProgress?.(98);
 
-    const buffer = targetBuffer.buffer;
-    if (!buffer) {
-      throw new Error("Failed to produce output video buffer.");
-    }
-
-    const blob = new Blob([buffer], { type: settings.format });
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(bestBlob);
 
     onProgress?.(100);
 
     return {
-      blob,
+      blob: bestBlob,
       url,
-      dimensions: targetDims,
+      dimensions: bestDims,
       originalDimensions: { width: origW, height: origH },
-      size: blob.size,
+      size: bestBlob.size,
       format: settings.format,
       duration: effectiveDuration,
       fps: outputFps,
+      exceededTargetCap,
     };
   } finally {
     try {

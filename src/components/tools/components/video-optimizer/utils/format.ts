@@ -8,11 +8,14 @@ import {
 } from "../types";
 
 export function formatBytes(bytes: number, decimals = 1): string {
-  if (bytes === 0) return "0 B";
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
   const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const i = Math.min(
+    sizes.length - 1,
+    Math.floor(Math.log(bytes) / Math.log(k)),
+  );
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
 
@@ -38,13 +41,12 @@ export function calculateSavings(original: number, compressed: number) {
 }
 
 /**
- * Calculates the nominal WebCodecs bitrate (bps) required to ensure the compressed
- * output file strictly respects the specified target size (MB) as an absolute ceiling,
- * while utilizing maximum bit budget to push output file size as close as possible
- * to the cap (e.g. 7.7-7.9 MB for 8 MB cap).
+ * Calculates the nominal WebCodecs bitrate (bps) required to keep the compressed
+ * output within the specified target size (MB) cap.
  *
- * Employs hardware VBR compensation (1.14x for MP4) to prevent Windows hardware encoders
- * from starving bit allocation into ugly blocky artifacts.
+ * Uses conservative headroom so hardware VBR rate controllers don't overshoot
+ * on high-entropy scenes; compressVideo() also runs a closed-loop retry pass
+ * if the encoded buffer still exceeds the cap.
  */
 export function calculateBitrateForTargetSize(
   targetSizeMB: number,
@@ -55,14 +57,12 @@ export function calculateBitrateForTargetSize(
   if (durationSeconds <= 0) return 2_000_000;
 
   const targetBytes = targetSizeMB * 1024 * 1024;
-  // Safety ceiling:
-  // For tight caps (<= 1.5 MB), allocate a 9% margin (~90KB) so fixed container overhead
-  // (moov atom, WebM cluster cues) and audio cannot push the final output over 1.0 MB.
-  // For standard caps (> 1.5 MB), a 2.5%-3.0% margin pushes file size right against the ceiling.
+  // Reserve headroom for container overhead (moov/cues) and VBR variance:
+  // Tight caps (<= 2 MB) get 10% margin; larger caps get 5% margin.
   const safetyFactor =
-    targetSizeMB <= 1.5
-      ? format === "video/webm" ? 0.91 : 0.92
-      : format === "video/webm" ? 0.975 : 0.97;
+    targetSizeMB <= 2
+      ? format === "video/webm" ? 0.89 : 0.90
+      : format === "video/webm" ? 0.95 : 0.94;
   const safeTargetBytes = Math.round(targetBytes * safetyFactor);
 
   // Muxing container overhead (~35KB for MP4 faststart atom / WebM cluster indices)
@@ -78,25 +78,59 @@ export function calculateBitrateForTargetSize(
 
   // Available bits strictly for video track
   const availableVideoBits = Math.max(
-    80_000 * durationSeconds,
+    60_000 * durationSeconds,
     totalBits - audioBits,
   );
 
   const baseVideoBps = Math.round(availableVideoBits / durationSeconds);
 
-  // Hardware VBR Compensation:
-  // In WebCodecs `bitrateMode: 'variable'`, hardware H.264 (MP4) encoders (NVENC/QuickSync)
-  // internally starve bitrate by ~15-20% on typical scenes, causing blocky distortion.
-  // WebM (VP9) software controller is much more linear (~95% utilization).
-  // For tight caps (<= 1.5 MB), keep WebM compensation at 1.00x so it never overshoots.
-  const vbrCompensation =
+  // Keep compensation <= 1.0 so hardware VBR cannot intentionally exceed the cap.
+  const rateFactor =
     format === "video/webm"
-      ? targetSizeMB <= 1.5 ? 1.00 : 1.02
-      : targetSizeMB <= 1.5 ? 1.08 : 1.14;
-  const targetVideoBps = Math.round(baseVideoBps * vbrCompensation);
+      ? targetSizeMB <= 2 ? 0.95 : 0.98
+      : targetSizeMB <= 2 ? 0.94 : 0.98;
+  const targetVideoBps = Math.round(baseVideoBps * rateFactor);
 
-  // Clamp within practical hardware bounds (80 kbps to 25 Mbps)
-  return Math.min(25_000_000, Math.max(80_000, targetVideoBps));
+  // Clamp within practical hardware bounds (60 kbps to 25 Mbps)
+  return Math.min(25_000_000, Math.max(60_000, targetVideoBps));
+}
+
+/**
+ * Computes the physical minimum playable file size (bytes) at floor bitrates
+ * (60 kbps video + 64 kbps audio when kept + container overhead).
+ */
+export function getMinTargetSizeBytes(
+  durationSeconds: number,
+  stripAudio: boolean,
+  targetSizeMB = 8,
+): number {
+  if (durationSeconds <= 0) return 0;
+  const audioBps = stripAudio ? 0 : targetSizeMB <= 2 ? 64_000 : 128_000;
+  const minVideoBps = 60_000;
+  return Math.round(((minVideoBps + audioBps) * durationSeconds) / 8) + 35_000;
+}
+
+/**
+ * Steps down a resolution preset by one tier for closed-loop target-size retries
+ * when high-entropy footage hits hardware encoder QP ceilings.
+ */
+export function stepDownResolutionPreset(
+  preset: VideoResizePreset,
+): VideoResizePreset | null {
+  switch (preset) {
+    case "original":
+    case "1080p":
+      return "720p";
+    case "720p":
+      return "480p";
+    case "480p":
+      return "360p";
+    case "custom":
+      return "720p";
+    case "360p":
+    default:
+      return null;
+  }
 }
 
 /**
@@ -333,11 +367,10 @@ export function getEffectiveVideoDuration(
 
 /**
  * Deterministically estimates output video file size prior to running compression.
- * In Bitrate mode: Size (bytes) = (Bitrate * Duration) / 8 + container overhead,
- * calibrated for WebCodecs VBR rate control and resolution-specific entropy limits.
- * In Target Size mode: Accurately projects target file size ceiling with safety cushion.
- * In Quality mode: Computes target bitrate based on resolution, codec, and quality factor.
- * Capped against originalSize when provided so re-encoding cannot estimate larger than source.
+ * - In Quality mode: returns 0 because adaptive quantizer (CRF) output depends
+ *   heavily on scene entropy and cannot be reliably guessed before encoding.
+ * - In Target Size mode: projects the requested MB cap with container margin.
+ * - In Bitrate mode: computes Size = (Bitrate * Duration) / 8 + container overhead.
  */
 export function estimateVideoSize(
   durationSeconds: number,
@@ -345,11 +378,12 @@ export function estimateVideoSize(
   trim?: { start: number; end: number },
   width: number = 1920,
   height: number = 1080,
-  originalSize?: number,
+  _originalSize?: number,
   sections?: VideoSection[],
   originalFps?: number,
 ): number {
   if (durationSeconds <= 0) return 0;
+  if (settings.mode === "quality") return 0;
   const exportSpeed =
     settings.exportSpeed && settings.exportSpeed > 0 ? settings.exportSpeed : 1;
   const effectiveDuration = getEffectiveVideoDuration(
@@ -394,7 +428,6 @@ export function estimateVideoSize(
   }
 
   const pixels = targetW * targetH;
-  const referencePixels = 1920 * 1080;
 
   let videoBps: number;
   const resolvedFps = resolveTargetFps(settings.targetFps, originalFps);
@@ -403,16 +436,7 @@ export function estimateVideoSize(
       ? Math.pow(resolvedFps / originalFps, 0.35)
       : 1;
 
-  if (settings.mode === "quality") {
-    const q = (settings.qualityPercent ?? 80) / 100;
-    const factor = 0.3 * Math.exp(2.5538 * q);
-    const referenceBitrate = 2_800_000;
-    const scaleFactor = Math.pow(pixels / referencePixels, 0.92);
-    const codecEfficiency = settings.format === "video/webm" ? 0.75 : 1.0;
-    videoBps = Math.round(
-      referenceBitrate * scaleFactor * factor * codecEfficiency * fpsEfficiency,
-    );
-  } else if (settings.mode === "target-size") {
+  if (settings.mode === "target-size") {
     videoBps = calculateBitrateForTargetSize(
       settings.targetSizeMB ?? 8,
       effectiveDuration,
@@ -420,17 +444,14 @@ export function estimateVideoSize(
       settings.format || "video/mp4",
     );
   } else {
-    // Bitrate mode: WebCodecs variable bitrate with the specified bitrate as peak ceiling.
+    // Bitrate mode: WebCodecs variable bitrate with the specified bitrate budget.
     const nominalBps = (settings.bitrateMbps ?? 2.5) * 1_000_000;
-    // Entropy ceiling: A smaller resolution (e.g. 720p or 360p) cannot absorb infinite bitrate.
-    // Max practical bpp is ~0.16 bits per pixel at 30 fps.
     const maxResolutionBps = Math.round(pixels * 30 * 0.16);
-
-    // MP4 (H.264) hardware encoders (NVENC/QuickSync) aggressively starve bitrate in VBR (~72% nominal).
-    // WebM (VP9 libvpx) software rate controller spends closer to the full target budget (~92% nominal),
-    // producing higher visual fidelity with less distortion, but a correspondingly larger file size.
-    const utilization = settings.format === "video/webm" ? 0.92 : 0.72;
-    videoBps = Math.min(Math.round(nominalBps * utilization), maxResolutionBps);
+    const utilization = settings.format === "video/webm" ? 0.92 : 0.85;
+    videoBps = Math.min(
+      Math.round(nominalBps * utilization * fpsEfficiency),
+      maxResolutionBps,
+    );
   }
 
   // Optional audio track (64 kbps for tight targets <= 2 MB, 128 kbps otherwise)
@@ -444,30 +465,20 @@ export function estimateVideoSize(
   // bytes = bits / 8 + container overhead (~30KB for moov atom and index)
   let estimatedBytes = Math.round((totalBps * effectiveDuration) / 8) + 30_000;
 
-  // For target-size mode, accurately project the ceiling without exceeding target
+  // For target-size mode, project the target cap ceiling while respecting the physical minimum floor
   if (settings.mode === "target-size") {
     const targetMB = settings.targetSizeMB ?? 8;
     const targetCapBytes = targetMB * 1024 * 1024;
-    const safetyMargin =
-      targetMB <= 1.5
-        ? settings.format === "video/webm" ? 0.91 : 0.92
-        : settings.format === "video/webm" ? 0.98 : 0.975;
-    estimatedBytes = Math.min(
-      estimatedBytes,
-      Math.round(targetCapBytes * safetyMargin),
+    const safetyMargin = targetMB <= 2 ? 0.92 : 0.96;
+    const minBytes = getMinTargetSizeBytes(
+      effectiveDuration,
+      Boolean(settings.stripAudio),
+      targetMB,
     );
-  }
-
-  // Cap with original size:
-  // Re-encoding already-compressed footage will not exceed the source file size
-  // (adjusted for trimmed duration).
-  if (originalSize && originalSize > 0) {
-    const durationRatio =
-      durationSeconds > 0 ? effectiveDuration / durationSeconds : 1;
-    const maxPossibleSize = Math.round(originalSize * durationRatio * 0.95);
-    if (maxPossibleSize > 30_000) {
-      estimatedBytes = Math.min(estimatedBytes, maxPossibleSize);
-    }
+    estimatedBytes = Math.max(
+      minBytes,
+      Math.min(estimatedBytes, Math.round(targetCapBytes * safetyMargin)),
+    );
   }
 
   return estimatedBytes;

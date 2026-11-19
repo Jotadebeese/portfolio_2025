@@ -16,6 +16,7 @@ import {
   Square,
   Loader,
   X,
+  AlertCircle,
 } from "lucide-react";
 import {
   VideoFpsOption,
@@ -33,11 +34,15 @@ type Props = {
   selectedCount: number;
   selectedPendingCount?: number;
   selectedDoneCount?: number;
+  doneCount?: number;
+  hasLargerItems?: boolean;
+  hasOverCapItems?: boolean;
   totalCount: number;
   onToggleSelectAll: () => void;
   onCompressSelected?: () => void;
   onDeleteSelected: () => void;
   onDownloadSelected: () => void;
+  onDownloadAll?: () => void;
   isDownloadingZip?: boolean;
   totalOriginalBytes: number;
   totalCompressedBytes: number;
@@ -90,11 +95,15 @@ export default function Toolbar({
   selectedCount,
   selectedPendingCount = 0,
   selectedDoneCount = 0,
+  doneCount = 0,
+  hasLargerItems = false,
+  hasOverCapItems = false,
   totalCount,
   onToggleSelectAll,
   onCompressSelected,
   onDeleteSelected,
   onDownloadSelected,
+  onDownloadAll,
   isDownloadingZip = false,
   totalOriginalBytes,
   totalCompressedBytes,
@@ -247,11 +256,17 @@ export default function Toolbar({
                 title={
                   hasUncompressed || hasPendingChanges
                     ? "Run hardware-accelerated video compression"
-                    : "All videos in queue are already optimized with current settings"
+                    : hasLargerItems
+                      ? "Some compressed videos are larger than the original"
+                      : hasOverCapItems
+                        ? "Some videos exceeded the requested target size cap"
+                        : "All videos in queue are already optimized with current settings"
                 }
               >
                 {hasUncompressed || hasPendingChanges ? (
                   <Play className="h-3.5 w-3.5 fill-current" />
+                ) : hasLargerItems || hasOverCapItems ? (
+                  <AlertCircle className="text-code-rust h-3.5 w-3.5" />
                 ) : (
                   <Check className="text-code-green h-3.5 w-3.5" />
                 )}
@@ -260,7 +275,11 @@ export default function Toolbar({
                     ? `Compress Queue (${(uncompressedCount ?? totalCount) + (pendingChangesCount ?? 0)})`
                     : hasPendingChanges
                       ? `Apply Changes (${pendingChangesCount ?? totalCount})`
-                      : "All Optimized"}
+                      : hasLargerItems
+                        ? "Done (Larger)"
+                        : hasOverCapItems
+                          ? "Done (Over cap)"
+                          : "All Optimized"}
                 </span>
               </button>
             )}
@@ -314,24 +333,25 @@ export default function Toolbar({
                   })
                 }
                 className={clsx(
-                  "border-border-color flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1 text-xs transition-all",
+                  "border-border-color hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2.5 py-1 text-xs transition-all",
                   settings.stripAudio ? "text-code-rust" : "text-foreground",
                 )}
+                aria-pressed={settings.stripAudio}
                 title={
                   settings.stripAudio
-                    ? "Audio track stripped for lightweight web hero loops"
-                    : "Audio track will be preserved"
+                    ? "Audio track is off (stripped on export)"
+                    : "Audio track will be preserved on export"
                 }
               >
                 {settings.stripAudio ? (
                   <>
                     <VolumeX className="h-3.5 w-3.5" />
-                    <span>Mute</span>
+                    <span>Off</span>
                   </>
                 ) : (
                   <>
                     <Volume2 className="h-3.5 w-3.5" />
-                    <span>Keep </span>
+                    <span>Keep</span>
                   </>
                 )}
               </button>
@@ -416,11 +436,13 @@ export default function Toolbar({
           </div>
 
           <div className="flex min-w-0 flex-col gap-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="text-foreground shrink-0">Size:</span>
+            <div className="flex min-w-0 items-start gap-2 sm:items-center">
+              <span className="text-foreground shrink-0 pt-1 sm:pt-0">
+                Size:
+              </span>
 
               {isCustom ? (
-                <div className="flex max-w-full shrink-0 items-center gap-1.5 overflow-x-auto">
+                <div className="flex max-w-full flex-wrap items-center gap-1.5">
                   <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
                     <button
                       type="button"
@@ -438,7 +460,7 @@ export default function Toolbar({
                     </button>
                   </div>
 
-                  <div className="border-border-color flex shrink-0 items-center rounded-md border bg-white p-0.5">
+                  <div className="border-border-color flex max-w-full flex-wrap items-center gap-0.5 rounded-md border bg-white p-0.5">
                     <button
                       type="button"
                       disabled={
@@ -535,7 +557,7 @@ export default function Toolbar({
                   </button>
                 </div>
               ) : (
-                <div className="border-border-color flex max-w-full items-center overflow-x-auto rounded-md border bg-white p-0.5 sm:overflow-visible">
+                <div className="border-border-color flex max-w-full flex-wrap items-center gap-0.5 rounded-md border bg-white p-0.5">
                   {RESIZE_PRESETS.map((p) => (
                     <button
                       key={p.value}
@@ -577,7 +599,7 @@ export default function Toolbar({
               <span className="text-foreground shrink-0">Tuning:</span>
             </div>
 
-            <div className="border-border-color flex shrink-0 items-center rounded-md border bg-white p-0.5">
+            <div className="border-border-color flex max-w-full flex-wrap items-center gap-0.5 rounded-md border bg-white p-0.5">
               <button
                 type="button"
                 disabled={isProcessing}
@@ -693,7 +715,7 @@ export default function Toolbar({
                 </span>
               </div>
 
-              <div className="flex items-center gap-1 overflow-x-auto sm:flex-wrap">
+              <div className="flex flex-wrap items-center gap-1">
                 {[
                   { label: "Low", val: 40 },
                   { label: "Draft", val: 60 },
@@ -723,7 +745,7 @@ export default function Toolbar({
           ) : settings.mode === "target-size" ? (
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-1.5">
-                <div className="border-border-color flex shrink-0 items-center rounded-md border bg-white p-0.5">
+                <div className="border-border-color flex max-w-full flex-wrap items-center gap-0.5 rounded-md border bg-white p-0.5">
                   <button
                     type="button"
                     disabled={isProcessing || (settings.targetSizeMB || 8) <= 1}
@@ -790,7 +812,7 @@ export default function Toolbar({
                 </span>
               </div>
 
-              <div className="flex items-center gap-1 overflow-x-auto sm:flex-wrap">
+              <div className="flex flex-wrap items-center gap-1">
                 {[
                   { label: "Mini", val: 1 },
                   { label: "Hero", val: 3 },
@@ -821,8 +843,9 @@ export default function Toolbar({
 
               {(settings.targetSizeMB || 8) <= 2 && (
                 <span className="text-foreground/70 text-[11px]">
-                  Auto-calibrates 64k audio & resolution ceiling to strictly
-                  guarantee &le; {settings.targetSizeMB || 8} MB
+                  Auto-calibrates bitrate, 64k audio &amp; resolution (retries
+                  automatically if needed) to fit &le;{" "}
+                  {settings.targetSizeMB || 8} MB
                 </span>
               )}
             </div>
@@ -886,7 +909,7 @@ export default function Toolbar({
                 </span>
               </div>
 
-              <div className="flex items-center gap-1 overflow-x-auto sm:flex-wrap">
+              <div className="flex flex-wrap items-center gap-1">
                 {[
                   { label: "Loop", val: 1.0 },
                   { label: "Web", val: 2.5 },
@@ -935,6 +958,23 @@ export default function Toolbar({
                 ({selectedCount}/{totalCount})
               </span>
             </button>
+
+            {!isSomeSelected && doneCount >= 2 && onDownloadAll && (
+              <button
+                type="button"
+                onClick={onDownloadAll}
+                disabled={isDownloadingZip || isProcessing}
+                className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
+                title="Download all compressed clips as a ZIP archive"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>
+                  {isDownloadingZip
+                    ? "Zipping..."
+                    : `Download All (${doneCount})`}
+                </span>
+              </button>
+            )}
 
             {isSomeSelected && (
               <>
@@ -998,9 +1038,8 @@ export default function Toolbar({
             </div>
 
             {hasPendingChanges &&
-              totalEstimatedBytes &&
-              totalEstimatedBytes > 0 &&
-              totalOriginalBytes > totalEstimatedBytes && (
+              (totalEstimatedBytes ?? 0) > 0 &&
+              totalOriginalBytes > (totalEstimatedBytes ?? 0) && (
                 <div
                   className="flex items-center gap-1"
                   title="New estimated total output if re-compressed with current settings"
@@ -1009,7 +1048,7 @@ export default function Toolbar({
                     New:
                   </span>
                   <span className="text-code-blue bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap">
-                    ~{formatBytes(totalEstimatedBytes)} (-
+                    ~{formatBytes(totalEstimatedBytes ?? 0)} (-
                     {totalEstSavingsPct}%)
                   </span>
                 </div>
@@ -1032,9 +1071,8 @@ export default function Toolbar({
               %)
             </span>
           </div>
-        ) : totalEstimatedBytes &&
-          totalEstimatedBytes > 0 &&
-          totalOriginalBytes > totalEstimatedBytes &&
+        ) : (totalEstimatedBytes ?? 0) > 0 &&
+          totalOriginalBytes > 0 &&
           hasUncompressed ? (
           <div
             className="ml-auto flex shrink-0 items-center gap-1.5 text-xs whitespace-nowrap"
@@ -1043,8 +1081,19 @@ export default function Toolbar({
             <span className="text-foreground/70 hidden sm:inline">
               Est. Output:
             </span>
-            <span className="text-code-blue bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap">
-              ~{formatBytes(totalEstimatedBytes)} (-{totalEstSavingsPct}%)
+            <span
+              className={clsx(
+                "bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap",
+                totalOriginalBytes >= (totalEstimatedBytes ?? 0)
+                  ? "text-code-blue"
+                  : "text-code-rust",
+              )}
+            >
+              ~{formatBytes(totalEstimatedBytes ?? 0)} (
+              {totalOriginalBytes >= (totalEstimatedBytes ?? 0)
+                ? `-${totalEstSavingsPct}%`
+                : `+${Math.abs(totalEstSavingsPct)}%`}
+              )
             </span>
           </div>
         ) : null}

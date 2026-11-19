@@ -41,6 +41,7 @@ type Props = {
   onToggleSelect: () => void;
   onActivate: () => void;
   onDownload: () => void;
+  onDownloadOriginal?: () => void;
   onDelete: () => void;
   onOpenCompare?: () => void;
   onOpenEdit?: () => void;
@@ -56,6 +57,7 @@ export default function FileRow({
   onToggleSelect,
   onActivate,
   onDownload,
+  onDownloadOriginal,
   onDelete,
   onOpenCompare,
   onOpenEdit,
@@ -372,6 +374,11 @@ export default function FileRow({
                         (Est. -{estimatedSavings.percentSaved}%)
                       </span>
                     )}
+                    {estimatedSavings && estimatedSavings.percentSaved < 0 && (
+                      <span className="text-code-rust/80 font-mono text-[9px]">
+                        (Est. +{Math.abs(estimatedSavings.percentSaved)}%)
+                      </span>
+                    )}
                   </>
                 )
               )}
@@ -522,7 +529,41 @@ export default function FileRow({
                   className="border-border-color bg-utils-scent-gray-01/30 text-foreground/70 ml-0.5 flex h-6 shrink-0 items-center gap-0.5 rounded-xs border px-1.5 font-mono text-[9px]"
                   title="Settings modified since last compression. Re-compress to apply."
                 >
-                  New Est: ~{formatBytes(estimatedBytes)}
+                  {estimatedBytes > 0
+                    ? `New Est: ~${formatBytes(estimatedBytes)}`
+                    : "Settings changed"}
+                </span>
+              ) : item.compressedSize >= item.originalSize ? (
+                <div className="ml-0.5 flex shrink-0 items-center gap-1">
+                  <span
+                    className="border-code-rust/40 bg-code-rust/10 text-code-rust flex h-6 shrink-0 items-center gap-1 rounded-xs border px-1.5 font-mono text-[9px]"
+                    title="Output is larger than the original file. Download the original or adjust quality/resolution."
+                  >
+                    <AlertCircle size={9} />
+                    <span>Larger</span>
+                  </span>
+                  {onDownloadOriginal && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDownloadOriginal();
+                      }}
+                      className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex h-6 shrink-0 cursor-pointer items-center gap-1 rounded-xs border bg-white px-1.5 font-mono text-[9px] transition-all"
+                      title="Download the smaller original file instead"
+                    >
+                      <Download size={9} />
+                      <span className="hidden sm:inline">Original</span>
+                    </button>
+                  )}
+                </div>
+              ) : item.exceededTargetCap ? (
+                <span
+                  className="border-code-rust/40 bg-code-rust/10 text-code-rust ml-0.5 flex h-6 shrink-0 items-center gap-1 rounded-xs border px-1.5 font-mono text-[9px]"
+                  title="Clip could not physically fit under the target MB cap even after retries"
+                >
+                  <AlertCircle size={9} />
+                  <span>Over cap</span>
                 </span>
               ) : (
                 <span

@@ -27,6 +27,8 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
   const [items, setItems] = useState<Heading[]>(headings);
   const [activeId, setActiveId] = useState<string>(headings[0]?.id || "");
   const [isOpen, setIsOpen] = useState(false);
+  const [hasActiveTools, setHasActiveTools] = useState(false);
+  const [isWorkbenchInView, setIsWorkbenchInView] = useState(false);
 
   const isClicking = useRef(false);
 
@@ -36,6 +38,7 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
 
   useEffect(() => {
     return subscribeWorkbenchTools((activeTools) => {
+      setHasActiveTools(activeTools.length > 0);
       setItems((prevItems) => {
         const hasWorkbench =
           prevItems.some(
@@ -120,6 +123,28 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
 
     return () => observer.disconnect();
   }, [items]);
+
+  useEffect(() => {
+    if (!hasActiveTools) {
+      setIsWorkbenchInView(false);
+      return;
+    }
+
+    const workbenchEl =
+      document.querySelector('[data-tools-workbench="true"]') ||
+      document.getElementById("tools-workbench");
+    if (!workbenchEl) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setIsWorkbenchInView(entries.some((entry) => entry.isIntersecting));
+      },
+      { threshold: 0.05 },
+    );
+
+    observer.observe(workbenchEl);
+    return () => observer.disconnect();
+  }, [hasActiveTools]);
 
   const handleClick = (e: React.MouseEvent, id: string) => {
     const element = document.getElementById(id);
@@ -345,13 +370,15 @@ export default function TableOfContents({ headings }: { headings: Heading[] }) {
       </aside>
 
       <div className="md:hidden">
-        <button
-          onClick={() => setIsOpen(true)}
-          className="bg-foreground text-background fixed right-2.5 bottom-18 z-40 flex cursor-pointer items-center justify-center rounded-full p-3 shadow-sm transition-transform active:scale-95 sm:right-5"
-          aria-label="Table of Contents"
-        >
-          <List size={20} />
-        </button>
+        {!(hasActiveTools && isWorkbenchInView) && (
+          <button
+            onClick={() => setIsOpen(true)}
+            className="bg-foreground text-background fixed right-2.5 bottom-18 z-40 flex cursor-pointer items-center justify-center rounded-full p-3 shadow-sm transition-transform active:scale-95 sm:right-5"
+            aria-label="Table of Contents"
+          >
+            <List size={20} />
+          </button>
+        )}
         {isOpen && (
           <div
             className="fixed inset-0 z-60 bg-black/40 transition-opacity"

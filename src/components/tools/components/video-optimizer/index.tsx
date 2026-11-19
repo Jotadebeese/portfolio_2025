@@ -28,7 +28,7 @@ const DEFAULT_SETTINGS: VideoOptimizerSettings = {
   resizePreset: "1080p",
   targetFps: "original",
   exportSpeed: 1,
-  stripAudio: true,
+  stripAudio: false,
 };
 
 export default function VideoOptimizer() {
@@ -334,6 +334,7 @@ export default function VideoOptimizer() {
                 compressedFormat: result.format,
                 compressedDuration: result.duration,
                 compressedFps: result.fps,
+                exceededTargetCap: result.exceededTargetCap,
                 lastCompressedSettings: { ...itemSettings },
               };
             }),
@@ -503,14 +504,21 @@ export default function VideoOptimizer() {
     document.body.removeChild(a);
   };
 
-  const handleDownloadSelected = async () => {
-    const selectedItems = items.filter(
-      (i) => selectedIds.has(i.id) && i.status === "done" && i.compressedBlob,
-    );
-    if (selectedItems.length === 0) return;
+  const handleDownloadOriginal = (item: VideoFileItem) => {
+    if (!item.originalUrl) return;
+    const a = document.createElement("a");
+    a.href = item.originalUrl;
+    a.download = item.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
-    if (selectedItems.length === 1) {
-      handleDownloadSingle(selectedItems[0]);
+  const downloadVideosBatch = async (targetItems: VideoFileItem[]) => {
+    if (targetItems.length === 0) return;
+
+    if (targetItems.length === 1) {
+      handleDownloadSingle(targetItems[0]);
       return;
     }
 
@@ -519,7 +527,7 @@ export default function VideoOptimizer() {
       const zip = new JSZip();
       const usedNames = new Set<string>();
 
-      for (const item of selectedItems) {
+      for (const item of targetItems) {
         if (item.compressedBlob) {
           const baseFilename = getVideoFilenameWithExtension(
             item.name,
@@ -557,6 +565,20 @@ export default function VideoOptimizer() {
     } finally {
       setIsDownloadingZip(false);
     }
+  };
+
+  const handleDownloadSelected = async () => {
+    const selectedItems = items.filter(
+      (i) => selectedIds.has(i.id) && i.status === "done" && i.compressedBlob,
+    );
+    await downloadVideosBatch(selectedItems);
+  };
+
+  const handleDownloadAll = async () => {
+    const doneItems = items.filter(
+      (i) => i.status === "done" && i.compressedBlob,
+    );
+    await downloadVideosBatch(doneItems);
   };
 
   useEffect(() => {
@@ -650,31 +672,50 @@ export default function VideoOptimizer() {
   const maxSourceFps =
     fpsValues.length > 0 ? Math.max(...fpsValues) : undefined;
 
-  const totalEstimatedBytes = items.reduce((acc, item) => {
-    const effectiveItemSettings = {
-      ...settings,
-      stripAudio:
-        item.stripAudio !== undefined ? item.stripAudio : settings.stripAudio,
-      exportSpeed:
-        item.exportSpeed !== undefined
-          ? item.exportSpeed
-          : settings.exportSpeed ?? 1,
-      targetFps:
-        item.targetFps !== undefined ? item.targetFps : settings.targetFps,
-      sections: item.sections,
-    };
-    const est = estimateVideoSize(
-      item.duration,
-      effectiveItemSettings,
-      item.trim,
-      item.originalDimensions.width,
-      item.originalDimensions.height,
-      item.originalSize,
-      item.sections,
-      item.originalFps,
-    );
-    return acc + (est > 0 ? est : item.originalSize);
-  }, 0);
+  const totalEstimatedBytes =
+    settings.mode === "quality"
+      ? 0
+      : items.reduce((acc, item) => {
+          const effectiveItemSettings = {
+            ...settings,
+            stripAudio:
+              item.stripAudio !== undefined
+                ? item.stripAudio
+                : settings.stripAudio,
+            exportSpeed:
+              item.exportSpeed !== undefined
+                ? item.exportSpeed
+                : settings.exportSpeed ?? 1,
+            targetFps:
+              item.targetFps !== undefined
+                ? item.targetFps
+                : settings.targetFps,
+            sections: item.sections,
+          };
+          const est = estimateVideoSize(
+            item.duration,
+            effectiveItemSettings,
+            item.trim,
+            item.originalDimensions.width,
+            item.originalDimensions.height,
+            item.originalSize,
+            item.sections,
+            item.originalFps,
+          );
+          return acc + (est > 0 ? est : 0);
+        }, 0);
+  const doneCount = items.filter(
+    (i) => i.status === "done" && i.compressedBlob,
+  ).length;
+  const hasLargerItems = items.some(
+    (i) =>
+      i.status === "done" &&
+      i.compressedSize !== undefined &&
+      i.compressedSize >= i.originalSize,
+  );
+  const hasOverCapItems = items.some(
+    (i) => i.status === "done" && Boolean(i.exceededTargetCap),
+  );
   const uncompressedCount = items.filter((i) => i.status !== "done").length;
   const pendingChangesCount = items.filter(
     (i) =>
@@ -729,11 +770,15 @@ export default function VideoOptimizer() {
         selectedCount={selectedIds.size}
         selectedPendingCount={selectedPendingCount}
         selectedDoneCount={selectedDoneCount}
+        doneCount={doneCount}
+        hasLargerItems={hasLargerItems}
+        hasOverCapItems={hasOverCapItems}
         totalCount={items.length}
         onToggleSelectAll={handleToggleSelectAll}
         onCompressSelected={handleCompressSelected}
         onDeleteSelected={handleDeleteSelected}
         onDownloadSelected={handleDownloadSelected}
+        onDownloadAll={handleDownloadAll}
         isDownloadingZip={isDownloadingZip}
         totalOriginalBytes={totalOriginalBytes}
         totalCompressedBytes={totalCompressedBytes}
@@ -809,6 +854,7 @@ export default function VideoOptimizer() {
                     onToggleSelect={() => handleToggleSelect(item.id)}
                     onActivate={() => setActiveId(item.id)}
                     onDownload={() => handleDownloadSingle(item)}
+                    onDownloadOriginal={() => handleDownloadOriginal(item)}
                     onDelete={() => handleDeleteItem(item.id)}
                     onOpenEdit={() => setEditingItem(item)}
                     onCompressSingle={() => handleCompressSingle(item)}
@@ -839,6 +885,9 @@ export default function VideoOptimizer() {
               settings={settings}
               isProcessing={isProcessing}
               onDownload={() => activeItem && handleDownloadSingle(activeItem)}
+              onDownloadOriginal={() =>
+                activeItem && handleDownloadOriginal(activeItem)
+              }
               onDelete={() => activeItem && handleDeleteItem(activeItem.id)}
               onOpenCompare={() => activeItem && setComparingItem(activeItem)}
               onOpenEdit={() => activeItem && setEditingItem(activeItem)}

@@ -1017,7 +1017,10 @@ export default function EditModal({
     finalSectionsToApply,
     item.originalFps,
   );
-  const estimatedSavings = calculateSavings(item.originalSize, estimatedBytes);
+  const estimatedSavings =
+    estimatedBytes > 0
+      ? calculateSavings(item.originalSize, estimatedBytes)
+      : null;
 
   const handleApply = () => {
     onApply(
@@ -1810,9 +1813,10 @@ export default function EditModal({
                     "border-border-color hover:bg-utils-scent-gray-01/30 flex h-7 cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2.5 text-xs leading-none transition-all",
                     isMuted ? "text-code-rust" : "text-foreground",
                   )}
+                  aria-pressed={isMuted}
                   title={
                     isMuted
-                      ? "Audio track will be stripped on export"
+                      ? "Audio track is off (stripped on export)"
                       : "Audio track will be preserved on export"
                   }
                 >
@@ -1821,7 +1825,7 @@ export default function EditModal({
                   ) : (
                     <Volume2 className="h-3.5 w-3.5" />
                   )}
-                  <span>{isMuted ? "Mute" : "Keep"}</span>
+                  <span>{isMuted ? "Off" : "Keep"}</span>
                 </button>
               ) : (
                 <span className="border-border-color text-foreground/55 flex h-7 items-center rounded-md border bg-white px-2.5 text-xs leading-none">
@@ -1840,12 +1844,19 @@ export default function EditModal({
               Projected Output:
             </span>
             <span className="text-foreground font-mono">
-              {formatStatDuration(finalOutputDuration)} &bull; ~
-              {formatBytes(estimatedBytes)}
+              {formatStatDuration(finalOutputDuration)} &bull;{" "}
+              {estimatedBytes > 0
+                ? `~${formatBytes(estimatedBytes)}`
+                : "Adaptive (VBR)"}
             </span>
             {estimatedSavings && estimatedSavings.percentSaved > 0 && (
               <span className="text-code-green bg-utils-scent-gray-01/40 border-border-color inline-flex h-7 items-center rounded-md border px-2 font-mono text-xs leading-none">
                 Est. -{estimatedSavings.percentSaved}%
+              </span>
+            )}
+            {estimatedSavings && estimatedSavings.percentSaved < 0 && (
+              <span className="text-code-rust bg-utils-scent-gray-01/40 border-border-color inline-flex h-7 items-center rounded-md border px-2 font-mono text-xs leading-none">
+                Est. +{Math.abs(estimatedSavings.percentSaved)}%
               </span>
             )}
           </div>

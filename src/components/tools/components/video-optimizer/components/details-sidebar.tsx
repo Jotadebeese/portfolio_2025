@@ -32,6 +32,7 @@ import {
   hasSettingsChanged,
   getVideoOrientation,
   getAdaptedPresetForTargetSize,
+  getMinTargetSizeBytes,
   estimateVideoSize,
   resolveTargetFps,
 } from "../utils/format";
@@ -42,6 +43,7 @@ type Props = {
   settings: VideoOptimizerSettings;
   isProcessing?: boolean;
   onDownload: () => void;
+  onDownloadOriginal?: () => void;
   onDelete: () => void;
   onOpenCompare: () => void;
   onOpenEdit: () => void;
@@ -66,6 +68,7 @@ export default function DetailsSidebar({
   settings,
   isProcessing = false,
   onDownload,
+  onDownloadOriginal,
   onDelete,
   onOpenCompare,
   onOpenEdit,
@@ -183,7 +186,29 @@ export default function DetailsSidebar({
       ? calculateSavings(item.originalSize, item.compressedSize)
       : null;
 
-  const estimatedSavings = calculateSavings(item.originalSize, estimatedBytes);
+  const estimatedSavings =
+    estimatedBytes > 0
+      ? calculateSavings(item.originalSize, estimatedBytes)
+      : null;
+
+  const targetCapMB = settings.targetSizeMB ?? 8;
+  const targetCapBytes = targetCapMB * 1024 * 1024;
+  const minPlayableBytes =
+    settings.mode === "target-size" && effectiveDuration > 0
+      ? getMinTargetSizeBytes(
+          effectiveDuration,
+          Boolean(isStrippedAudio),
+          targetCapMB,
+        )
+      : 0;
+  const isCapBelowFloor =
+    settings.mode === "target-size" && minPlayableBytes > targetCapBytes;
+  const showPostOverCap =
+    item.status === "done" &&
+    Boolean(item.exceededTargetCap) &&
+    !itemSettingsChanged;
+  const showPreOverCap =
+    isCapBelowFloor && (item.status !== "done" || itemSettingsChanged);
 
   const activeFormat = (item.compressedFormat ||
     settings.format) as VideoOutputFormat;
@@ -376,8 +401,17 @@ export default function DetailsSidebar({
             </span>
           )}
         {!realSavings && estimatedSavings && (
-          <span className="text-foreground/70 bg-utils-scent-gray-01/40 shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px]">
-            ~{estimatedSavings.percentSaved}% (Est.)
+          <span
+            className={clsx(
+              "bg-utils-scent-gray-01/40 shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px]",
+              estimatedSavings.isReduced
+                ? "text-foreground/70"
+                : "text-code-rust",
+            )}
+          >
+            {estimatedSavings.isReduced
+              ? `~-${estimatedSavings.percentSaved}% (Est.)`
+              : `~+${Math.abs(estimatedSavings.percentSaved)}% (Est.)`}
           </span>
         )}
       </div>
@@ -404,7 +438,9 @@ export default function DetailsSidebar({
               ? formatBytes(item.compressedSize)
               : item.status === "processing"
                 ? `Optimizing (${item.progress}%)`
-                : `~${formatBytes(estimatedBytes)} (Est.)`}
+                : estimatedBytes > 0
+                  ? `~${formatBytes(estimatedBytes)} (Est.)`
+                  : "Adaptive (VBR)"}
           </span>
 
           {realSavings ? (
@@ -435,10 +471,22 @@ export default function DetailsSidebar({
             </>
           ) : estimatedSavings ? (
             <>
-              <span className="text-foreground">Estimated Savings:</span>
-              <span className="text-foreground text-right font-mono">
-                ~{formatBytes(estimatedSavings.bytesSaved)} (-
-                {estimatedSavings.percentSaved}%)
+              <span className="text-foreground">
+                {estimatedSavings.bytesSaved >= 0
+                  ? "Estimated Savings:"
+                  : "Estimated Change:"}
+              </span>
+              <span
+                className={clsx(
+                  "text-right font-mono",
+                  estimatedSavings.bytesSaved >= 0
+                    ? "text-foreground"
+                    : "text-code-rust",
+                )}
+              >
+                {estimatedSavings.bytesSaved >= 0
+                  ? `~${formatBytes(estimatedSavings.bytesSaved)} (-${estimatedSavings.percentSaved}%)`
+                  : `+~${formatBytes(Math.abs(estimatedSavings.bytesSaved))} (+${Math.abs(estimatedSavings.percentSaved)}%)`}
               </span>
             </>
           ) : null}
@@ -518,7 +566,15 @@ export default function DetailsSidebar({
 
           <span className="text-foreground">Status:</span>
           <span className="text-right">
-            {item.status === "done" && <span>Ready</span>}
+            {item.status === "done" &&
+              (item.compressedSize !== undefined &&
+              item.compressedSize >= item.originalSize ? (
+                <span className="text-code-rust">Larger than source</span>
+              ) : item.exceededTargetCap ? (
+                <span className="text-code-rust">Over target cap</span>
+              ) : (
+                <span className="text-code-green">Optimized</span>
+              ))}
             {item.status === "processing" && (
               <span>Optimizing ({item.progress}%)</span>
             )}
@@ -544,6 +600,17 @@ export default function DetailsSidebar({
               (settings.resizePreset === "1080p" ||
                 settings.resizePreset === "original");
 
+            const downloadOriginalBtn = onDownloadOriginal ? (
+              <button
+                type="button"
+                onClick={onDownloadOriginal}
+                className="border-foreground bg-foreground text-background flex cursor-pointer items-center justify-center gap-1 rounded-md border px-2.5 py-1 text-xs transition-all hover:opacity-90"
+              >
+                <Download className="h-3 w-3" />
+                <span>Keep Original</span>
+              </button>
+            ) : null;
+
             if (
               usedSettings.mode === "quality" &&
               (usedSettings.qualityPercent || 80) > 85
@@ -563,30 +630,36 @@ export default function DetailsSidebar({
                     <strong className="text-foreground">80% sweet spot</strong>
                     {canDownscaleTo720 ? " or downscale to 720p" : ""}.
                   </div>
-                  {onApplySettings && !isProcessing && (
+                  {((onApplySettings && !isProcessing) ||
+                    downloadOriginalBtn) && (
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onApplySettings({
-                            mode: "quality",
-                            qualityPercent: 80,
-                          })
-                        }
-                        className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
-                      >
-                        Set Quality to 80%
-                      </button>
-                      {canDownscaleTo720 && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onApplySettings({ resizePreset: "720p" })
-                          }
-                          className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
-                        >
-                          Resize to 720p
-                        </button>
+                      {downloadOriginalBtn}
+                      {onApplySettings && !isProcessing && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onApplySettings({
+                                mode: "quality",
+                                qualityPercent: 80,
+                              })
+                            }
+                            className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                          >
+                            Set Quality to 80%
+                          </button>
+                          {canDownscaleTo720 && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onApplySettings({ resizePreset: "720p" })
+                              }
+                              className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                            >
+                              Resize to 720p
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   )}
@@ -610,20 +683,24 @@ export default function DetailsSidebar({
                     <strong className="text-foreground">Quality (80%)</strong>{" "}
                     mode.
                   </div>
-                  {onApplySettings && !isProcessing && (
+                  {((onApplySettings && !isProcessing) ||
+                    downloadOriginalBtn) && (
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onApplySettings({
-                            mode: "quality",
-                            qualityPercent: 80,
-                          })
-                        }
-                        className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
-                      >
-                        Switch to Quality (80%)
-                      </button>
+                      {downloadOriginalBtn}
+                      {onApplySettings && !isProcessing && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onApplySettings({
+                              mode: "quality",
+                              qualityPercent: 80,
+                            })
+                          }
+                          className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                        >
+                          Switch to Quality (80%)
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -636,36 +713,154 @@ export default function DetailsSidebar({
                   <strong className="text-foreground">
                     Why size increased:
                   </strong>{" "}
-                  This {origFormatLabel} is already tightly compressed. Lower
-                  quality to{" "}
-                  <strong className="text-foreground">60%–75%</strong> or
-                  downscale resolution to reduce byte size.
+                  This {origFormatLabel} is already tightly compressed or has
+                  high visual entropy. Keep the smaller original, lower quality
+                  to <strong className="text-foreground">60%–75%</strong>, or
+                  use <strong className="text-foreground">Fit to Size</strong>.
                 </div>
-                {onApplySettings && !isProcessing && (
+                {((onApplySettings && !isProcessing) ||
+                  downloadOriginalBtn) && (
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onApplySettings({
-                          mode: "quality",
-                          qualityPercent: 75,
-                        })
-                      }
-                      className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
-                    >
-                      Set Quality to 75%
-                    </button>
-                    {canDownscaleTo720 && (
+                    {downloadOriginalBtn}
+                    {onApplySettings && !isProcessing && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onApplySettings({
+                              mode: "quality",
+                              qualityPercent: 75,
+                            })
+                          }
+                          className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                        >
+                          Set Quality to 75%
+                        </button>
+                        {canDownscaleTo720 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onApplySettings({ resizePreset: "720p" })
+                            }
+                            className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                          >
+                            Resize to 720p
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+        {(showPostOverCap || showPreOverCap) &&
+          !(realSavings && realSavings.bytesSaved < 0) &&
+          (() => {
+            const usedTargetMB = showPostOverCap
+              ? (item.lastCompressedSettings?.targetSizeMB ?? targetCapMB)
+              : targetCapMB;
+            const usedStripAudio = showPostOverCap
+              ? Boolean(
+                  item.lastCompressedSettings?.stripAudio ?? isStrippedAudio,
+                )
+              : Boolean(isStrippedAudio);
+            const usedMinPlayableBytes =
+              effectiveDuration > 0
+                ? getMinTargetSizeBytes(
+                    effectiveDuration,
+                    usedStripAudio,
+                    usedTargetMB,
+                  )
+                : 0;
+            const isPhysicalFloor =
+              usedMinPlayableBytes > usedTargetMB * 1024 * 1024;
+            const recommendedMB = Math.min(
+              500,
+              Math.max(
+                usedTargetMB + 1,
+                Math.ceil(
+                  Math.max(
+                    usedMinPlayableBytes,
+                    showPostOverCap && item.compressedSize
+                      ? item.compressedSize
+                      : 0,
+                  ) /
+                    (1024 * 1024),
+                ),
+              ),
+            );
+            const hasActiveAudio = item.hasAudio && !usedStripAudio;
+
+            return (
+              <div className="bg-background/40 border-border-color text-foreground/80 flex flex-col gap-2 rounded border border-dashed p-2 text-[10px] leading-relaxed">
+                <div>
+                  <strong className="text-foreground">
+                    {isPhysicalFloor
+                      ? showPostOverCap
+                        ? "Why it exceeded the cap:"
+                        : "Cap below physical minimum:"
+                      : "Why it exceeded the cap:"}
+                  </strong>{" "}
+                  {isPhysicalFloor ? (
+                    <>
+                      A{" "}
+                      <strong className="text-foreground">
+                        {formatDuration(effectiveDuration)}
+                      </strong>{" "}
+                      clip{hasActiveAudio ? " with audio" : ""} requires at
+                      least{" "}
+                      <strong className="text-foreground">
+                        ~{formatBytes(usedMinPlayableBytes)}
+                      </strong>{" "}
+                      at minimum playable bitrate (
+                      {hasActiveAudio ? "64k audio + " : ""}60k video).
+                    </>
+                  ) : (
+                    <>
+                      High visual detail couldn&apos;t fit under{" "}
+                      <strong className="text-foreground">
+                        {usedTargetMB} MB
+                      </strong>{" "}
+                      even after retry passes. Trim the clip, turn audio off,
+                      or raise the cap.
+                    </>
+                  )}
+                </div>
+
+                {!isProcessing && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {onApplySettings && (
                       <button
                         type="button"
                         onClick={() =>
-                          onApplySettings({ resizePreset: "720p" })
+                          onApplySettings({
+                            mode: "target-size",
+                            targetSizeMB: recommendedMB,
+                          })
                         }
                         className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
                       >
-                        Resize to 720p
+                        Set Cap to {recommendedMB} MB
                       </button>
                     )}
+                    {onApplySettings && hasActiveAudio && (
+                      <button
+                        type="button"
+                        onClick={() => onApplySettings({ stripAudio: true })}
+                        className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                      >
+                        Turn Audio Off
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={onOpenEdit}
+                      className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                    >
+                      Trim Clip
+                    </button>
                   </div>
                 )}
               </div>

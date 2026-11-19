@@ -67,14 +67,12 @@ export default function ToolsWorkbench({
   const fallbackTools = getInitialTools();
   const [activeTools, setActiveTools] = useState<ToolId[]>(fallbackTools);
   const [copiedShare, setCopiedShare] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     notifyWorkbenchTools(activeTools);
   }, [activeTools]);
 
   useEffect(() => {
-    setMounted(true);
     if (typeof window === "undefined") return;
 
     if (!hideSelector) {
@@ -172,7 +170,11 @@ export default function ToolsWorkbench({
       .replace(/[^a-z0-9-]/g, "") || "tools-workbench";
 
   return (
-    <section id={sectionId} className="flex w-full scroll-mt-24 flex-col gap-2">
+    <section
+      id={sectionId}
+      data-tools-workbench="true"
+      className="flex w-full scroll-mt-24 flex-col gap-2"
+    >
       {(sectionHeading || description) && (
         <div className="flex flex-col gap-1 pb-2">
           {sectionHeading && <h2>{sectionHeading}</h2>}
@@ -278,6 +280,7 @@ export default function ToolsWorkbench({
                 key={toolId}
                 id={toolId}
                 title={def.name}
+                description={def.shortDesc}
                 apiBadge={def.apiBadge}
                 onClose={hideSelector ? undefined : () => closeTool(toolId)}
               >

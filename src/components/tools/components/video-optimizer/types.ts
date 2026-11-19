@@ -72,5 +72,6 @@ export interface VideoFileItem {
   compressedFormat?: VideoOutputFormat;
   compressedDuration?: number;
   compressedFps?: number;
+  exceededTargetCap?: boolean;
   lastCompressedSettings?: VideoOptimizerSettings;
 }

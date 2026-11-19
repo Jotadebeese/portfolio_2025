@@ -23,10 +23,12 @@ type Props = {
   onSettingsChange: (settings: OptimizerSettings) => void;
   onFilesSelected: (files: FileList | File[]) => void;
   selectedCount: number;
+  doneCount?: number;
   totalCount: number;
   onToggleSelectAll: () => void;
   onDeleteSelected: () => void;
   onDownloadSelected: () => void;
+  onDownloadAll?: () => void;
   isDownloadingZip: boolean;
   totalOriginalBytes: number;
   totalOptimizedBytes: number;
@@ -54,10 +56,12 @@ export default function Toolbar({
   onSettingsChange,
   onFilesSelected,
   selectedCount,
+  doneCount = 0,
   totalCount,
   onToggleSelectAll,
   onDeleteSelected,
   onDownloadSelected,
+  onDownloadAll,
   isDownloadingZip,
   totalOriginalBytes,
   totalOptimizedBytes,
@@ -248,11 +252,13 @@ export default function Toolbar({
             </div>
           )}
 
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="text-foreground shrink-0">Max Size:</span>
+          <div className="flex min-w-0 items-start gap-2 sm:items-center">
+            <span className="text-foreground shrink-0 pt-1 sm:pt-0">
+              Max Size:
+            </span>
 
             {isCustom ? (
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex max-w-full flex-wrap items-center gap-1.5">
                 <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
                   <button
                     onClick={() =>
@@ -357,7 +363,7 @@ export default function Toolbar({
                 </button>
               </div>
             ) : (
-              <div className="border-border-color flex max-w-full items-center overflow-x-auto rounded-md border bg-white p-0.5">
+              <div className="border-border-color flex max-w-full flex-wrap items-center gap-0.5 rounded-md border bg-white p-0.5">
                 {RESIZE_PRESETS.map((p) => (
                   <button
                     key={p.value}
@@ -464,6 +470,23 @@ export default function Toolbar({
                   ({selectedCount}/{totalCount})
                 </span>
               </button>
+
+              {!isSomeSelected && doneCount >= 2 && onDownloadAll && (
+                <button
+                  type="button"
+                  onClick={onDownloadAll}
+                  disabled={isDownloadingZip}
+                  className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
+                  title="Download all optimized images as a ZIP archive"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>
+                    {isDownloadingZip
+                      ? "Zipping..."
+                      : `Download All (${doneCount})`}
+                  </span>
+                </button>
+              )}
 
               {isSomeSelected && (
                 <>
