@@ -16,28 +16,28 @@ export const AVAILABLE_TOOLS: ToolDefinition[] = [
     id: "secret-generator",
     name: "Cryptographic Keys & UUID v7",
     shortDesc:
-      "CSPRNG UUID v7, v4, 256-bit API keys, and passwords generated locally via Web Crypto API.",
+      "Generate UUIDs (v7 and v4), API keys, and passwords locally in your browser.",
     apiBadge: "Web Crypto API",
   },
   {
     id: "jwt-inspector",
     name: "Zero-Knowledge JWT Inspector",
     shortDesc:
-      "Offline token claim decoder and expiration countdown with zero network calls.",
+      "Paste a JWT to inspect its claims and check when it expires, all offline.",
     apiBadge: "atob / JSON",
   },
   {
     id: "image-optimizer",
     name: "Web Image Optimizer",
     shortDesc:
-      "Instant client-side WebP, JPEG, and PNG compression via HTML5 Canvas — files never leave your device.",
+      "Compress and resize images to WebP, JPEG, or PNG directly in your browser.",
     apiBadge: "HTML5 Canvas",
   },
   {
     id: "video-optimizer",
     name: "Web Video Compressor",
     shortDesc:
-      "Hardware-accelerated MP4 & WebM encoding via browser GPU WebCodecs — 100% local, zero server uploads.",
+      "Compress and trim videos to MP4 or WebM using your browser's GPU, no uploads needed.",
     apiBadge: "WebCodecs GPU",
   },
 ];

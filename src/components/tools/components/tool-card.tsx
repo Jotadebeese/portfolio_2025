@@ -50,27 +50,29 @@ export default function ToolCard({
             isCollapsed ? "border-none" : "border-b",
           )}
         >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <h4>{title}</h4>
-              <span className="bg-utils-scent-gray-01/60 text-foreground inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-[10px] sm:py-1 sm:text-xs">
-                {apiBadge}
-              </span>
-              <button
-                onClick={handleCopyAnchor}
-                className="hover:bg-utils-scent-gray-01/30 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-all"
-                aria-label="Copy anchor link"
-                title="Copy anchor link"
-              >
-                {copiedLink ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <Link2 className="h-4 w-4" />
-                )}
-              </button>
+          <div className="flex items-start justify-between gap-2 sm:items-center">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+              <h4 className="leading-snug">{title}</h4>
+              <div className="flex items-center gap-1.5">
+                <span className="bg-utils-scent-gray-01/60 text-foreground inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-[10px] whitespace-nowrap sm:py-1 sm:text-xs">
+                  {apiBadge}
+                </span>
+                <button
+                  onClick={handleCopyAnchor}
+                  className="hover:bg-utils-scent-gray-01/30 flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full transition-all sm:h-8 sm:w-8"
+                  aria-label="Copy anchor link"
+                  title="Copy anchor link"
+                >
+                  {copiedLink ? (
+                    <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  ) : (
+                    <Link2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1">
               <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex cursor-pointer items-center justify-center rounded-lg p-1.5 transition-all"
