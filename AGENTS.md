@@ -82,6 +82,7 @@ src/
 │   ├── navbar/
 │   └── footer/
 ├── lib/
+│   ├── email/          ← Branded HTML email layout and reusable Payload templates
 │   └── payload/
 │       ├── actions.ts  ← ALL data fetching functions (see "Caching" below)
 │       └── utils/      ← Utilities like extractHeadingsFromBlocks
