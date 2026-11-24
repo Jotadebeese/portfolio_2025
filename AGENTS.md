@@ -132,6 +132,25 @@ This project uses **Tailwind v4**, NOT v3. Key differences:
 
 ---
 
+## Design System & UI Contract (3-Layer Architecture)
+
+Keep UI consistent across `jotadebeese.com` and `forthweb.jotadebeese.com` by enforcing these three layers:
+
+| Layer | Location | Purpose |
+| ----- | -------- | ------- |
+| **1. Design Tokens** | `src/app/(app)/globals.css` (`@theme inline`) | Color, typography, and CSS variables (`#eeeeee`, `#181411`, `#ff9900`, `#e6d9d1`, `#cecece`) |
+| **2. Component Primitives** | `src/components/common/cta-button.tsx`, `src/components/ui/` (`ToolButton`, `Badge`) | Enforced reusable button and pill components |
+| **3. UI Rules** | This section | When to use each primitive and surface pattern |
+
+### Rules
+
+1. **Radius grammar:** Use `rounded-full` for page CTAs, filter chips, and nav pills; use `rounded-md` for dense in-app controls inside `src/components/tools/`.
+2. **No ad-hoc buttons:** Use `<CTAButton>` on marketing/page surfaces and `<ToolButton>` (`primary` | `secondary` | `outline` | `danger` | `ghost`) inside tools — never hand-roll new one-off button styles.
+3. **Reserved dashed borders:** Use `border-dashed` strictly for structural dividers, dropzones, empty states, and workbench dock/undock slots — never on action or preset buttons.
+4. **Badges:** Use `<Badge>` (`meta` warm putty `bg-utils-scent-gray-01/60` for tech/API/count pills; `success` / `danger` / `info` for metric readouts).
+
+---
+
 ## RichText Rendering Pipeline
 
 Payload CMS uses **Lexical** for rich text. Custom converters are registered in `src/components/RichText/converters/index.tsx`:

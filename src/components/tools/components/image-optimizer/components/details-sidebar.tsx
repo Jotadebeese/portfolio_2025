@@ -26,6 +26,8 @@ import {
   getFilenameWithExtension,
   getFormatLabel,
 } from "../utils/format";
+import ToolButton from "@/components/ui/tool-button";
+import Badge from "@/components/ui/badge";
 
 type Props = {
   item: ImageFileItem | null;
@@ -237,22 +239,22 @@ export default function DetailsSidebar({
         </div>
 
         {savings && savings.isReduced && (
-          <span className="text-code-green bg-utils-scent-gray-01/40 shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px]">
+          <Badge variant="success" className="shrink-0">
             -{savings.percentSaved}%
-          </span>
+          </Badge>
         )}
         {savings &&
           !savings.isReduced &&
           item.optimizedSize !== undefined &&
           item.optimizedSize > item.originalSize && (
-            <span className="text-code-rust bg-utils-scent-gray-01/40 shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px]">
+            <Badge variant="danger" className="shrink-0">
               +
               {Math.round(
                 ((item.optimizedSize - item.originalSize) / item.originalSize) *
                   100,
               )}
               %
-            </span>
+            </Badge>
           )}
       </div>
 
@@ -593,30 +595,35 @@ export default function DetailsSidebar({
       </div>
 
       <div className="border-border-color flex gap-2 border-t border-dashed pt-3">
-        <button
+        <ToolButton
+          variant="secondary"
+          size="md"
           onClick={onOpenCompare}
           disabled={item.status !== "done"}
-          className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:opacity-50"
+          className="flex-1"
         >
           <Columns2 className="h-3.5 w-3.5" />
           <span>Compare</span>
-        </button>
-        <button
+        </ToolButton>
+        <ToolButton
+          variant="primary"
+          size="md"
           onClick={onDownload}
           disabled={item.status !== "done"}
-          className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:opacity-50"
+          className="flex-1"
         >
           <Download className="h-3.5 w-3.5" />
           <span>Download</span>
-        </button>
-        <button
+        </ToolButton>
+        <ToolButton
+          variant="danger"
+          size="icon-md"
           onClick={onDelete}
-          className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-white transition-all"
           title="Delete from list"
           aria-label="Delete image"
         >
           <Trash2 className="h-3.5 w-3.5" />
-        </button>
+        </ToolButton>
       </div>
     </div>
   );

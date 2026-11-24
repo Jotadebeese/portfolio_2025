@@ -26,6 +26,8 @@ import {
 } from "../types";
 import { formatBytes, calculateSavings, formatFps } from "../utils/format";
 import clsx from "clsx";
+import ToolButton from "@/components/ui/tool-button";
+import Badge from "@/components/ui/badge";
 
 type Props = {
   settings: VideoOptimizerSettings;
@@ -209,13 +211,13 @@ export default function Toolbar({
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
+          <ToolButton
+            variant="secondary"
+            size="sm"
             onClick={() => {
               if (!isQueueFull && !isProcessing) fileInputRef.current?.click();
             }}
             disabled={isQueueFull || isProcessing}
-            className="bg-background border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             title={
               isQueueFull
                 ? `Queue limit reached (${maxFiles} clips max)`
@@ -229,30 +231,32 @@ export default function Toolbar({
                 ({totalCount}/{maxFiles})
               </span>
             )}
-          </button>
+          </ToolButton>
         </div>
         {totalCount > 0 && (
           <div className="flex items-center gap-2">
             {isProcessing ? (
               <>
                 <Loader size={14} className="animate-spin" />
-                <button
-                  type="button"
+                <ToolButton
+                  variant="danger"
+                  size="sm"
                   onClick={onCancelCompress}
-                  className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1.5 text-xs transition-all"
                 >
                   <span>
                     ({processingIndex + 1}/{processingTotal})
                   </span>
                   <Square className="h-3.5 w-3.5" />
-                </button>
+                </ToolButton>
               </>
             ) : (
-              <button
-                type="button"
+              <ToolButton
+                variant={
+                  hasUncompressed || hasPendingChanges ? "primary" : "outline"
+                }
+                size="sm"
                 onClick={onStartCompress}
                 disabled={!hasUncompressed && !hasPendingChanges}
-                className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1.5 text-xs transition-all active:scale-[0.98] disabled:cursor-default disabled:opacity-60 disabled:hover:bg-white"
                 title={
                   hasUncompressed || hasPendingChanges
                     ? "Run hardware-accelerated video compression"
@@ -281,7 +285,7 @@ export default function Toolbar({
                           ? "Done (Over cap)"
                           : "All Optimized"}
                 </span>
-              </button>
+              </ToolButton>
             )}
           </div>
         )}
@@ -731,10 +735,10 @@ export default function Toolbar({
                       onSettingsChange({ ...settings, qualityPercent: qp.val })
                     }
                     className={clsx(
-                      "border-border-color shrink-0 cursor-pointer rounded border border-dashed px-1.5 py-1 text-[10px] text-nowrap transition-all",
+                      "shrink-0 cursor-pointer rounded border px-1.5 py-1 text-[10px] text-nowrap transition-colors",
                       (settings.qualityPercent || 80) === qp.val
-                        ? "bg-foreground/5 text-foreground border-foreground/5 border-solid"
-                        : "text-foreground/50 hover:text-foreground",
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border-color/80 text-foreground/70 hover:text-foreground hover:bg-background bg-white",
                     )}
                   >
                     {qp.label} ({qp.val}%)
@@ -829,10 +833,10 @@ export default function Toolbar({
                       onSettingsChange({ ...settings, targetSizeMB: sp.val })
                     }
                     className={clsx(
-                      "border-border-color shrink-0 cursor-pointer rounded border border-dashed px-1.5 py-1 text-[10px] text-nowrap transition-all",
+                      "shrink-0 cursor-pointer rounded border px-1.5 py-1 text-[10px] text-nowrap transition-colors",
                       (settings.targetSizeMB || 8) === sp.val
-                        ? "bg-foreground/5 text-foreground border-foreground/5 border-solid"
-                        : "text-foreground/50 hover:text-foreground",
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border-color/80 text-foreground/70 hover:text-foreground hover:bg-background bg-white",
                     )}
                     title={`${sp.label} (${sp.val}MB max limit)`}
                   >
@@ -924,10 +928,10 @@ export default function Toolbar({
                       onSettingsChange({ ...settings, bitrateMbps: bp.val })
                     }
                     className={clsx(
-                      "border-border-color shrink-0 cursor-pointer rounded border border-dashed px-1.5 py-1 text-[10px] text-nowrap transition-all",
+                      "shrink-0 cursor-pointer rounded border px-1.5 py-1 text-[10px] text-nowrap transition-colors",
                       settings.bitrateMbps === bp.val
-                        ? "bg-foreground/5 text-foreground border-foreground/5 border-solid"
-                        : "text-foreground/50 hover:text-foreground",
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border-color/80 text-foreground/70 hover:text-foreground hover:bg-background bg-white",
                     )}
                   >
                     {bp.label} ({bp.val}M)
@@ -941,11 +945,11 @@ export default function Toolbar({
       <div className="flex flex-wrap items-center justify-between gap-2">
         {totalCount > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            <button
-              type="button"
+            <ToolButton
+              variant="secondary"
+              size="sm"
               onClick={onToggleSelectAll}
               disabled={isProcessing}
-              className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
               title={isAllSelected ? "Deselect all" : "Select all"}
             >
               {isAllSelected ? (
@@ -957,14 +961,14 @@ export default function Toolbar({
               <span className="text-foreground/70 font-mono text-[11px]">
                 ({selectedCount}/{totalCount})
               </span>
-            </button>
+            </ToolButton>
 
             {!isSomeSelected && doneCount >= 2 && onDownloadAll && (
-              <button
-                type="button"
+              <ToolButton
+                variant="secondary"
+                size="sm"
                 onClick={onDownloadAll}
                 disabled={isDownloadingZip || isProcessing}
-                className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
                 title="Download all compressed clips as a ZIP archive"
               >
                 <Download className="h-3.5 w-3.5" />
@@ -973,32 +977,32 @@ export default function Toolbar({
                     ? "Zipping..."
                     : `Download All (${doneCount})`}
                 </span>
-              </button>
+              </ToolButton>
             )}
 
             {isSomeSelected && (
               <>
                 {onCompressSelected && selectedPendingCount > 0 && (
-                  <button
-                    type="button"
+                  <ToolButton
+                    variant="secondary"
+                    size="sm"
                     onClick={onCompressSelected}
                     disabled={isProcessing}
-                    className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
                     title="Optimize selected videos with pending changes"
                   >
                     <Play className="h-3.5 w-3.5 fill-current" />
                     <span className="font-mono text-[11px]">
                       ({selectedPendingCount})
                     </span>
-                  </button>
+                  </ToolButton>
                 )}
 
                 {selectedDoneCount > 0 && (
-                  <button
-                    type="button"
+                  <ToolButton
+                    variant="secondary"
+                    size="sm"
                     onClick={onDownloadSelected}
                     disabled={isDownloadingZip || isProcessing}
-                    className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
                     title="Download selected compressed clips"
                   >
                     <Download className="h-3.5 w-3.5" />
@@ -1007,21 +1011,21 @@ export default function Toolbar({
                         ? "Zipping..."
                         : `(${selectedDoneCount})`}
                     </span>
-                  </button>
+                  </ToolButton>
                 )}
 
-                <button
-                  type="button"
+                <ToolButton
+                  variant="danger"
+                  size="sm"
                   onClick={onDeleteSelected}
                   disabled={isProcessing}
-                  className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1.5 text-xs transition-all disabled:opacity-50"
                   title="Delete selected videos"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   <span className="font-mono text-[11px]">
                     ({selectedCount})
                   </span>
-                </button>
+                </ToolButton>
               </>
             )}
           </div>
@@ -1032,9 +1036,9 @@ export default function Toolbar({
               <span className="text-foreground/70 hidden sm:inline">
                 Saved:
               </span>
-              <span className="text-code-green bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap">
+              <Badge variant="success">
                 {formatBytes(totalSavedBytes)} (-{totalSavingsPct}%)
-              </span>
+              </Badge>
             </div>
 
             {hasPendingChanges &&
@@ -1047,10 +1051,10 @@ export default function Toolbar({
                   <span className="text-foreground/70 hidden sm:inline">
                     New:
                   </span>
-                  <span className="text-code-blue bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap">
+                  <Badge variant="info">
                     ~{formatBytes(totalEstimatedBytes ?? 0)} (-
                     {totalEstSavingsPct}%)
-                  </span>
+                  </Badge>
                 </div>
               )}
           </div>
@@ -1061,7 +1065,7 @@ export default function Toolbar({
             <span className="text-foreground/70 hidden sm:inline">
               Size change:
             </span>
-            <span className="text-code-rust bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap">
+            <Badge variant="danger">
               +{formatBytes(totalCompressedBytes - totalOriginalBytes)} (+
               {Math.round(
                 ((totalCompressedBytes - totalOriginalBytes) /
@@ -1069,7 +1073,7 @@ export default function Toolbar({
                   100,
               )}
               %)
-            </span>
+            </Badge>
           </div>
         ) : (totalEstimatedBytes ?? 0) > 0 &&
           totalOriginalBytes > 0 &&
@@ -1081,20 +1085,19 @@ export default function Toolbar({
             <span className="text-foreground/70 hidden sm:inline">
               Est. Output:
             </span>
-            <span
-              className={clsx(
-                "bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap",
+            <Badge
+              variant={
                 totalOriginalBytes >= (totalEstimatedBytes ?? 0)
-                  ? "text-code-blue"
-                  : "text-code-rust",
-              )}
+                  ? "info"
+                  : "danger"
+              }
             >
               ~{formatBytes(totalEstimatedBytes ?? 0)} (
               {totalOriginalBytes >= (totalEstimatedBytes ?? 0)
                 ? `-${totalEstSavingsPct}%`
                 : `+${Math.abs(totalEstSavingsPct)}%`}
               )
-            </span>
+            </Badge>
           </div>
         ) : null}
       </div>

@@ -37,6 +37,7 @@ import {
   resolveTargetFps,
 } from "../utils/format";
 import { calculateTargetVideoDimensions } from "../utils/compress-video";
+import ToolButton from "@/components/ui/tool-button";
 
 type Props = {
   item: VideoFileItem | null;
@@ -875,59 +876,67 @@ export default function DetailsSidebar({
             (item.status === "idle" ||
               item.status === "error" ||
               itemSettingsChanged) && (
-              <button
-                type="button"
+              <ToolButton
+                variant="primary"
+                size="md"
                 onClick={onCompressSingle}
                 disabled={isProcessing}
-                className="border-foreground bg-foreground text-background flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1"
               >
                 <Play className="h-3.5 w-3.5 fill-current" />
                 <span>
                   {itemSettingsChanged ? "Apply Changes" : "Optimize"}
                 </span>
-              </button>
+              </ToolButton>
             )}
-          <button
-            type="button"
+          <ToolButton
+            variant="secondary"
+            size="md"
             onClick={onOpenEdit}
             disabled={isProcessing}
-            className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1"
           >
             <Scissors className="h-3.5 w-3.5" />
             <span>Edit Studio</span>
-          </button>
+          </ToolButton>
         </div>
 
         <div className="border-border-color flex gap-2 border-t border-dashed pt-3">
-          <button
-            type="button"
+          <ToolButton
+            variant="secondary"
+            size="md"
             onClick={onOpenCompare}
             disabled={item.status !== "done"}
-            className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1"
           >
             <Columns2 className="h-3.5 w-3.5" />
             <span>Compare</span>
-          </button>
-          <button
-            type="button"
+          </ToolButton>
+          <ToolButton
+            variant={
+              item.status === "done" && !itemSettingsChanged
+                ? "primary"
+                : "secondary"
+            }
+            size="md"
             onClick={onDownload}
             disabled={item.status !== "done"}
-            className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs transition-all disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1"
           >
             <Download className="h-3.5 w-3.5" />
             <span>Download</span>
-          </button>
+          </ToolButton>
 
-          <button
-            type="button"
+          <ToolButton
+            variant="danger"
+            size="icon-md"
             onClick={onDelete}
             disabled={isProcessing}
-            className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-white transition-all disabled:cursor-not-allowed disabled:opacity-50"
             title="Delete from list"
             aria-label="Delete video"
           >
             <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          </ToolButton>
         </div>
       </div>
     </div>

@@ -17,6 +17,8 @@ import {
 import { OptimizerSettings, OutputFormat, ResizePreset } from "../types";
 import { formatBytes } from "../utils/format";
 import clsx from "clsx";
+import ToolButton from "@/components/ui/tool-button";
+import Badge from "@/components/ui/badge";
 
 type Props = {
   settings: OptimizerSettings;
@@ -149,12 +151,13 @@ export default function Toolbar({
         className="hidden"
       />
       <div>
-        <button
+        <ToolButton
+          variant="secondary"
+          size="sm"
           onClick={() => {
             if (!isQueueFull) fileInputRef.current?.click();
           }}
           disabled={isQueueFull}
-          className="bg-background border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           title={
             isQueueFull
               ? `Queue limit reached (${maxFiles} images max)`
@@ -168,9 +171,9 @@ export default function Toolbar({
               ({totalCount}/{maxFiles})
             </span>
           )}
-        </button>
+        </ToolButton>
       </div>
-      <div className="border-border-color bg-background/50 flex flex-col justify-between gap-3 rounded-md border border-dashed p-2 text-xs md:flex-row md:items-stretch">
+      <div className="border-border-color bg-background/50 flex flex-col justify-between gap-3 rounded-md border border-dashed p-2 text-xs lg:flex-row lg:items-stretch">
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <span className="text-foreground shrink-0">Format:</span>
@@ -378,7 +381,7 @@ export default function Toolbar({
                       })
                     }
                     className={clsx(
-                      "shrink-0 cursor-pointer rounded px-2.5 py-0.5 text-xs whitespace-nowrap transition-all",
+                      "shrink-0 cursor-pointer rounded px-2 py-0.5 text-xs whitespace-nowrap transition-all",
                       settings.resizePreset === p.value
                         ? "bg-foreground text-background font-medium"
                         : "text-foreground/70 hover:text-foreground",
@@ -392,7 +395,7 @@ export default function Toolbar({
           </div>
         </div>
 
-        <div className="border-border-color flex shrink-0 items-center gap-2 border-t border-dashed pt-2.5 md:border-t-0 md:border-l md:border-dashed md:pt-0 md:pl-4">
+        <div className="border-border-color flex shrink-0 items-center gap-2 border-t border-dashed pt-2.5 lg:border-t-0 lg:border-l lg:border-dashed lg:pt-0 lg:pl-4">
           <Sliders className="text-foreground/70 h-3.5 w-3.5 shrink-0" />
           <span className="text-foreground shrink-0">Quality:</span>
 
@@ -455,9 +458,11 @@ export default function Toolbar({
         <div className="flex flex-wrap items-center gap-2">
           {totalCount > 0 && (
             <>
-              <button
+              <ToolButton
+                variant="secondary"
+                size="sm"
                 onClick={onToggleSelectAll}
-                className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all select-none"
+                className="select-none"
                 title={isAllSelected ? "Deselect all" : "Select all"}
               >
                 {isAllSelected ? (
@@ -469,14 +474,14 @@ export default function Toolbar({
                 <span className="text-foreground/70 font-mono text-[11px]">
                   ({selectedCount}/{totalCount})
                 </span>
-              </button>
+              </ToolButton>
 
               {!isSomeSelected && doneCount >= 2 && onDownloadAll && (
-                <button
-                  type="button"
+                <ToolButton
+                  variant="secondary"
+                  size="sm"
                   onClick={onDownloadAll}
                   disabled={isDownloadingZip}
-                  className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
                   title="Download all optimized images as a ZIP archive"
                 >
                   <Download className="h-3.5 w-3.5" />
@@ -485,33 +490,35 @@ export default function Toolbar({
                       ? "Zipping..."
                       : `Download All (${doneCount})`}
                   </span>
-                </button>
+                </ToolButton>
               )}
 
               {isSomeSelected && (
                 <>
-                  <button
+                  <ToolButton
+                    variant="secondary"
+                    size="sm"
                     onClick={onDownloadSelected}
                     disabled={isDownloadingZip}
-                    className="border-border-color text-foreground bg-background hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-all disabled:opacity-50"
                     title="Download selected images as a ZIP archive"
                   >
                     <Download className="h-3.5 w-3.5" />
                     <span className="font-mono text-[11px]">
                       {isDownloadingZip ? "Zipping..." : `(${selectedCount})`}
                     </span>
-                  </button>
+                  </ToolButton>
 
-                  <button
+                  <ToolButton
+                    variant="danger"
+                    size="sm"
                     onClick={onDeleteSelected}
-                    className="border-border-color text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2 py-1.5 text-xs transition-all"
                     title="Delete selected images from queue"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     <span className="font-mono text-[11px]">
                       ({selectedCount})
                     </span>
-                  </button>
+                  </ToolButton>
                 </>
               )}
             </>
@@ -522,9 +529,9 @@ export default function Toolbar({
           <div className="flex items-center gap-1.5 text-xs">
             <Sparkles className="text-foreground/70 h-3.5 w-3.5" />
             <span className="text-foreground/70 hidden sm:inline">Saved:</span>
-            <span className="text-code-green bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
+            <Badge variant="success">
               {formatBytes(totalSavedBytes)} (-{totalSavingsPct}%)
-            </span>
+            </Badge>
           </div>
         ) : totalOptimizedBytes > totalOriginalBytes &&
           totalOriginalBytes > 0 ? (
@@ -532,7 +539,7 @@ export default function Toolbar({
             <span className="text-foreground/70 hidden sm:inline">
               Size change:
             </span>
-            <span className="text-code-rust bg-utils-scent-gray-01/40 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
+            <Badge variant="danger">
               +{formatBytes(totalOptimizedBytes - totalOriginalBytes)} (+
               {Math.round(
                 ((totalOptimizedBytes - totalOriginalBytes) /
@@ -540,7 +547,7 @@ export default function Toolbar({
                   100,
               )}
               %)
-            </span>
+            </Badge>
           </div>
         ) : null}
       </div>

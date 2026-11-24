@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { Check, Copy, RefreshCw, ShieldCheck, KeyRound } from "lucide-react";
 import clsx from "clsx";
+import ToolButton from "@/components/ui/tool-button";
 
 function generateUuidV7(): string {
   const bytes = new Uint8Array(16);
@@ -132,15 +133,12 @@ export default function SecretGenerator() {
           </code>
         </div>
 
-        <button
-          onClick={regenerateAll}
-          className="text-foreground bg-background flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md p-1.5 text-xs transition-all hover:opacity-80"
-        >
+        <ToolButton variant="secondary" size="sm" onClick={regenerateAll}>
           <RefreshCw
             className={clsx("h-3.5 w-3.5", isRotating && "animate-spin")}
           />
           <span>Regenerate All</span>
-        </button>
+        </ToolButton>
       </div>
 
       <div className="flex flex-col">
@@ -161,31 +159,29 @@ export default function SecretGenerator() {
                 {item.value}
               </div>
 
-              <button
+              <ToolButton
+                variant="outline"
+                size="icon-md"
                 onClick={item.onRegen}
-                className="border-border-color text-foreground/70 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-white transition-all hover:opacity-80"
                 title="Regenerate this key"
                 aria-label={`Regenerate ${item.title}`}
               >
                 <RefreshCw className="h-3.5 w-3.5" />
-              </button>
+              </ToolButton>
 
-              <button
+              <ToolButton
+                variant="outline"
+                size="icon-md"
                 onClick={() => copyToClipboard(item.value, item.id)}
-                className="border-border-color text-foreground/70 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border bg-white text-xs transition-all hover:opacity-80"
                 title="Copy to clipboard"
                 aria-label={`Copy ${item.title}`}
               >
                 {copiedKey === item.id ? (
-                  <>
-                    <Check className="text-code-green h-3.5 w-3.5" />
-                  </>
+                  <Check className="text-code-green h-3.5 w-3.5" />
                 ) : (
-                  <>
-                    <Copy className="h-3.5 w-3.5" />
-                  </>
+                  <Copy className="h-3.5 w-3.5" />
                 )}
-              </button>
+              </ToolButton>
             </div>
           </div>
         ))}
@@ -260,30 +256,31 @@ export default function SecretGenerator() {
             {password}
           </div>
 
-          <button
+          <ToolButton
+            variant="outline"
+            size="icon-md"
             onClick={() =>
               setPassword(generatePassword(passwordLength, includeSymbols))
             }
-            className="border-border-color text-foreground/70 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border bg-white text-xs transition-all hover:opacity-80"
             title="Regenerate password"
+            aria-label="Regenerate password"
           >
             <RefreshCw className="h-3.5 w-3.5" />
-          </button>
+          </ToolButton>
 
-          <button
+          <ToolButton
+            variant="outline"
+            size="icon-md"
             onClick={() => copyToClipboard(password, "password")}
-            className="border-border-color text-foreground/70 flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border bg-white text-xs transition-all hover:opacity-80"
+            title="Copy password"
+            aria-label="Copy password"
           >
             {copiedKey === "password" ? (
-              <>
-                <Check className="text-code-green h-3.5 w-3.5" />
-              </>
+              <Check className="text-code-green h-3.5 w-3.5" />
             ) : (
-              <>
-                <Copy className="h-3.5 w-3.5" />
-              </>
+              <Copy className="h-3.5 w-3.5" />
             )}
-          </button>
+          </ToolButton>
         </div>
       </div>
     </div>

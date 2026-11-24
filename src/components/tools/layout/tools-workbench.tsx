@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import ToolCard from "../components/tool-card";
 import ToolSkeleton from "./tool-skeleton";
+import ToolButton from "@/components/ui/tool-button";
+import Badge from "@/components/ui/badge";
 import { AVAILABLE_TOOLS, ToolId } from "../types";
 import { notifyWorkbenchTools } from "../utils/toc-sync";
 
@@ -193,18 +195,19 @@ export default function ToolsWorkbench({
             <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <SlidersHorizontal className="h-3.5 w-3.5" />
-              <small>
-                Tools{" "}
-                <span className="bg-utils-scent-gray-01/60 rounded-md px-1.5 py-1">
+              <small className="inline-flex items-center gap-1.5">
+                <span>Tools</span>
+                <Badge variant="meta" size="xs" mono={false} className="py-1">
                   {activeTools.length} of {toolsToDisplay.length} selected
-                </span>
+                </Badge>
               </small>
             </div>
 
             <div className="flex items-center gap-2">
-              <button
+              <ToolButton
+                variant="secondary"
+                size="sm"
                 onClick={shareWorkspace}
-                className="bg-background text-foreground flex cursor-pointer items-center gap-1.5 rounded-md p-1.5 text-xs transition-all hover:opacity-80"
                 title="Copy shareable link with current active tools"
               >
                 {copiedShare ? (
@@ -213,16 +216,17 @@ export default function ToolsWorkbench({
                   <Share2 className="h-3.5 w-3.5" />
                 )}
                 <span>Share</span>
-              </button>
+              </ToolButton>
 
-              <button
+              <ToolButton
+                variant="secondary"
+                size="sm"
                 onClick={resetTools}
-                className="bg-background text-foreground hover:text-foreground flex cursor-pointer items-center gap-1 rounded-md p-1.5 text-xs transition-all hover:opacity-80"
                 title="Reset to default tools"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>Reset</span>
-              </button>
+              </ToolButton>
             </div>
           </div>
 
@@ -247,14 +251,9 @@ export default function ToolsWorkbench({
                     <Plus className="text-foreground/70 h-3.5 w-3.5" />
                   )}
                   <span>{tool.name}</span>
-                  <span
-                    className={clsx(
-                      "text-foreground bg-background hidden rounded-md px-1.5 py-1 text-[10px] md:inline",
-                      isOpen && "bg-white",
-                    )}
-                  >
+                  <Badge variant="meta" size="xs" className="hidden md:inline-flex">
                     {tool.apiBadge}
-                  </span>
+                  </Badge>
                 </button>
               );
             })}

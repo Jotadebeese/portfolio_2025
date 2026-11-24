@@ -11,6 +11,7 @@ import {
   Link2,
   X,
 } from "lucide-react";
+import Badge from "@/components/ui/badge";
 
 type Props = {
   id: string;
@@ -64,9 +65,9 @@ export default function ToolCard({
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
               <h4 className="leading-snug">{title}</h4>
               <div className="flex items-center gap-1.5">
-                <span className="bg-utils-scent-gray-01/60 text-foreground inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-[10px] whitespace-nowrap sm:py-1 sm:text-xs">
+                <Badge variant="meta" size="xs" className="sm:py-1 sm:text-xs">
                   {apiBadge}
-                </span>
+                </Badge>
                 <button
                   onClick={handleCopyAnchor}
                   className="hover:bg-utils-scent-gray-01/30 flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full transition-all sm:h-8 sm:w-8"
