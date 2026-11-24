@@ -19,8 +19,8 @@ export default function ForthwebHomePage() {
       <div className="flex w-full max-w-3xl flex-col gap-4">
         <h1 className="text-5xl sm:text-7xl">forthweb</h1>
         <p className="text-foreground/80 max-w-2xl text-base sm:text-lg">
-          Browser-native developer utilities running 100% locally on your device
-          — zero server uploads.
+          Browser-native developer utilities running 100% locally on your
+          device, zero server uploads.
         </p>
       </div>
 

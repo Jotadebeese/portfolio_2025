@@ -6,20 +6,20 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import ForthwebHeader from "@/components/forthweb/forthweb-header";
 import ForthwebFooter from "@/components/forthweb/forthweb-footer";
-import { FORTHWEB_PUBLIC_URL } from "@/lib/forthweb-host";
+import { FORTHWEB_PUBLIC_URL, PORTFOLIO_PUBLIC_URL } from "@/lib/forthweb-host";
 
 export const metadata: Metadata = {
   metadataBase: new URL(FORTHWEB_PUBLIC_URL),
   title: {
     template: "%s | forthweb",
-    default: "forthweb — Browser-Native Developer Tools",
+    default: "forthweb - Browser-Native Developer Tools",
   },
   description:
-    "Fast, privacy-first developer utilities running 100% locally in your browser via HTML5 Canvas, WebCodecs GPU, and Web Crypto API — zero uploads, zero tracking of your files.",
+    "Fast, privacy-first developer utilities running 100% locally in your browser via HTML5 Canvas, WebCodecs GPU, and Web Crypto API, zero uploads, zero tracking of your files.",
   openGraph: {
-    title: "forthweb — Browser-Native Developer Tools",
+    title: "forthweb - Browser-Native Developer Tools",
     description:
-      "Fast, privacy-first developer utilities running 100% locally in your browser — zero server uploads.",
+      "Fast, privacy-first developer utilities running 100% locally in your browser, zero server uploads.",
     siteName: "forthweb",
     locale: "en_US",
     type: "website",
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "forthweb — Browser-Native Developer Tools",
+    title: "forthweb - Browser-Native Developer Tools",
     description:
-      "Fast, privacy-first developer utilities running 100% locally in your browser — zero server uploads.",
+      "Fast, privacy-first developer utilities running 100% locally in your browser, zero server uploads.",
     images: ["/assets/forthweb-og-1200x630.jpg"],
   },
 };
@@ -69,7 +69,7 @@ export default function ForthwebRootLayout({
             </main>
             <Analytics />
             <SpeedInsights />
-            <ForthwebFooter />
+            <ForthwebFooter portfolioUrl={PORTFOLIO_PUBLIC_URL} />
           </div>
         </PostHogProvider>
       </body>

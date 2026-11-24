@@ -1,6 +1,25 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import { PORTFOLIO_PUBLIC_URL } from "@/lib/forthweb-host";
 
-export default function ForthwebFooter() {
+function getUtmContent(pathname: string | null): string {
+  if (!pathname) return "workbench";
+  const normalized = pathname
+    .replace(/^\/forthweb(?=\/|$)/, "")
+    .replace(/^\/+|\/+$/g, "");
+  return normalized || "workbench";
+}
+
+export default function ForthwebFooter({
+  portfolioUrl = PORTFOLIO_PUBLIC_URL,
+}: {
+  portfolioUrl?: string;
+}) {
+  const pathname = usePathname();
+  const utmContent = getUtmContent(pathname);
+  const portfolioHref = `${portfolioUrl.replace(/\/$/, "")}?utm_source=forthweb&utm_medium=referral&utm_campaign=footer&utm_content=${encodeURIComponent(utmContent)}`;
+
   return (
     <footer className="relative z-30 flex w-full justify-center">
       <div className="flex w-full max-w-6xl justify-center px-2.5 sm:px-5">
@@ -10,9 +29,9 @@ export default function ForthwebFooter() {
           <span className="text-foreground/70 text-xs whitespace-nowrap sm:text-sm">
             Built by{" "}
             <a
-              href={PORTFOLIO_PUBLIC_URL}
+              href={portfolioHref}
               target="_blank"
-              rel="noopener noreferrer"
+              rel="noopener"
               className="text-foreground decoration-border-color font-medium underline underline-offset-4 transition-colors hover:text-amber-600 hover:decoration-amber-600"
             >
               Juan
