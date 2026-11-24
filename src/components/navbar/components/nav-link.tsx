@@ -22,8 +22,10 @@ export default function NavLink({
     <Link
       href={href}
       className={clsx(
-        "flex text-sm font-medium transition-all ease-in-out hover:text-amber-600",
-        dimInactive && !isActive ? "opacity-70 hover:opacity-100" : "opacity-100",
+        "flex text-sm transition-all ease-in-out hover:text-amber-600",
+        dimInactive && !isActive
+          ? "opacity-70 hover:opacity-100"
+          : "opacity-100",
         className,
       )}
     >

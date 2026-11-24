@@ -62,9 +62,6 @@ export async function GET() {
 
 > Full Stack Product Engineer with a background in electronics engineering and a passion for AI. Building modern web applications, scalable platforms, and AI-native products.
 
-## About
-- [About Me](${baseUrl}/about): Professional background, electronics engineering roots, and technical philosophy.
-
 ## Notes & Articles
 ${blogItems || "- No articles published yet."}
 

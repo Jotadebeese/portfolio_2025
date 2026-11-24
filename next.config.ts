@@ -68,6 +68,11 @@ const nextConfig: NextConfig = {
         destination: "/#projects",
         permanent: true,
       },
+      {
+        source: "/about",
+        destination: "/#about",
+        permanent: true,
+      },
     ];
   },
   async headers() {
