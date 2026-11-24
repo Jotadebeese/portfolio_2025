@@ -1,4 +1,5 @@
 import { postgresAdapter } from "@payloadcms/db-postgres";
+import { resendAdapter } from "@payloadcms/email-resend";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import path from "path";
 import { buildConfig } from "payload";
@@ -57,6 +58,16 @@ export default buildConfig({
   collections: [Users, Media, Projects, Tags, Tech, BlogTags, Blog],
   globals: [AboutPage, BlogPage, HomePage],
   editor: lexicalEditor({}),
+  ...(process.env.RESEND_API_KEY
+    ? {
+        email: resendAdapter({
+          defaultFromAddress:
+            process.env.RESEND_FROM_ADDRESS || "noreply@mail.jotadebeese.com",
+          defaultFromName: process.env.RESEND_FROM_NAME || "Jota Admin",
+          apiKey: process.env.RESEND_API_KEY,
+        }),
+      }
+    : {}),
   ...(process.env.PAYLOAD_PUBLIC_SERVER_URL
     ? { serverURL: process.env.PAYLOAD_PUBLIC_SERVER_URL }
     : {}),

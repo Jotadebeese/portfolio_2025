@@ -1907,6 +1907,11 @@
   dependencies:
     nodemailer "7.0.12"
 
+"@payloadcms/email-resend@3.75.0":
+  version "3.75.0"
+  resolved "https://registry.yarnpkg.com/@payloadcms/email-resend/-/email-resend-3.75.0.tgz#21a8e930f1ae29d216ad039d47044ad540584e0d"
+  integrity sha512-+XjE73Dz57GWACgZDjKyRr9z8YoKv5rfh89UHc10VADWJBTUBkCcYy/eSPq9s94Ef7MkCi+DwX1bcvvyvvtmGg==
+
 "@payloadcms/graphql@3.75.0":
   version "3.75.0"
   resolved "https://registry.yarnpkg.com/@payloadcms/graphql/-/graphql-3.75.0.tgz#54a89d09b6ba12c091b6831dfa8d6083cd3a6ec4"

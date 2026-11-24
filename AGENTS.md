@@ -281,6 +281,9 @@ Installed and configured:
 | `DATABASE_URI`              | PostgreSQL connection string   |
 | `PAYLOAD_SECRET`            | Payload CMS encryption key     |
 | `BLOB_READ_WRITE_TOKEN`     | Vercel Blob storage token      |
+| `RESEND_API_KEY`            | Resend API key for Payload transactional emails (password resets, notifications); optional in dev (falls back to console logger) |
+| `RESEND_FROM_ADDRESS`       | Optional sender address (defaults to `noreply@mail.jotadebeese.com`) |
+| `RESEND_FROM_NAME`          | Optional sender display name (defaults to `Jota Admin`) |
 
 ---
 
