@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { LIVE_TOOL_IDS, ToolId } from "@/components/tools/types";
+import { isForthwebHost } from "@/lib/forthweb-host";
 
 export function proxy(request: NextRequest) {
   const host = request.headers.get("host") || "";
@@ -27,10 +29,47 @@ export function proxy(request: NextRequest) {
   }
 
   // =========================================================================
-  // CASE B: MAIN DOMAIN (e.g. jotadebeese.com, localhost:3000)
+  // CASE B: FORTHWEB SUBDOMAIN (e.g. forthweb.jotadebeese.com, forthweb.localhost:3000)
   // =========================================================================
-  // Hide /admin completely on the main domain -> display 404 Not Found
-  if (pathname.startsWith("/admin")) {
+  if (isForthwebHost(host)) {
+    // 1. Strip internal /forthweb prefix if requested directly
+    if (pathname === "/forthweb" || pathname.startsWith("/forthweb/")) {
+      const strippedPath = pathname.replace(/^\/forthweb/, "") || "/";
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = strippedPath;
+      return NextResponse.redirect(redirectUrl, 308);
+    }
+
+    // 2. Rewrite "/" to the Forthweb workbench (preserving ?tools=...)
+    if (pathname === "/") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/forthweb";
+      return NextResponse.rewrite(url);
+    }
+
+    // 3. Rewrite single-segment live tool routes (e.g. /image-optimizer)
+    const slug = pathname.slice(1);
+    if (!slug.includes("/") && LIVE_TOOL_IDS.includes(slug as ToolId)) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/forthweb/${slug}`;
+      return NextResponse.rewrite(url);
+    }
+
+    // 4. Route everything else (including /admin, /about, /jwt-inspector) to Forthweb 404
+    const notFoundUrl = request.nextUrl.clone();
+    notFoundUrl.pathname = "/forthweb/not-found";
+    return NextResponse.rewrite(notFoundUrl);
+  }
+
+  // =========================================================================
+  // CASE C: MAIN DOMAIN (e.g. jotadebeese.com, localhost:3000)
+  // =========================================================================
+  // Hide /admin and internal /forthweb routes on the main domain -> 404 Not Found
+  if (
+    pathname.startsWith("/admin") ||
+    pathname === "/forthweb" ||
+    pathname.startsWith("/forthweb/")
+  ) {
     return NextResponse.rewrite(new URL("/not-found", request.url));
   }
 

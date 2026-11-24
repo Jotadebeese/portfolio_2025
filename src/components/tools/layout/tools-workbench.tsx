@@ -25,6 +25,8 @@ type Props = {
   availableTools?: ToolId[] | null;
   defaultTools?: ToolId[] | null;
   hideSelector?: boolean | null;
+  hideHeading?: boolean | null;
+  standaloneBasePath?: string | null;
 };
 
 export default function ToolsWorkbench({
@@ -33,6 +35,8 @@ export default function ToolsWorkbench({
   availableTools,
   defaultTools,
   hideSelector,
+  hideHeading,
+  standaloneBasePath,
 }: Props) {
   const toolsToDisplay = useMemo(
     () =>
@@ -161,8 +165,9 @@ export default function ToolsWorkbench({
   };
 
   const customHeading = heading?.trim();
-  const sectionHeading =
-    customHeading || (!hideSelector ? "Tools Workbench" : null);
+  const sectionHeading = hideHeading
+    ? null
+    : customHeading || (!hideSelector ? "Tools Workbench" : null);
   const sectionId =
     sectionHeading
       ?.toLowerCase()
@@ -282,6 +287,11 @@ export default function ToolsWorkbench({
                 title={def.name}
                 description={def.shortDesc}
                 apiBadge={def.apiBadge}
+                standaloneHref={
+                  standaloneBasePath
+                    ? `${standaloneBasePath.replace(/\/$/, "")}/${toolId}`
+                    : undefined
+                }
                 onClose={hideSelector ? undefined : () => closeTool(toolId)}
               >
                 <Suspense fallback={<ToolSkeleton toolId={toolId} />}>

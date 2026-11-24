@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { headers } from "next/headers";
+import { getForthwebBaseUrl, isForthwebHost } from "@/lib/forthweb-host";
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const headersList = await headers();
@@ -14,13 +15,26 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     };
   }
 
+  if (isForthwebHost(host)) {
+    const forthwebBaseUrl = getForthwebBaseUrl(host);
+    return {
+      rules: {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/admin/", "/api/", "/forthweb/"],
+      },
+      sitemap: `${forthwebBaseUrl}/sitemap.xml`,
+      host: forthwebBaseUrl,
+    };
+  }
+
   const baseUrl = process.env.NEXT_WEB_APP_PUBLIC_URL || "http://localhost:3000";
 
   return {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/admin/", "/api/"],
+      disallow: ["/admin/", "/api/", "/forthweb/"],
     },
     sitemap: `${baseUrl}/sitemap.xml`,
     host: baseUrl,

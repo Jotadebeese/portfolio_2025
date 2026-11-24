@@ -1,14 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import clsx from "clsx";
-import { Check, ChevronDown, ChevronUp, Link2, X } from "lucide-react";
+import {
+  ArrowUpRight,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Link2,
+  X,
+} from "lucide-react";
 
 type Props = {
   id: string;
   title: string;
   description?: string;
   apiBadge: string;
+  standaloneHref?: string;
   onClose?: () => void;
   children: React.ReactNode;
   className?: string;
@@ -19,6 +28,7 @@ export default function ToolCard({
   title,
   description,
   apiBadge,
+  standaloneHref,
   onClose,
   children,
   className,
@@ -73,6 +83,17 @@ export default function ToolCard({
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
+              {standaloneHref && (
+                <Link
+                  href={standaloneHref}
+                  className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex cursor-pointer items-center justify-center rounded-lg p-1.5 transition-all"
+                  aria-label="Open dedicated tool page"
+                  title="Open dedicated tool page"
+                >
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
+              )}
+
               <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex cursor-pointer items-center justify-center rounded-lg p-1.5 transition-all"
