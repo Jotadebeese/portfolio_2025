@@ -6,7 +6,8 @@
   "scripts": {
     "demo:all": "tsx scripts/render-all.ts",
     "demo:image": "tsx scripts/render-all.ts --only image-optimizer",
-    "demo:video": "tsx scripts/render-all.ts --only video-optimizer"
+    "demo:video": "tsx scripts/render-all.ts --only video-optimizer",
+    "demo:keys": "tsx scripts/render-all.ts --only secret-generator"
   },
   "dependencies": {
     "playwright": "^1.51.0",

@@ -195,9 +195,9 @@ export async function renderStudioPlates(
               height: ${win.titlebarH}px;
               background: #f7f5f2;
               border-bottom: 1px solid #e2ddd5;
-              display: flex;
+              display: grid;
+              grid-template-columns: 1fr auto 1fr;
               align-items: center;
-              justify-content: space-between;
               padding: 0 16px;
             }
             .dots { display: flex; align-items: center; gap: 7px; min-width: 78px; }
@@ -218,12 +218,7 @@ export async function renderStudioPlates(
             .url-dot { width: 6px; height: 6px; border-radius: 9999px; background: #ff9900; }
             .right {
               min-width: 78px;
-              text-align: right;
-              font-size: 10px;
-              font-weight: 500;
-              letter-spacing: 0.08em;
-              text-transform: uppercase;
-              color: #786f67;
+              justify-self: end;
             }
           </style>
         </head>
@@ -237,7 +232,7 @@ export async function renderStudioPlates(
               </div>
               <div class="url">
                 <span class="url-dot"></span>
-                <span>jotadebeese.com/projects/forthweb</span>
+                <span>${escapeHtml(opts.barTitle || "forthweb.jotadebeese.com")}</span>
               </div>
               <div class="right"></div>
             </div>

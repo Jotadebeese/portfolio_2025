@@ -31,20 +31,18 @@ export async function runSecretGeneratorScene(
   await rec.click(copyUuidBtn, { moveSec: 0.32, settleSec: 0.28 });
 
   if (variant === "spotlight") {
-    // Showcase interactive password entropy slider & copy
-    await rec.focusElement(lengthSlider, {
-      scale: isWide ? 1.38 : 1.12,
-      transitionSec: 0.5,
-      offsetX: isWide ? -80 : 0,
-      offsetY: 10,
+    // Showcase interactive password entropy slider & copy with full card width framed cleanly
+    rec.focusPoint(0.5, 0.62, {
+      scale: isWide ? 1.08 : 1.02,
+      transitionSec: 0.42,
     });
     await rec.sweepHorizontal(lengthSlider, 0.225, [0.76], {
       legSec: 0.65,
       pauseAtStopSec: 0.14,
     });
     await rec.click(copyPwdBtn, { moveSec: 0.32, settleSec: 0.25 });
-    rec.resetCamera(0.5);
-    await rec.hold(0.45);
+    rec.resetCamera(0.42);
+    await rec.hold(0.65);
   } else {
     rec.resetCamera(0.45);
     await rec.hold(0.3);

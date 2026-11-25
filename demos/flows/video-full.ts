@@ -29,39 +29,31 @@ export async function runVideoFullScene(
 
   await fileInput.waitFor({ state: "attached", timeout: 20000 });
   await rec.captureUIFrame(0);
-  await rec.moveTo(dropzonePrompt, { durationSec: 0.28 });
+  await rec.moveTo(dropzonePrompt, { durationSec: 0.16 });
 
-  // 1. Add 60s 4K (3840x2160, ~361 MB) video and wait for duration + thumbnail readiness
+  // 1. Add 60s 4K (3840x2160, ~361 MB) video and hold briefly so huge source size registers
   await fileInput.setInputFiles([VIDEO_INPUT_MP4]);
   await page.getByText("01:00").first().waitFor({ state: "visible", timeout: 45000 });
   await editClipBtn.waitFor({ state: "visible", timeout: 20000 });
   await page.waitForTimeout(250);
   await rec.captureUIFrame(rec.elapsed());
-  await rec.hold(0.32);
+  await rec.hold(0.45);
 
-  // 2. Toggle Format, Audio (Keep), Resolution (720p), and Tuning modes
+  // 2. Quick settings pass: 720p -> Fit to Size (MB) -> Quality (%) so Edit Studio opens around ~3s
   const isWide = rec.viewportWidth >= 900;
   const card = page.locator("article#video-optimizer");
-  const webmBtn = card.getByRole("button", { name: /WebM/i }).first();
-  const mp4Btn = card.getByRole("button", { name: /MP4/i }).first();
-  const audioBtn = card.locator('button[title*="Audio track"]').first();
   const res720Btn = card.getByRole("button", { name: "720p", exact: true }).first();
   const fitSizeBtn = card.getByRole("button", { name: "Fit to Size (MB)", exact: true }).first();
   const qualityModeBtn = card.getByRole("button", { name: "Quality (%)", exact: true }).first();
 
   rec.focusPoint(0.5, 0.36, {
     scale: isWide ? 1.1 : 1.02,
-    transitionSec: 0.38,
+    transitionSec: 0.34,
   });
 
-  await rec.click(webmBtn, { moveSec: 0.24, settleSec: 0.22 });
-  await rec.click(mp4Btn, { moveSec: 0.22, settleSec: 0.22 });
-  if (await audioBtn.isVisible().catch(() => false)) {
-    await rec.click(audioBtn, { moveSec: 0.22, settleSec: 0.24 });
-  }
-  await rec.click(res720Btn, { moveSec: 0.24, settleSec: 0.24 });
-  await rec.click(fitSizeBtn, { moveSec: 0.26, settleSec: 0.32 });
-  await rec.click(qualityModeBtn, { moveSec: 0.22, settleSec: 0.2 });
+  await rec.click(res720Btn, { moveSec: 0.2, settleSec: 0.2 });
+  await rec.click(fitSizeBtn, { moveSec: 0.2, settleSec: 0.26 });
+  await rec.click(qualityModeBtn, { moveSec: 0.2, settleSec: 0.18 });
 
   // 3. Edit Studio: full 01:00 waveform + wide, unmistakable multi-section cuts across scenes
   rec.resetCamera(0.32);
@@ -117,43 +109,43 @@ export async function runVideoFullScene(
     const clickTimeline = async (frac: number) => {
       const tx = timelineBox.x + timelineBox.width * frac;
       const ty = timelineBox.y + timelineBox.height * 0.55;
-      await rec.clickPoint(tx, ty, { moveSec: 0.22, settleSec: 0.14 });
+      await rec.clickPoint(tx, ty, { moveSec: 0.16, settleSec: 0.1 });
     };
 
     // Split end of Clip 1 (00:13) and start of Clip 2 (00:21) -> delete gap (00:13->00:21)
     await clickTimeline(0.22);
-    await rec.click(splitClipBtn, { moveSec: 0.2, settleSec: 0.16 });
+    await rec.click(splitClipBtn, { moveSec: 0.16, settleSec: 0.12 });
     await clickTimeline(0.35);
-    await rec.click(splitClipBtn, { moveSec: 0.2, settleSec: 0.16 });
+    await rec.click(splitClipBtn, { moveSec: 0.16, settleSec: 0.12 });
     await clickTimeline(0.285);
     if (await deleteSecBtn.isEnabled().catch(() => false)) {
-      await rec.click(deleteSecBtn, { moveSec: 0.2, settleSec: 0.24 });
+      await rec.click(deleteSecBtn, { moveSec: 0.16, settleSec: 0.18 });
     }
 
     // Split end of Clip 2 (00:30) and start of Clip 3 (00:39) -> delete gap (00:30->00:39)
     await clickTimeline(0.50);
-    await rec.click(splitClipBtn, { moveSec: 0.2, settleSec: 0.16 });
+    await rec.click(splitClipBtn, { moveSec: 0.16, settleSec: 0.12 });
     await clickTimeline(0.65);
-    await rec.click(splitClipBtn, { moveSec: 0.2, settleSec: 0.16 });
+    await rec.click(splitClipBtn, { moveSec: 0.16, settleSec: 0.12 });
     await clickTimeline(0.575);
     if (await deleteSecBtn.isEnabled().catch(() => false)) {
-      await rec.click(deleteSecBtn, { moveSec: 0.2, settleSec: 0.24 });
+      await rec.click(deleteSecBtn, { moveSec: 0.16, settleSec: 0.18 });
     }
 
     // Split end of Clip 3 (00:47) -> delete tail (00:47->01:00)
     await clickTimeline(0.78);
-    await rec.click(splitClipBtn, { moveSec: 0.2, settleSec: 0.16 });
+    await rec.click(splitClipBtn, { moveSec: 0.16, settleSec: 0.12 });
     await clickTimeline(0.89);
     if (await deleteSecBtn.isEnabled().catch(() => false)) {
-      await rec.click(deleteSecBtn, { moveSec: 0.2, settleSec: 0.36 });
+      await rec.click(deleteSecBtn, { moveSec: 0.16, settleSec: 0.28 });
     }
   }
 
-  await rec.hold(0.42);
+  await rec.hold(0.32);
 
   // 4. Live browser WebCodecs compression — ~12x speed timelapse (ratio 0.08)
-  rec.resetCamera(0.35);
-  await rec.click(saveCompressBtn, { moveSec: 0.28, settleSec: 0.16 });
+  rec.resetCamera(0.32);
+  await rec.click(saveCompressBtn, { moveSec: 0.24, settleSec: 0.16 });
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
 
   const compareVideoBtn = page.locator('button[aria-label="Compare video"]').first();
@@ -161,10 +153,17 @@ export async function runVideoFullScene(
     maxWaitMs: 180000,
     playbackCompressRatio: 0.08,
   });
-  await rec.hold(0.32);
+
+  // Savings payoff hold: highlight MB saved & % reduction before opening CompareModal
+  rec.focusPoint(0.5, 0.44, {
+    scale: isWide ? 1.08 : 1.0,
+    transitionSec: 0.32,
+  });
+  await rec.hold(0.85);
 
   // 5. CompareModal: Side by Side + Full Timeline (3 highlighted kept bands + live playback) -> Matched Frames + Split Slider
-  await rec.click(compareVideoBtn, { moveSec: 0.3, settleSec: 0.38 });
+  rec.resetCamera(0.28);
+  await rec.click(compareVideoBtn, { moveSec: 0.28, settleSec: 0.36 });
 
   const sideBySideBtn = page.locator('button[title="Side by side view"]').first();
   const fullTimelineBtn = page
@@ -207,5 +206,5 @@ export async function runVideoFullScene(
     pauseAtStopSec: 0.14,
   });
 
-  await rec.hold(0.35);
+  await rec.hold(0.75);
 }

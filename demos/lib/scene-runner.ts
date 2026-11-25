@@ -38,7 +38,7 @@ export async function captureToolScene(
     const page = await context.newPage();
     cdp = await context.newCDPSession(page);
 
-    const url = `${baseUrl}/projects/forthweb?tools=${encodeURIComponent(toolId)}`;
+    const url = `${baseUrl}/${encodeURIComponent(toolId)}`;
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
     await page.waitForLoadState("load").catch(() => {});
 

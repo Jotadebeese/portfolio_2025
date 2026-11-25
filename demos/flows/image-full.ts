@@ -24,34 +24,30 @@ export async function runImageFullScene(
 
   await fileInput.waitFor({ state: "attached", timeout: 20000 });
   await rec.captureUIFrame(0);
-  await rec.moveTo(dropzoneText, { durationSec: 0.3 });
+  await rec.moveTo(dropzoneText, { durationSec: 0.16 });
 
   // 1. Batch drop official GTA VI in-game 4K screenshots (PNG)
   await fileInput.setInputFiles([GTAVI_MARINA_PNG, GTAVI_HEIST_PNG]);
   await firstCompareBtn.waitFor({ state: "visible", timeout: 20000 });
   await page.waitForTimeout(200);
   await rec.captureUIFrame(rec.elapsed());
-  await rec.hold(0.3);
+  await rec.hold(0.65);
 
-  // 2. Output Format (JPEG -> WebP) + Resize Preset (1280px) + Quality slider
+  // 2. Resize Preset (1280px) + Quality slider (every click visibly updates size savings)
   const isWide = rec.viewportWidth >= 900;
   const card = page.locator("article#image-optimizer");
-  const jpegBtn = card.getByRole("button", { name: "JPEG", exact: true });
-  const webpBtn = card.getByRole("button", { name: "WebP", exact: true });
   const size1280Btn = card.getByRole("button", { name: "1280px", exact: true });
 
   rec.focusPoint(0.45, 0.34, {
     scale: isWide ? 1.12 : 1.03,
-    transitionSec: 0.45,
+    transitionSec: 0.38,
   });
 
-  await rec.click(jpegBtn, { moveSec: 0.34, settleSec: 0.35 });
-  await rec.click(webpBtn, { moveSec: 0.26, settleSec: 0.3 });
-  await rec.click(size1280Btn, { moveSec: 0.34, settleSec: 0.35 });
+  await rec.click(size1280Btn, { moveSec: 0.24, settleSec: 0.26 });
 
   await rec.sweepHorizontal(qualitySlider, 0.778, [0.56], {
-    legSec: 0.56,
-    pauseAtStopSec: 0.22,
+    legSec: 0.52,
+    pauseAtStopSec: 0.2,
   });
 
   // 3. Visual Inspection Modal: Split Slider -> Dark / Light backdrops -> Side by Side
@@ -88,11 +84,10 @@ export async function runImageFullScene(
 
   await rec.click(closeModalBtn, { moveSec: 0.34, settleSec: 0.28 });
 
-  // 4. Select All queue cue -> reveals batch ZIP Download button
+  // 4. Select All queue cue -> reveals batch ZIP Download button + Total Saved badge
   const selectAllBtn = page.locator('button[title="Select all"]').first();
   if (await selectAllBtn.isVisible().catch(() => false)) {
-    await rec.click(selectAllBtn, { moveSec: 0.34, settleSec: 0.38 });
-  } else {
-    await rec.hold(0.35);
+    await rec.click(selectAllBtn, { moveSec: 0.28, settleSec: 0.3 });
   }
+  await rec.hold(0.75);
 }

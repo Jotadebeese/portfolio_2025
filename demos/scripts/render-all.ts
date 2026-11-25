@@ -1,7 +1,9 @@
+import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium, type Browser } from "playwright";
 import { runImageFullScene } from "../flows/image-full.js";
+import { runSecretGeneratorScene } from "../flows/secret-generator.js";
 import { runVideoFullScene } from "../flows/video-full.js";
 import { composeVideo } from "../lib/compositor.js";
 import { OUTPUT_LAYOUTS, type OutputFormat } from "../lib/compositor-html.js";
@@ -12,7 +14,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEMOS_ROOT = path.resolve(__dirname, "..");
 const OUTPUT_ROOT = path.join(DEMOS_ROOT, "output");
 
-type TargetName = "image-optimizer" | "video-optimizer";
+type TargetName = "image-optimizer" | "video-optimizer" | "secret-generator";
 
 interface RenderJobConfig {
   name: TargetName;
@@ -29,7 +31,7 @@ const ALL_JOBS: RenderJobConfig[] = [
   {
     name: "image-optimizer",
     formats: ["16x9"],
-    barTitle: "",
+    barTitle: "forthweb.jotadebeese.com/image-optimizer",
     buildScenes: async (browser, baseUrl, layout) => [
       await captureToolScene(
         {
@@ -47,7 +49,7 @@ const ALL_JOBS: RenderJobConfig[] = [
   {
     name: "video-optimizer",
     formats: ["16x9"],
-    barTitle: "",
+    barTitle: "forthweb.jotadebeese.com/video-optimizer",
     buildScenes: async (browser, baseUrl, layout) => [
       await captureToolScene(
         {
@@ -62,6 +64,24 @@ const ALL_JOBS: RenderJobConfig[] = [
       ),
     ],
   },
+  {
+    name: "secret-generator",
+    formats: ["16x9"],
+    barTitle: "forthweb.jotadebeese.com/secret-generator",
+    buildScenes: async (browser, baseUrl, layout) => [
+      await captureToolScene(
+        {
+          browser,
+          baseUrl,
+          toolId: "secret-generator",
+          pillLabel: "",
+          layout,
+          variant: "spotlight",
+        },
+        (rec, v) => runSecretGeneratorScene(rec, v)
+      ),
+    ],
+  },
 ];
 
 function parseArg(flag: string): string | undefined {
@@ -72,8 +92,54 @@ function parseArg(flag: string): string | undefined {
   return undefined;
 }
 
+function normalizeForthwebBaseUrl(raw: string): string {
+  const parsed = new URL(raw);
+  if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+    parsed.hostname = "forthweb.localhost";
+  }
+  return parsed.toString().replace(/\/+$/, "");
+}
+
 async function assertServerReachable(baseUrl: string): Promise<void> {
-  const target = `${baseUrl}/projects/forthweb`;
+  const parsed = new URL(baseUrl);
+  const target = `${baseUrl}/`;
+
+  if (parsed.protocol === "http:" && parsed.hostname.endsWith(".localhost")) {
+    await new Promise<void>((resolve, reject) => {
+      const req = http.request(
+        {
+          hostname: "127.0.0.1",
+          port: Number(parsed.port) || 80,
+          path: "/",
+          method: "GET",
+          headers: { host: parsed.host },
+          timeout: 8000,
+        },
+        (res) => {
+          res.resume();
+          const status = res.statusCode ?? 0;
+          if (status >= 200 && status < 400) {
+            resolve();
+          } else {
+            reject(new Error(`HTTP ${status} from ${target}`));
+          }
+        }
+      );
+      req.on("timeout", () => {
+        req.destroy(new Error(`Timed out connecting to ${target}`));
+      });
+      req.on("error", reject);
+      req.end();
+    }).catch((err) => {
+      throw new Error(
+        `Forthweb page is not reachable at ${target}. Start the dev server (yarn dev) or pass DEMO_BASE_URL. Details: ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      );
+    });
+    return;
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
   try {
@@ -93,7 +159,9 @@ async function assertServerReachable(baseUrl: string): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const baseUrl = (process.env.DEMO_BASE_URL || "http://localhost:3000").replace(/\/+$/, "");
+  const baseUrl = normalizeForthwebBaseUrl(
+    process.env.DEMO_BASE_URL || "http://forthweb.localhost:3000"
+  );
   const onlyArg = parseArg("--only") as TargetName | undefined;
   const formatArg = parseArg("--format") as OutputFormat | "all" | undefined;
 
@@ -113,6 +181,7 @@ async function main(): Promise<void> {
     headless: true,
     channel: "chrome",
     args: [
+      "--host-resolver-rules=MAP *.localhost 127.0.0.1",
       "--disable-background-timer-throttling",
       "--disable-renderer-backgrounding",
       "--disable-backgrounding-occluded-windows",
