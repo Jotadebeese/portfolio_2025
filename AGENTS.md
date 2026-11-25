@@ -140,7 +140,7 @@ Keep UI consistent across `jotadebeese.com` and `forthweb.jotadebeese.com` by en
 | Layer | Location | Purpose |
 | ----- | -------- | ------- |
 | **1. Design Tokens** | `src/app/(app)/globals.css` (`@theme inline`) | Color, typography, and CSS variables (`#eeeeee`, `#181411`, `#ff9900`, `#e6d9d1`, `#cecece`) |
-| **2. Component Primitives** | `src/components/common/cta-button.tsx`, `src/components/ui/` (`ToolButton`, `Badge`) | Enforced reusable button and pill components |
+| **2. Component Primitives** | `src/components/common/cta-button.tsx`, `src/components/ui/` (`ToolButton`, `Badge`, `HardwareFader`, `SegmentedSwitch`) | Enforced reusable button, pill, and tactile hardware control components |
 | **3. UI Rules** | This section | When to use each primitive and surface pattern |
 
 ### Rules
@@ -149,6 +149,7 @@ Keep UI consistent across `jotadebeese.com` and `forthweb.jotadebeese.com` by en
 2. **No ad-hoc buttons:** Use `<CTAButton>` on marketing/page surfaces and `<ToolButton>` (`primary` | `secondary` | `outline` | `danger` | `ghost`) inside tools — never hand-roll new one-off button styles.
 3. **Reserved dashed borders:** Use `border-dashed` strictly for structural dividers, dropzones, empty states, and workbench dock/undock slots — never on action or preset buttons.
 4. **Badges:** Use `<Badge>` (`meta` warm putty `bg-utils-scent-gray-01/60` for tech/API/count pills; `success` / `danger` / `info` for metric readouts).
+5. **Tactile Hardware Scope & Zero-CLS:** Keep hardware tactility (`HardwareFader`, `SegmentedSwitch`, LED indicator dots, keycap bevels) scoped strictly to interactive instrument controls across toolbars, modals, and workbench rack switches — file rows, dropzones, property tables, and `jotadebeese.com` editorial pages stay flat. Enforce zero layout shift on toggle/playback updates via persistent LED/icon widths, `min-w-[...]` on swapping labels, `font-medium` across both active and inactive switch states, and `tabular-nums` on ticking readouts.
 
 ---
 

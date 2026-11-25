@@ -602,14 +602,15 @@ export default function DetailsSidebar({
                 settings.resizePreset === "original");
 
             const downloadOriginalBtn = onDownloadOriginal ? (
-              <button
-                type="button"
+              <ToolButton
+                variant="primary"
+                size="sm"
                 onClick={onDownloadOriginal}
-                className="border-foreground bg-foreground text-background flex cursor-pointer items-center justify-center gap-1 rounded-md border px-2.5 py-1 text-xs transition-all hover:opacity-90"
+                className="py-1"
               >
                 <Download className="h-3 w-3" />
                 <span>Keep Original</span>
-              </button>
+              </ToolButton>
             ) : null;
 
             if (
@@ -637,28 +638,30 @@ export default function DetailsSidebar({
                       {downloadOriginalBtn}
                       {onApplySettings && !isProcessing && (
                         <>
-                          <button
-                            type="button"
+                          <ToolButton
+                            variant="outline"
+                            size="sm"
                             onClick={() =>
                               onApplySettings({
                                 mode: "quality",
                                 qualityPercent: 80,
                               })
                             }
-                            className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                            className="py-1"
                           >
                             Set Quality to 80%
-                          </button>
+                          </ToolButton>
                           {canDownscaleTo720 && (
-                            <button
-                              type="button"
+                            <ToolButton
+                              variant="outline"
+                              size="sm"
                               onClick={() =>
                                 onApplySettings({ resizePreset: "720p" })
                               }
-                              className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                              className="py-1"
                             >
                               Resize to 720p
-                            </button>
+                            </ToolButton>
                           )}
                         </>
                       )}
@@ -689,18 +692,19 @@ export default function DetailsSidebar({
                     <div className="flex flex-wrap items-center gap-1.5">
                       {downloadOriginalBtn}
                       {onApplySettings && !isProcessing && (
-                        <button
-                          type="button"
+                        <ToolButton
+                          variant="outline"
+                          size="sm"
                           onClick={() =>
                             onApplySettings({
                               mode: "quality",
                               qualityPercent: 80,
                             })
                           }
-                          className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                          className="py-1"
                         >
                           Switch to Quality (80%)
-                        </button>
+                        </ToolButton>
                       )}
                     </div>
                   )}
@@ -725,28 +729,30 @@ export default function DetailsSidebar({
                     {downloadOriginalBtn}
                     {onApplySettings && !isProcessing && (
                       <>
-                        <button
-                          type="button"
+                        <ToolButton
+                          variant="outline"
+                          size="sm"
                           onClick={() =>
                             onApplySettings({
                               mode: "quality",
                               qualityPercent: 75,
                             })
                           }
-                          className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                          className="py-1"
                         >
                           Set Quality to 75%
-                        </button>
+                        </ToolButton>
                         {canDownscaleTo720 && (
-                          <button
-                            type="button"
+                          <ToolButton
+                            variant="outline"
+                            size="sm"
                             onClick={() =>
                               onApplySettings({ resizePreset: "720p" })
                             }
-                            className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                            className="py-1"
                           >
                             Resize to 720p
-                          </button>
+                          </ToolButton>
                         )}
                       </>
                     )}
@@ -833,35 +839,38 @@ export default function DetailsSidebar({
                 {!isProcessing && (
                   <div className="flex flex-wrap items-center gap-1.5">
                     {onApplySettings && (
-                      <button
-                        type="button"
+                      <ToolButton
+                        variant="outline"
+                        size="sm"
                         onClick={() =>
                           onApplySettings({
                             mode: "target-size",
                             targetSizeMB: recommendedMB,
                           })
                         }
-                        className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                        className="py-1"
                       >
                         Set Cap to {recommendedMB} MB
-                      </button>
+                      </ToolButton>
                     )}
                     {onApplySettings && hasActiveAudio && (
-                      <button
-                        type="button"
+                      <ToolButton
+                        variant="outline"
+                        size="sm"
                         onClick={() => onApplySettings({ stripAudio: true })}
-                        className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                        className="py-1"
                       >
                         Turn Audio Off
-                      </button>
+                      </ToolButton>
                     )}
-                    <button
-                      type="button"
+                    <ToolButton
+                      variant="outline"
+                      size="sm"
                       onClick={onOpenEdit}
-                      className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex cursor-pointer items-center justify-center rounded-md border bg-white px-2.5 py-1 text-xs transition-all"
+                      className="py-1"
                     >
                       Trim Clip
-                    </button>
+                    </ToolButton>
                   </div>
                 )}
               </div>

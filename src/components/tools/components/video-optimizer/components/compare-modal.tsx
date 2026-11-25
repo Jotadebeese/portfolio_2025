@@ -30,6 +30,7 @@ import {
   mapOrigTimeToCompTime,
   getEffectiveVideoDuration,
 } from "../utils/format";
+import SegmentedSwitch from "@/components/ui/segmented-switch";
 
 type Props = {
   item: VideoFileItem;
@@ -602,73 +603,71 @@ export default function CompareModal({
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {isTrimmedOrCut && (
-              <div className="border-border-color bg-background flex shrink-0 items-center rounded-md border p-0.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => handleToggleSyncMode("cut-range")}
-                  className={clsx(
-                    "flex cursor-pointer items-center gap-1 rounded px-2 py-1 font-mono text-[11px] whitespace-nowrap transition-all",
-                    syncMode === "cut-range"
-                      ? "bg-foreground text-background"
-                      : "text-foreground/70 hover:text-foreground",
-                  )}
-                  title="Lock playback frame-by-frame to the edited cut for pixel-accurate quality inspection"
-                >
-                  <Link2 size={11} />
-                  <span className="hidden sm:inline">Matched</span>
-                  <span className="hidden lg:inline"> Frames</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleToggleSyncMode("full-timeline")}
-                  className={clsx(
-                    "flex cursor-pointer items-center gap-1 rounded px-2 py-1 font-mono text-[11px] whitespace-nowrap transition-all",
-                    syncMode === "full-timeline"
-                      ? "bg-foreground text-background"
-                      : "text-foreground/70 hover:text-foreground",
-                  )}
-                  title="Play the full source video timeline (shows where the cut sits along the entire file)"
-                >
-                  <Clock size={11} />
-                  <span className="hidden sm:inline">Full</span>
-                  <span className="hidden lg:inline"> Timeline</span>
-                </button>
-              </div>
+              <SegmentedSwitch
+                size="xs"
+                value={syncMode}
+                onChange={handleToggleSyncMode}
+                ariaLabel="Timeline playback sync mode"
+                options={[
+                  {
+                    value: "cut-range",
+                    mono: true,
+                    title:
+                      "Lock playback frame-by-frame to the edited cut for pixel-accurate quality inspection",
+                    label: (
+                      <span className="flex items-center gap-1">
+                        <Link2 size={11} />
+                        <span className="hidden sm:inline">Matched</span>
+                        <span className="hidden lg:inline"> Frames</span>
+                      </span>
+                    ),
+                  },
+                  {
+                    value: "full-timeline",
+                    mono: true,
+                    title:
+                      "Play the full source video timeline (shows where the cut sits along the entire file)",
+                    label: (
+                      <span className="flex items-center gap-1">
+                        <Clock size={11} />
+                        <span className="hidden sm:inline">Full</span>
+                        <span className="hidden lg:inline"> Timeline</span>
+                      </span>
+                    ),
+                  },
+                ]}
+              />
             )}
 
             {/* View Mode Toggle: Side by Side vs Split Slider */}
-            <div className="border-border-color bg-background flex shrink-0 items-center rounded-md border p-0.5 text-xs">
-              <button
-                type="button"
-                onClick={() => setViewMode("side-by-side")}
-                className={clsx(
-                  "flex cursor-pointer items-center gap-1 rounded px-2 py-1 text-xs whitespace-nowrap transition-all",
-                  viewMode === "side-by-side"
-                    ? "bg-foreground text-background"
-                    : "text-foreground/70 hover:text-foreground",
-                )}
-                title="Side by side view"
-              >
-                <Columns2 className="h-3 w-3" />
-                <span className="hidden sm:inline">Side by Side</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setViewMode("split")}
-                className={clsx(
-                  "flex cursor-pointer items-center gap-1 rounded px-2 py-1 text-xs whitespace-nowrap transition-all",
-                  viewMode === "split"
-                    ? "bg-foreground text-background"
-                    : "text-foreground/70 hover:text-foreground",
-                )}
-                title="Split slider view"
-              >
-                <SplitSquareVertical className="h-3 w-3" />
-                <span className="hidden sm:inline">Split Slider</span>
-              </button>
-            </div>
+            <SegmentedSwitch
+              size="sm"
+              value={viewMode}
+              onChange={setViewMode}
+              ariaLabel="Video comparison layout"
+              options={[
+                {
+                  value: "side-by-side",
+                  title: "Side by side view",
+                  label: (
+                    <span className="flex items-center gap-1">
+                      <Columns2 className="h-3 w-3" />
+                      <span className="hidden sm:inline">Side by Side</span>
+                    </span>
+                  ),
+                },
+                {
+                  value: "split",
+                  title: "Split slider view",
+                  label: (
+                    <span className="flex items-center gap-1">
+                      <SplitSquareVertical className="h-3 w-3" />
+                      <span className="hidden sm:inline">Split Slider</span>
+                    </span>
+                  ),
+                },
+              ]}
+            />
 
             <button
               type="button"
@@ -842,13 +841,13 @@ export default function CompareModal({
         </div>
 
         {/* Master Playback Controls Bar */}
-        <div className="border-border-color flex flex-col gap-2 border-t border-dashed bg-white p-2.5 sm:p-3">
+        <div className="border-border-color flex flex-col gap-2 border-t border-dashed bg-[#f4f2ee]/90 p-2.5 sm:p-3">
           <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
             {/* Play/Pause Button */}
             <button
               type="button"
               onClick={togglePlayPause}
-              className="bg-foreground text-background hover:bg-utils-scent-orange flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-all active:scale-95"
+              className="bg-foreground text-background hover:bg-utils-scent-orange flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md shadow-[0_1px_2px_rgba(24,20,17,0.28),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all active:translate-y-px active:scale-95"
               title={isPlaying ? "Pause (Space)" : "Play (Space)"}
             >
               {isPlaying ? (
@@ -862,7 +861,7 @@ export default function CompareModal({
             <button
               type="button"
               onClick={() => jumpTime(-5)}
-              className="text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/30 flex h-7 shrink-0 cursor-pointer items-center gap-0.5 rounded px-1.5 font-mono text-[11px] transition-colors"
+              className="border-border-color/90 text-foreground/75 hover:text-foreground flex h-7 shrink-0 cursor-pointer items-center gap-0.5 rounded-md border bg-[#f7f5f2] px-2 font-mono text-[11px] shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:bg-white active:translate-y-px active:shadow-none"
               title="Jump back 5s"
             >
               <RotateCcw size={12} />
@@ -870,16 +869,16 @@ export default function CompareModal({
             </button>
 
             {/* Current / Total Master Time */}
-            <span className="text-foreground min-w-[75px] shrink-0 font-mono text-xs">
+            <span className="text-foreground min-w-[82px] shrink-0 font-mono text-xs tabular-nums">
               {formatDuration(masterCurrentTime)} /{" "}
               {formatDuration(masterDuration)}
             </span>
 
             {/* Synchronized Timeline Scrubber with Kept Region Indicators */}
-            <div className="relative order-first flex h-6 w-full items-center sm:order-none sm:w-auto sm:flex-1">
+            <div className="border-border-color/90 relative order-first flex h-2.5 w-full items-center overflow-hidden rounded-full border bg-[#e2dfda] shadow-[inset_0_1px_2px_rgba(24,20,17,0.18)] sm:order-none sm:w-auto sm:flex-1">
               {/* Highlight kept regions on track in full-timeline mode */}
               {!isCutSync && isTrimmedOrCut && (
-                <div className="bg-utils-scent-gray-01/60 pointer-events-none absolute inset-x-0 h-1.5 overflow-hidden rounded-lg">
+                <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
                   {keptRanges.map((range, idx) => {
                     const leftPct = (range.start / origDuration) * 100;
                     const widthPct =
@@ -887,7 +886,7 @@ export default function CompareModal({
                     return (
                       <div
                         key={idx}
-                        className="bg-utils-scent-orange/50 absolute top-0 bottom-0"
+                        className="bg-utils-scent-orange/45 absolute top-0 bottom-0"
                         style={{
                           left: `${leftPct}%`,
                           width: `${widthPct}%`,
@@ -905,7 +904,7 @@ export default function CompareModal({
                 step="0.05"
                 value={masterCurrentTime}
                 onChange={handleSeek}
-                className="accent-utils-scent-orange bg-utils-scent-gray-01/60 relative z-10 h-1.5 w-full cursor-pointer appearance-none rounded-lg"
+                className="accent-utils-scent-orange relative z-10 h-full w-full cursor-pointer appearance-none bg-transparent"
               />
             </div>
 
@@ -915,13 +914,20 @@ export default function CompareModal({
                 type="button"
                 onClick={() => setIsLooping(!isLooping)}
                 className={clsx(
-                  "flex shrink-0 cursor-pointer items-center gap-1 rounded-md border px-2 py-1 font-mono text-[11px] transition-all",
+                  "border-border-color/90 flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-md border px-2 font-mono text-[11px] font-medium transition-all active:translate-y-px",
                   isLooping
-                    ? "bg-foreground text-background border-foreground"
-                    : "border-border-color text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/30 bg-white",
+                    ? "bg-foreground text-background border-foreground shadow-[0_1px_2px_rgba(24,20,17,0.28),inset_0_1px_0_rgba(255,255,255,0.18)]"
+                    : "text-foreground/75 hover:text-foreground bg-[#f7f5f2] shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] hover:bg-white",
                 )}
                 title="Loop preview playback continuously"
               >
+                <span
+                  aria-hidden="true"
+                  className={clsx(
+                    "size-1.5 shrink-0 rounded-full transition-colors",
+                    isLooping ? "bg-utils-scent-orange" : "bg-foreground/20",
+                  )}
+                />
                 <Repeat size={12} />
                 <span className="hidden sm:inline">Loop</span>
               </button>
@@ -931,10 +937,10 @@ export default function CompareModal({
                 type="button"
                 onClick={() => setIsMuted((prev) => !prev)}
                 className={clsx(
-                  "border-border-color hover:bg-utils-scent-gray-01/30 flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-white transition-all",
+                  "border-border-color/90 flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-[#f7f5f2] shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:bg-white active:translate-y-px active:shadow-none",
                   isMuted
                     ? "text-code-rust"
-                    : "text-foreground/70 hover:text-foreground",
+                    : "text-foreground/75 hover:text-foreground",
                 )}
                 title={isMuted ? "Unmute" : "Mute"}
               >
@@ -945,7 +951,7 @@ export default function CompareModal({
               <button
                 type="button"
                 onClick={onDownload}
-                className="bg-background border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition-all sm:px-3"
+                className="border-border-color/90 text-foreground flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-md border bg-[#f7f5f2] px-2.5 text-xs font-medium shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:bg-white active:translate-y-px active:shadow-none sm:px-3"
                 title="Download optimized video"
               >
                 <Download className="h-3.5 w-3.5" />

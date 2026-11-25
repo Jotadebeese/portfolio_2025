@@ -19,6 +19,8 @@ import { formatBytes } from "../utils/format";
 import clsx from "clsx";
 import ToolButton from "@/components/ui/tool-button";
 import Badge from "@/components/ui/badge";
+import HardwareFader from "@/components/ui/hardware-fader";
+import SegmentedSwitch from "@/components/ui/segmented-switch";
 
 type Props = {
   settings: OptimizerSettings;
@@ -173,46 +175,34 @@ export default function Toolbar({
           )}
         </ToolButton>
       </div>
-      <div className="border-border-color bg-background/50 flex flex-col justify-between gap-3 rounded-md border border-dashed p-2 text-xs lg:flex-row lg:items-stretch">
+      <div className="border-border-color flex flex-col justify-between gap-3 rounded-md border border-dashed bg-[#f4f2ee]/90 p-2 text-xs lg:flex-row lg:items-stretch">
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <span className="text-foreground shrink-0">Format:</span>
-            <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
-              {FORMATS.map((f) => {
+            <SegmentedSwitch
+              showLed
+              ariaLabel="Output image format"
+              value={settings.format}
+              onChange={(nextFormat) => {
+                if (nextFormat === "image/webp" && !supportsWebP) {
+                  setShowWebpExplainer((prev) => !prev);
+                } else {
+                  onSettingsChange({ ...settings, format: nextFormat });
+                }
+              }}
+              options={FORMATS.map((f) => {
                 const isWebpUnsupported =
                   f.value === "image/webp" && !supportsWebP;
-                return (
-                  <button
-                    key={f.value}
-                    type="button"
-                    onClick={() => {
-                      if (isWebpUnsupported) {
-                        setShowWebpExplainer((prev) => !prev);
-                      } else {
-                        onSettingsChange({ ...settings, format: f.value });
-                      }
-                    }}
-                    title={
-                      isWebpUnsupported
-                        ? "WebP canvas encoding is not supported on iOS WebKit browsers. Tap to learn why."
-                        : undefined
-                    }
-                    className={clsx(
-                      "cursor-pointer rounded px-2.5 py-0.5 text-xs transition-all",
-                      isWebpUnsupported
-                        ? "text-foreground/45 hover:text-foreground/75"
-                        : settings.format === f.value
-                          ? "bg-foreground text-background font-medium"
-                          : "text-foreground/70 hover:text-foreground",
-                    )}
-                  >
-                    <span className={clsx(isWebpUnsupported && "line-through")}>
-                      {f.label}
-                    </span>
-                  </button>
-                );
+                return {
+                  value: f.value,
+                  label: f.label,
+                  struck: isWebpUnsupported,
+                  title: isWebpUnsupported
+                    ? "WebP canvas encoding is not supported on iOS WebKit browsers. Tap to learn why."
+                    : undefined,
+                };
               })}
-            </div>
+            />
             {!supportsWebP && (
               <button
                 type="button"
@@ -262,7 +252,7 @@ export default function Toolbar({
 
             {isCustom ? (
               <div className="flex max-w-full flex-wrap items-center gap-1.5">
-                <div className="border-border-color flex items-center rounded-md border bg-white p-0.5">
+                <div className="border-border-color/90 flex items-center rounded-md border bg-[#e6e3dd] p-0.5 shadow-[inset_0_1px_2px_rgba(24,20,17,0.12)]">
                   <button
                     onClick={() =>
                       onSettingsChange({
@@ -270,14 +260,14 @@ export default function Toolbar({
                         resizePreset: "original",
                       })
                     }
-                    className="bg-foreground text-background shrink-0 cursor-pointer rounded px-2.5 py-0.5 text-xs font-medium whitespace-nowrap"
+                    className="bg-foreground text-background shrink-0 cursor-pointer rounded px-2.5 py-0.5 text-xs font-medium whitespace-nowrap shadow-[0_1px_2px_rgba(24,20,17,0.28),inset_0_1px_0_rgba(255,255,255,0.18)]"
                     title="Click to return to presets"
                   >
                     Custom
                   </button>
                 </div>
 
-                <div className="border-border-color flex shrink-0 items-center rounded-md border bg-white p-0.5">
+                <div className="border-border-color/90 flex shrink-0 items-center rounded-md border bg-[#e6e3dd] p-0.5 shadow-[inset_0_1px_2px_rgba(24,20,17,0.12)]">
                   <button
                     type="button"
                     disabled={(settings.customMaxDimension || 1600) <= 50}
@@ -292,7 +282,7 @@ export default function Toolbar({
                         customMaxDimension: next,
                       });
                     }}
-                    className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90 disabled:cursor-not-allowed disabled:opacity-30"
+                    className="text-foreground/75 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded border border-transparent bg-[#f7f5f2] shadow-[0_1px_0_rgba(24,20,17,0.08)] transition-all hover:bg-white active:translate-y-px active:shadow-none disabled:cursor-not-allowed disabled:opacity-30"
                     title="Decrease 100px"
                     aria-label="Decrease custom size by 100px"
                   >
@@ -321,7 +311,7 @@ export default function Toolbar({
                       }
                     }}
                     onChange={(e) => setCustomInputText(e.target.value)}
-                    className="text-foreground focus:text-foreground w-12 [appearance:textfield] text-center font-mono text-xs focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="text-foreground focus:text-foreground mx-0.5 w-12 [appearance:textfield] rounded bg-white/85 py-0.5 text-center font-mono text-xs focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
 
                   <button
@@ -338,7 +328,7 @@ export default function Toolbar({
                         customMaxDimension: next,
                       });
                     }}
-                    className="text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded transition-all active:scale-90 disabled:cursor-not-allowed disabled:opacity-30"
+                    className="text-foreground/75 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded border border-transparent bg-[#f7f5f2] shadow-[0_1px_0_rgba(24,20,17,0.08)] transition-all hover:bg-white active:translate-y-px active:shadow-none disabled:cursor-not-allowed disabled:opacity-30"
                     title="Increase 100px"
                     aria-label="Increase custom size by 100px"
                   >
@@ -358,7 +348,7 @@ export default function Toolbar({
                       resizePreset: "original",
                     })
                   }
-                  className="border-border-color hover:bg-utils-scent-gray-01/30 text-foreground/60 hover:text-foreground flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-white transition-all active:scale-95"
+                  className="border-border-color text-foreground/65 hover:text-foreground flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-[#f7f5f2] shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:bg-white active:translate-y-px active:shadow-none"
                   title="Reset to Original presets (Esc)"
                   aria-label="Reset to Original presets"
                 >
@@ -366,31 +356,24 @@ export default function Toolbar({
                 </button>
               </div>
             ) : (
-              <div className="border-border-color flex max-w-full flex-wrap items-center gap-0.5 rounded-md border bg-white p-0.5">
-                {RESIZE_PRESETS.map((p) => (
-                  <button
-                    key={p.value}
-                    onClick={() =>
-                      onSettingsChange({
-                        ...settings,
-                        resizePreset: p.value,
-                        customMaxDimension:
-                          p.value === "custom" && !settings.customMaxDimension
-                            ? 1600
-                            : settings.customMaxDimension,
-                      })
-                    }
-                    className={clsx(
-                      "shrink-0 cursor-pointer rounded px-2 py-0.5 text-xs whitespace-nowrap transition-all",
-                      settings.resizePreset === p.value
-                        ? "bg-foreground text-background font-medium"
-                        : "text-foreground/70 hover:text-foreground",
-                    )}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
+              <SegmentedSwitch
+                ariaLabel="Max dimension preset"
+                value={settings.resizePreset}
+                onChange={(nextPreset) =>
+                  onSettingsChange({
+                    ...settings,
+                    resizePreset: nextPreset,
+                    customMaxDimension:
+                      nextPreset === "custom" && !settings.customMaxDimension
+                        ? 1600
+                        : settings.customMaxDimension,
+                  })
+                }
+                options={RESIZE_PRESETS.map((p) => ({
+                  value: p.value,
+                  label: p.label,
+                }))}
+              />
             )}
           </div>
         </div>
@@ -399,59 +382,37 @@ export default function Toolbar({
           <Sliders className="text-foreground/70 h-3.5 w-3.5 shrink-0" />
           <span className="text-foreground shrink-0">Quality:</span>
 
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() =>
-                onSettingsChange({
-                  ...settings,
-                  quality: Math.max(10, settings.quality - 5),
-                })
-              }
-              disabled={settings.quality <= 10}
-              className="border-border-color hover:bg-utils-scent-gray-01/30 text-foreground/70 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded border bg-white transition-all active:scale-90 disabled:cursor-not-allowed disabled:opacity-30"
-              title="Decrease quality (-5%)"
-              aria-label="Decrease quality by 5%"
-            >
-              <Minus className="h-3 w-3" />
-            </button>
-
-            <input
-              type="range"
-              min="10"
-              max="100"
-              step="5"
-              value={settings.quality}
-              onChange={(e) =>
-                onSettingsChange({
-                  ...settings,
-                  quality: Number(e.target.value),
-                })
-              }
-              className="accent-utils-scent-orange bg-utils-scent-gray-01/50 h-1.5 w-24 cursor-pointer appearance-none rounded-lg sm:w-28"
-              aria-label="Quality percentage"
-            />
-
-            <button
-              type="button"
-              onClick={() =>
-                onSettingsChange({
-                  ...settings,
-                  quality: Math.min(100, settings.quality + 5),
-                })
-              }
-              disabled={settings.quality >= 100}
-              className="border-border-color hover:bg-utils-scent-gray-01/30 text-foreground/70 hover:text-foreground flex h-5 w-5 cursor-pointer items-center justify-center rounded border bg-white transition-all active:scale-90 disabled:cursor-not-allowed disabled:opacity-30"
-              title="Increase quality (+5%)"
-              aria-label="Increase quality by 5%"
-            >
-              <Plus className="h-3 w-3" />
-            </button>
-          </div>
-
-          <span className="text-foreground w-7 text-center font-mono">
-            {settings.quality}%
-          </span>
+          <HardwareFader
+            min={10}
+            max={100}
+            step={5}
+            value={settings.quality}
+            onChange={(next) =>
+              onSettingsChange({
+                ...settings,
+                quality: next,
+              })
+            }
+            ariaLabel="Quality percentage"
+            onDecrement={() =>
+              onSettingsChange({
+                ...settings,
+                quality: Math.max(10, settings.quality - 5),
+              })
+            }
+            onIncrement={() =>
+              onSettingsChange({
+                ...settings,
+                quality: Math.min(100, settings.quality + 5),
+              })
+            }
+            decrementTitle="Decrease quality (-5%)"
+            incrementTitle="Increase quality (+5%)"
+            decrementAriaLabel="Decrease quality by 5%"
+            incrementAriaLabel="Increase quality by 5%"
+            readout={`${settings.quality}%`}
+            readoutClassName="min-w-10"
+          />
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2.5">

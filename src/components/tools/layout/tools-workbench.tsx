@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, Suspense, lazy } from "react";
 import clsx from "clsx";
 import {
   Check,
-  Plus,
   Share2,
   SlidersHorizontal,
   Wrench,
@@ -239,17 +238,19 @@ export default function ToolsWorkbench({
                   key={tool.id}
                   onClick={() => toggleTool(tool.id)}
                   className={clsx(
-                    "flex cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 text-xs transition-all hover:opacity-80",
+                    "flex cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 text-xs font-medium transition-all active:translate-y-px",
                     isOpen
-                      ? "bg-background border-background border-solid"
-                      : "border-border-color border-dashed bg-white",
+                      ? "border-foreground/30 text-foreground border-solid bg-white shadow-[0_1px_1px_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] hover:bg-[#f7f5f2]"
+                      : "border-border-color text-foreground/60 hover:text-foreground border-dashed bg-[#ece9e3]/70 hover:bg-[#f7f5f2]",
                   )}
                 >
-                  {isOpen ? (
-                    <Check className="text-foreground h-3.5 w-3.5 stroke-[2]" />
-                  ) : (
-                    <Plus className="text-foreground/70 h-3.5 w-3.5" />
-                  )}
+                  <span
+                    aria-hidden="true"
+                    className={clsx(
+                      "size-1.5 shrink-0 rounded-full transition-colors",
+                      isOpen ? "bg-utils-scent-orange" : "bg-foreground/20",
+                    )}
+                  />
                   <span>{tool.name}</span>
                   <Badge variant="meta" size="xs" className="hidden md:inline-flex">
                     {tool.apiBadge}

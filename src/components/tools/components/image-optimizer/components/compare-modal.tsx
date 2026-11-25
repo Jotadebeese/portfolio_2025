@@ -13,6 +13,7 @@ import {
 import clsx from "clsx";
 import { ImageFileItem } from "../types";
 import { formatBytes, calculateSavings } from "../utils/format";
+import SegmentedSwitch from "@/components/ui/segmented-switch";
 
 type Props = {
   item: ImageFileItem;
@@ -141,79 +142,76 @@ export default function CompareModal({
             {item.name}
           </h4>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <div
-              className="border-border-color bg-background flex shrink-0 items-center rounded-md border p-0.5 text-xs"
+            <SegmentedSwitch
+              size="sm"
+              value={backdrop}
+              onChange={setBackdrop}
               title="Preview backdrop for transparent images"
-            >
-              {(["checker", "dark", "light"] as BackdropMode[]).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setBackdrop(mode)}
-                  title={`${mode.charAt(0).toUpperCase() + mode.slice(1)} backdrop`}
-                  aria-label={`${mode} backdrop`}
-                  className={clsx(
-                    "flex cursor-pointer items-center gap-1.5 rounded px-2 py-1 capitalize transition-all",
-                    backdrop === mode
-                      ? "bg-foreground text-background"
-                      : "text-foreground/70 hover:text-foreground",
-                  )}
-                >
-                  <span
-                    style={
-                      mode === "checker"
-                        ? {
-                            backgroundColor: "#d8d2cc",
-                            backgroundImage:
-                              "linear-gradient(45deg, #9e958c 25%, transparent 25%), linear-gradient(-45deg, #9e958c 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #9e958c 75%), linear-gradient(-45deg, transparent 75%, #9e958c 75%)",
-                            backgroundSize: "6px 6px",
-                            backgroundPosition: "0 0, 0 3px, 3px -3px, -3px 0",
-                          }
-                        : mode === "dark"
-                          ? { backgroundColor: "#181411" }
-                          : { backgroundColor: "#ffffff" }
-                    }
-                    className={clsx(
-                      "h-3 w-3 shrink-0 rounded-xs border",
-                      backdrop === mode
-                        ? "border-white/40"
-                        : "border-foreground/30",
-                    )}
-                  />
-                  <span className="hidden sm:inline">{mode}</span>
-                </button>
-              ))}
-            </div>
+              ariaLabel="Preview backdrop for transparent images"
+              options={(["checker", "dark", "light"] as BackdropMode[]).map(
+                (mode) => ({
+                  value: mode,
+                  title: `${mode.charAt(0).toUpperCase() + mode.slice(1)} backdrop`,
+                  ariaLabel: `${mode} backdrop`,
+                  label: (
+                    <span className="flex items-center gap-1.5 capitalize">
+                      <span
+                        style={
+                          mode === "checker"
+                            ? {
+                                backgroundColor: "#d8d2cc",
+                                backgroundImage:
+                                  "linear-gradient(45deg, #9e958c 25%, transparent 25%), linear-gradient(-45deg, #9e958c 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #9e958c 75%), linear-gradient(-45deg, transparent 75%, #9e958c 75%)",
+                                backgroundSize: "6px 6px",
+                                backgroundPosition:
+                                  "0 0, 0 3px, 3px -3px, -3px 0",
+                              }
+                            : mode === "dark"
+                              ? { backgroundColor: "#181411" }
+                              : { backgroundColor: "#ffffff" }
+                        }
+                        className={clsx(
+                          "h-3 w-3 shrink-0 rounded-xs border",
+                          backdrop === mode
+                            ? "border-white/40"
+                            : "border-foreground/30",
+                        )}
+                      />
+                      <span className="hidden sm:inline">{mode}</span>
+                    </span>
+                  ),
+                }),
+              )}
+            />
 
-            <div className="border-border-color bg-background flex items-center rounded-md border p-0.5 text-xs">
-              <button
-                onClick={() => setViewMode("slider")}
-                className={clsx(
-                  "flex cursor-pointer items-center gap-1 rounded px-2 py-1 transition-all",
-                  viewMode === "slider"
-                    ? "bg-foreground text-background"
-                    : "text-foreground/70 hover:text-foreground",
-                )}
-                title="Split slider comparison"
-              >
-                <SplitSquareVertical className="h-3 w-3" />
-                <span className="hidden sm:inline">Split Slider</span>
-              </button>
-
-              <button
-                onClick={() => setViewMode("side-by-side")}
-                className={clsx(
-                  "flex cursor-pointer items-center gap-1 rounded px-2 py-1 transition-all",
-                  viewMode === "side-by-side"
-                    ? "bg-foreground text-background"
-                    : "text-foreground/70 hover:text-foreground",
-                )}
-                title="Side by side comparison"
-              >
-                <Columns2 className="h-3 w-3" />
-                <span className="hidden sm:inline">Side by Side</span>
-              </button>
-            </div>
+            <SegmentedSwitch
+              size="sm"
+              value={viewMode}
+              onChange={setViewMode}
+              ariaLabel="Image comparison layout"
+              options={[
+                {
+                  value: "slider",
+                  title: "Split slider comparison",
+                  label: (
+                    <span className="flex items-center gap-1">
+                      <SplitSquareVertical className="h-3 w-3" />
+                      <span className="hidden sm:inline">Split Slider</span>
+                    </span>
+                  ),
+                },
+                {
+                  value: "side-by-side",
+                  title: "Side by side comparison",
+                  label: (
+                    <span className="flex items-center gap-1">
+                      <Columns2 className="h-3 w-3" />
+                      <span className="hidden sm:inline">Side by Side</span>
+                    </span>
+                  ),
+                },
+              ]}
+            />
 
             <button
               onClick={onClose}

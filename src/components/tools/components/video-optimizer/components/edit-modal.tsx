@@ -20,6 +20,7 @@ import {
   Camera,
 } from "lucide-react";
 import clsx from "clsx";
+import SegmentedSwitch from "@/components/ui/segmented-switch";
 import {
   VideoFileItem,
   VideoFpsOption,
@@ -1172,13 +1173,13 @@ export default function EditModal({
         </div>
 
         {/* Video Player Transport Bar */}
-        <div className="border-border-color text-foreground flex flex-wrap items-center justify-between gap-2 border-b border-dashed bg-white px-3 py-2 text-xs sm:px-4">
+        <div className="border-border-color text-foreground flex flex-wrap items-center justify-between gap-2 border-b border-dashed bg-[#f4f2ee]/90 px-3 py-2 text-xs sm:px-4">
           {/* Playback Controls */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={togglePlay}
-              className="bg-foreground text-background hover:bg-utils-scent-orange flex h-7 w-7 cursor-pointer items-center justify-center rounded-md transition-all active:scale-95"
+              className="bg-foreground text-background hover:bg-utils-scent-orange flex h-7 w-7 cursor-pointer items-center justify-center rounded-md shadow-[0_1px_2px_rgba(24,20,17,0.28),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all active:translate-y-px active:scale-95"
               title={isPlaying ? "Pause (Space)" : "Play (Space)"}
             >
               {isPlaying ? (
@@ -1191,7 +1192,7 @@ export default function EditModal({
             <button
               type="button"
               onClick={() => jumpTime(-5)}
-              className="border-border-color text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/30 hidden h-7 cursor-pointer items-center gap-1 rounded-md border bg-white px-2 font-mono text-xs leading-none transition-all sm:flex"
+              className="border-border-color/90 text-foreground/75 hover:text-foreground hidden h-7 cursor-pointer items-center gap-1 rounded-md border bg-[#f7f5f2] px-2 font-mono text-xs leading-none shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:bg-white active:translate-y-px active:shadow-none sm:flex"
               title="Jump back 5s"
             >
               <RotateCcw size={12} />
@@ -1201,14 +1202,14 @@ export default function EditModal({
             <button
               type="button"
               onClick={() => jumpTime(5)}
-              className="border-border-color text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/30 hidden h-7 cursor-pointer items-center gap-1 rounded-md border bg-white px-2 font-mono text-xs leading-none transition-all sm:flex"
+              className="border-border-color/90 text-foreground/75 hover:text-foreground hidden h-7 cursor-pointer items-center gap-1 rounded-md border bg-[#f7f5f2] px-2 font-mono text-xs leading-none shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:bg-white active:translate-y-px active:shadow-none sm:flex"
               title="Jump forward 5s"
             >
               <RotateCw size={12} />
               <span>5s</span>
             </button>
 
-            <span className="text-foreground ml-0.5 font-mono text-xs leading-none">
+            <span className="text-foreground ml-0.5 min-w-[84px] font-mono text-xs leading-none tabular-nums">
               {formatDuration(currentTime)}{" "}
               <span className="text-foreground/45">
                 / {formatDuration(duration)}
@@ -1216,94 +1217,88 @@ export default function EditModal({
             </span>
           </div>
 
-          {/* Right Controls: Preview Speed, Loop, Waveform & Save Still */}
+          {/* Right Controls: Preview Speed, Waveform, Loop & Save Still */}
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {/* Preview playback speed toggle */}
             <div className="flex items-center gap-1.5">
               <span className="text-foreground/70 hidden text-xs sm:inline">
                 Preview:
               </span>
-              <div
-                className="border-border-color flex h-7 items-center rounded-md border bg-white p-0.5 font-mono"
+              <SegmentedSwitch
+                size="xs"
+                className="h-7"
+                value={playbackRate}
+                onChange={handleSetPlaybackRate}
                 title="Preview playback speed (for scrubbing/review only — does not affect exported video)"
-              >
-                {[0.5, 1, 1.25, 1.5, 2].map((rate) => (
-                  <button
-                    key={rate}
-                    type="button"
-                    onClick={() => handleSetPlaybackRate(rate)}
-                    className={clsx(
-                      "h-full cursor-pointer items-center rounded px-2 text-xs leading-none transition-all",
-                      rate === 1.25 ? "hidden sm:flex" : "flex",
-                      playbackRate === rate
-                        ? "bg-foreground text-background"
-                        : "text-foreground/70 hover:text-foreground",
-                    )}
-                    title={`Preview at ${rate}x speed (scrubbing only)`}
-                  >
-                    {rate}x
-                  </button>
-                ))}
-              </div>
+                ariaLabel="Preview playback speed"
+                options={[0.5, 1, 1.25, 1.5, 2].map((rate) => ({
+                  value: rate,
+                  label: `${rate}x`,
+                  mono: true,
+                  className:
+                    rate === 1.25 ? "hidden sm:inline-flex" : undefined,
+                  title: `Preview at ${rate}x speed (scrubbing only)`,
+                }))}
+              />
             </div>
+
+            {/* Waveform Style Toggle: Bars vs Smooth (only shown when source has audio) */}
+            {item.hasAudio && (
+              <SegmentedSwitch
+                size="xs"
+                className="h-7"
+                value={waveformStyle}
+                onChange={setWaveformStyle}
+                ariaLabel="Audio waveform style"
+                options={[
+                  {
+                    value: "bars",
+                    label: "Bars",
+                    title:
+                      "Render detailed vertical audio bars (crisp speech & pause transients)",
+                  },
+                  {
+                    value: "smooth",
+                    label: "Smooth",
+                    title:
+                      "Render smooth fluid waveform silhouette (Loom curve)",
+                  },
+                ]}
+              />
+            )}
 
             {/* Loop Toggle */}
             <button
               type="button"
               onClick={() => setLoopPlayback(!loopPlayback)}
               className={clsx(
-                "flex h-7 cursor-pointer items-center gap-1 rounded-md border px-2.5 text-xs leading-none transition-all",
+                "border-border-color/90 flex h-7 cursor-pointer items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium leading-none transition-all active:translate-y-px",
                 loopPlayback
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border-color text-foreground/70 hover:text-foreground hover:bg-utils-scent-gray-01/30 bg-white",
+                  ? "border-foreground bg-foreground text-background shadow-[0_1px_2px_rgba(24,20,17,0.28),inset_0_1px_0_rgba(255,255,255,0.18)]"
+                  : "text-foreground/75 hover:text-foreground bg-[#f7f5f2] shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] hover:bg-white",
               )}
               title="Loop preview playback (cycles continuously without stopping)"
             >
+              <span
+                aria-hidden="true"
+                className={clsx(
+                  "size-1.5 shrink-0 rounded-full transition-colors",
+                  loopPlayback ? "bg-utils-scent-orange" : "bg-foreground/20",
+                )}
+              />
               <Repeat size={12} />
               <span className="hidden sm:inline">Loop</span>
             </button>
-
-            {/* Waveform Style Toggle: Bars vs Smooth (only shown when source has audio) */}
-            {item.hasAudio && (
-              <div className="border-border-color flex h-7 items-center rounded-md border bg-white p-0.5">
-                <button
-                  type="button"
-                  onClick={() => setWaveformStyle("bars")}
-                  className={clsx(
-                    "flex h-full cursor-pointer items-center rounded px-2 text-xs leading-none transition-all",
-                    waveformStyle === "bars"
-                      ? "bg-foreground text-background"
-                      : "text-foreground/70 hover:text-foreground",
-                  )}
-                  title="Render detailed vertical audio bars (crisp speech & pause transients)"
-                >
-                  Bars
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setWaveformStyle("smooth")}
-                  className={clsx(
-                    "flex h-full cursor-pointer items-center rounded px-2 text-xs leading-none transition-all",
-                    waveformStyle === "smooth"
-                      ? "bg-foreground text-background"
-                      : "text-foreground/70 hover:text-foreground",
-                  )}
-                  title="Render smooth fluid waveform silhouette (Loom curve)"
-                >
-                  Smooth
-                </button>
-              </div>
-            )}
 
             {/* Capture Current Frame Still (WebP Poster) */}
             <button
               type="button"
               onClick={handleCaptureStill}
               className={clsx(
-                "flex h-7 cursor-pointer items-center gap-1 rounded-md border px-2.5 text-xs leading-none transition-all",
+                "flex h-7 cursor-pointer items-center justify-center gap-1 rounded-md border px-2.5 text-xs font-medium leading-none transition-all active:translate-y-px sm:min-w-[78px]",
                 stillSaved
                   ? "border-code-green bg-code-green/10 text-code-green"
-                  : "border-border-color text-foreground/80 hover:text-foreground hover:bg-utils-scent-gray-01/30 bg-white",
+                  : "border-border-color/90 text-foreground/80 hover:text-foreground bg-[#f7f5f2] shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] hover:bg-white active:shadow-none",
               )}
               title="Download current video frame as a full-res WebP still image (ideal for video posters)"
             >
@@ -1316,7 +1311,7 @@ export default function EditModal({
         </div>
 
         {/* Unified Timeline & Export Overrides Workspace */}
-        <div className="bg-background/50 flex flex-col gap-2.5 px-3 py-2.5 text-xs sm:px-4 sm:py-3">
+        <div className="flex flex-col gap-2.5 bg-[#f4f2ee]/90 px-3 py-2.5 text-xs sm:px-4 sm:py-3">
           {/* Trim & Cut Row */}
           <div className="text-foreground flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -1326,10 +1321,10 @@ export default function EditModal({
                 disabled={!canSplitAtPlayhead}
                 onClick={handleSplitAtPlayhead}
                 className={clsx(
-                  "border-border-color flex h-7 items-center gap-1.5 rounded-md border bg-white px-2.5 text-xs leading-none transition-all",
+                  "border-border-color/90 flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium leading-none transition-all",
                   canSplitAtPlayhead
-                    ? "text-foreground hover:bg-utils-scent-gray-01/30 cursor-pointer"
-                    : "text-foreground/45 cursor-not-allowed opacity-50",
+                    ? "text-foreground bg-[#f7f5f2] shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] hover:bg-white active:translate-y-px active:shadow-none cursor-pointer"
+                    : "text-foreground/45 bg-[#ece9e3]/70 cursor-not-allowed opacity-55",
                 )}
                 title={
                   canSplitAtPlayhead
@@ -1343,7 +1338,7 @@ export default function EditModal({
                   <span className="hidden sm:inline">
                     {" "}
                     at{" "}
-                    <span className="font-mono">
+                    <span className="font-mono tabular-nums">
                       {formatDuration(currentTime)} [S]
                     </span>
                   </span>
@@ -1357,10 +1352,10 @@ export default function EditModal({
                   disabled={keptSections.length <= 1}
                   onClick={() => handleToggleDeleteSection(selectedSection.id)}
                   className={clsx(
-                    "border-border-color text-foreground/80 flex h-7 items-center gap-1.5 rounded-md border bg-white px-2.5 text-xs leading-none transition-all",
+                    "border-border-color/90 text-foreground/85 flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium leading-none transition-all",
                     keptSections.length <= 1
-                      ? "cursor-not-allowed opacity-45"
-                      : "hover:text-foreground hover:bg-utils-scent-gray-01/30 cursor-pointer",
+                      ? "bg-[#ece9e3]/70 cursor-not-allowed opacity-45"
+                      : "hover:text-code-rust bg-[#f7f5f2] shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] hover:bg-white active:translate-y-px active:shadow-none cursor-pointer",
                   )}
                   title={
                     keptSections.length <= 1
@@ -1380,7 +1375,7 @@ export default function EditModal({
                 <button
                   type="button"
                   onClick={() => handleToggleDeleteSection(selectedSection.id)}
-                  className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex h-7 cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2.5 text-xs leading-none transition-all"
+                  className="border-border-color/90 text-foreground flex h-7 cursor-pointer items-center gap-1.5 rounded-md border bg-[#f7f5f2] px-2.5 text-xs font-medium leading-none shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:bg-white active:translate-y-px active:shadow-none"
                   title="Restore this cut section back into the video"
                 >
                   <Undo2 size={12} />
@@ -1404,7 +1399,7 @@ export default function EditModal({
                       handleMergeSection(idx - 1);
                     }
                   }}
-                  className="border-border-color hover:bg-utils-scent-gray-01/30 text-foreground/80 flex h-7 cursor-pointer items-center rounded-md border bg-white px-2.5 text-xs leading-none transition-all"
+                  className="border-border-color/90 text-foreground/85 flex h-7 cursor-pointer items-center rounded-md border bg-[#f7f5f2] px-2.5 text-xs font-medium leading-none shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:bg-white active:translate-y-px active:shadow-none"
                   title="Merge selected section with its neighbor"
                 >
                   Merge
@@ -1415,12 +1410,12 @@ export default function EditModal({
               {selectedSection && (
                 <span className="text-foreground/60 ml-1 hidden text-xs md:inline">
                   Selected:{" "}
-                  <span className="text-foreground font-mono">
+                  <span className="text-foreground font-mono tabular-nums">
                     {formatStatDuration(
                       selectedSection.end - selectedSection.start,
                     )}
                   </span>{" "}
-                  <span className="font-mono">
+                  <span className="font-mono tabular-nums">
                     ({formatDuration(selectedSection.start)} &rarr;{" "}
                     {formatDuration(selectedSection.end)})
                   </span>
@@ -1432,12 +1427,12 @@ export default function EditModal({
             <div className="flex items-center gap-2 text-xs">
               <span className="text-foreground/70">
                 Kept:{" "}
-                <span className="text-foreground font-mono">
+                <span className="text-foreground font-mono tabular-nums">
                   {formatStatDuration(totalKeptDuration)}
                 </span>
               </span>
               {totalCutDuration > 0.05 && (
-                <span className="border-border-color text-foreground/70 flex h-7 items-center gap-1 rounded-md border bg-white px-2 font-mono text-xs leading-none">
+                <span className="border-border-color text-foreground/70 flex h-7 items-center gap-1 rounded-md border bg-[#eae7e1]/90 px-2 font-mono text-xs leading-none tabular-nums shadow-[inset_0_1px_2px_rgba(24,20,17,0.08)]">
                   <span>Cut -{formatStatDuration(totalCutDuration)}</span>
                   <span className="hidden sm:inline">
                     (-{Math.round((totalCutDuration / duration) * 100)}%)
@@ -1733,72 +1728,56 @@ export default function EditModal({
               {/* Per-Video FPS Cap */}
               <div className="flex items-center gap-2">
                 <span className="text-foreground shrink-0">Export FPS:</span>
-                <div
-                  className="border-border-color flex h-7 items-center rounded-md border bg-white p-0.5"
+                <SegmentedSwitch
+                  size="sm"
+                  className="h-7"
+                  value={targetFps}
+                  onChange={setTargetFps}
                   title="Output frame rate for this video"
-                >
-                  {MODAL_FPS_OPTIONS.filter(
+                  ariaLabel="Output frame rate for this video"
+                  options={MODAL_FPS_OPTIONS.filter(
                     (opt) =>
                       opt.value === "original" ||
                       !item.originalFps ||
                       item.originalFps <= 0 ||
                       opt.value < item.originalFps - 0.5,
-                  ).map((opt) => {
-                    const isActive = targetFps === opt.value;
-                    return (
-                      <button
-                        key={String(opt.value)}
-                        type="button"
-                        onClick={() => setTargetFps(opt.value)}
-                        className={clsx(
-                          "flex h-full cursor-pointer items-center gap-1 rounded px-2 text-xs leading-none transition-all",
-                          opt.value !== "original" && "font-mono",
-                          isActive
-                            ? "bg-foreground text-background"
-                            : "text-foreground/70 hover:text-foreground",
-                        )}
-                        title={
-                          opt.value === "original"
-                            ? "Keep original frame rate"
-                            : `Export this video at ${opt.value}fps`
-                        }
-                      >
-                        <span>{opt.label}</span>
-                        {opt.value === "original" && item.originalFps && (
-                          <span className="font-mono text-xs opacity-75">
-                            ({formatFps(item.originalFps)})
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                  ).map((opt) => ({
+                    value: opt.value,
+                    label: opt.label,
+                    sublabel:
+                      opt.value === "original" && item.originalFps
+                        ? `(${formatFps(item.originalFps)})`
+                        : undefined,
+                    mono: opt.value !== "original",
+                    title:
+                      opt.value === "original"
+                        ? "Keep original frame rate"
+                        : `Export this video at ${opt.value}fps`,
+                  }))}
+                />
               </div>
 
               {/* Export Output Speed */}
               <div className="flex items-center gap-2">
                 <span className="text-foreground shrink-0">Export Speed:</span>
-                <div
-                  className="border-border-color flex h-7 items-center rounded-md border bg-white p-0.5 font-mono"
+                <SegmentedSwitch
+                  size="sm"
+                  className="h-7"
+                  value={
+                    [0.5, 1, 1.25, 1.5, 2].find(
+                      (spd) => Math.abs(exportSpeed - spd) < 0.01,
+                    ) ?? 1
+                  }
+                  onChange={setExportSpeed}
                   title="Output speed multiplier baked into the exported video"
-                >
-                  {[0.5, 1, 1.25, 1.5, 2].map((spd) => (
-                    <button
-                      key={spd}
-                      type="button"
-                      onClick={() => setExportSpeed(spd)}
-                      className={clsx(
-                        "flex h-full cursor-pointer items-center rounded px-2 text-xs leading-none transition-all",
-                        Math.abs(exportSpeed - spd) < 0.01
-                          ? "bg-foreground text-background"
-                          : "text-foreground/70 hover:text-foreground",
-                      )}
-                      title={`Export video at ${spd}x speed`}
-                    >
-                      {spd}x
-                    </button>
-                  ))}
-                </div>
+                  ariaLabel="Output export speed multiplier"
+                  options={[0.5, 1, 1.25, 1.5, 2].map((spd) => ({
+                    value: spd,
+                    label: `${spd}x`,
+                    mono: true,
+                    title: `Export video at ${spd}x speed`,
+                  }))}
+                />
               </div>
             </div>
 
@@ -1810,7 +1789,7 @@ export default function EditModal({
                   type="button"
                   onClick={() => setIsMuted(!isMuted)}
                   className={clsx(
-                    "border-border-color hover:bg-utils-scent-gray-01/30 flex h-7 cursor-pointer items-center gap-1.5 rounded-md border bg-white px-2.5 text-xs leading-none transition-all",
+                    "border-border-color/90 flex h-7 w-[88px] cursor-pointer items-center justify-start gap-1.5 rounded-md border bg-[#f7f5f2] px-2.5 text-xs font-medium leading-none shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:bg-white active:translate-y-px active:shadow-none",
                     isMuted ? "text-code-rust" : "text-foreground",
                   )}
                   aria-pressed={isMuted}
@@ -1820,6 +1799,13 @@ export default function EditModal({
                       : "Audio track will be preserved on export"
                   }
                 >
+                  <span
+                    aria-hidden="true"
+                    className={clsx(
+                      "size-1.5 shrink-0 rounded-full",
+                      isMuted ? "bg-code-rust/80" : "bg-code-green",
+                    )}
+                  />
                   {isMuted ? (
                     <VolumeX className="h-3.5 w-3.5" />
                   ) : (
@@ -1828,7 +1814,7 @@ export default function EditModal({
                   <span>{isMuted ? "Off" : "Keep"}</span>
                 </button>
               ) : (
-                <span className="border-border-color text-foreground/55 flex h-7 items-center rounded-md border bg-white px-2.5 text-xs leading-none">
+                <span className="border-border-color text-foreground/55 flex h-7 w-[88px] items-center justify-center rounded-md border bg-[#eae7e1]/90 px-2.5 text-xs leading-none shadow-[inset_0_1px_2px_rgba(24,20,17,0.08)]">
                   No audio
                 </span>
               )}
@@ -1843,19 +1829,19 @@ export default function EditModal({
             <span className="text-foreground/70 hidden sm:inline">
               Projected Output:
             </span>
-            <span className="text-foreground font-mono">
+            <span className="text-foreground font-mono tabular-nums">
               {formatStatDuration(finalOutputDuration)} &bull;{" "}
               {estimatedBytes > 0
                 ? `~${formatBytes(estimatedBytes)}`
                 : "Adaptive (VBR)"}
             </span>
             {estimatedSavings && estimatedSavings.percentSaved > 0 && (
-              <span className="text-code-green bg-utils-scent-gray-01/40 border-border-color inline-flex h-7 items-center rounded-md border px-2 font-mono text-xs leading-none">
+              <span className="text-code-green border-border-color inline-flex h-7 items-center rounded-md border bg-[#eae7e1]/90 px-2 font-mono text-xs leading-none tabular-nums">
                 Est. -{estimatedSavings.percentSaved}%
               </span>
             )}
             {estimatedSavings && estimatedSavings.percentSaved < 0 && (
-              <span className="text-code-rust bg-utils-scent-gray-01/40 border-border-color inline-flex h-7 items-center rounded-md border px-2 font-mono text-xs leading-none">
+              <span className="text-code-rust border-border-color inline-flex h-7 items-center rounded-md border bg-[#eae7e1]/90 px-2 font-mono text-xs leading-none tabular-nums">
                 Est. +{Math.abs(estimatedSavings.percentSaved)}%
               </span>
             )}
@@ -1865,14 +1851,14 @@ export default function EditModal({
             <button
               type="button"
               onClick={onClose}
-              className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex h-7 cursor-pointer items-center rounded-md border bg-white px-3 text-xs leading-none transition-all"
+              className="border-border-color/90 text-foreground flex h-7 cursor-pointer items-center rounded-md border bg-[#f7f5f2] px-3 text-xs font-medium leading-none shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:bg-white active:translate-y-px active:shadow-none"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleApply}
-              className="border-border-color text-foreground hover:bg-utils-scent-gray-01/30 flex h-7 cursor-pointer items-center gap-1.5 rounded-md border bg-white px-3 text-xs leading-none transition-all"
+              className="border-border-color/90 text-foreground flex h-7 cursor-pointer items-center gap-1.5 rounded-md border bg-[#f7f5f2] px-3 text-xs font-medium leading-none shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all hover:bg-white active:translate-y-px active:shadow-none"
               title="Save trim and cut edits to queue item"
             >
               <Check size={13} />
@@ -1883,7 +1869,7 @@ export default function EditModal({
             <button
               type="button"
               onClick={handleApplyAndCompress}
-              className="bg-foreground text-background hover:bg-foreground/90 flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-3 text-xs font-medium leading-none transition-all active:scale-95 sm:px-3.5"
+              className="bg-foreground text-background hover:bg-foreground/90 flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-3 text-xs font-medium leading-none shadow-[0_1px_2px_rgba(24,20,17,0.28),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all active:translate-y-px active:scale-95 sm:px-3.5"
               title="Save edits and immediately start compressing this video"
             >
               <Zap size={13} className="fill-current" />

@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Check, Copy, RefreshCw, ShieldCheck, KeyRound } from "lucide-react";
 import clsx from "clsx";
 import ToolButton from "@/components/ui/tool-button";
+import HardwareFader from "@/components/ui/hardware-fader";
 
 function generateUuidV7(): string {
   const bytes = new Uint8Array(16);
@@ -83,12 +84,6 @@ export default function SecretGenerator() {
     setPassword(generatePassword(passwordLength, includeSymbols));
     setTimeout(() => setIsRotating(false), 500);
   }, [passwordLength, includeSymbols]);
-
-  const handleLengthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const len = Number(e.target.value);
-    setPasswordLength(len);
-    setPassword(generatePassword(len, includeSymbols));
-  };
 
   const toggleSymbols = () => {
     const next = !includeSymbols;
@@ -205,27 +200,17 @@ export default function SecretGenerator() {
               role="checkbox"
               aria-checked={includeSymbols}
               onClick={toggleSymbols}
-              className="border-border-color flex cursor-pointer items-center gap-1.5 border-r border-dashed pr-2.5 select-none"
+              className="border-border-color/90 text-foreground hover:text-foreground flex cursor-pointer items-center gap-1.5 rounded-md border bg-[#f7f5f2] px-2.5 py-1 shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all select-none hover:bg-white active:translate-y-px active:shadow-none"
             >
-              <div
+              <span
+                aria-hidden="true"
                 className={clsx(
-                  "flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border transition-all",
+                  "size-1.5 shrink-0 rounded-full transition-colors",
                   includeSymbols
-                    ? "border-utils-scent-orange bg-utils-scent-orange/60 text-white"
-                    : "border-border-color hover:border-utils-scent-orange bg-white",
+                    ? "bg-utils-scent-orange"
+                    : "bg-foreground/25",
                 )}
-              >
-                <Check
-                  size={12}
-                  strokeWidth={4}
-                  className={clsx(
-                    "transition-all duration-100",
-                    includeSymbols
-                      ? "scale-100 opacity-100"
-                      : "scale-50 opacity-0",
-                  )}
-                />
-              </div>
+              />
               <span>
                 Symbols{" "}
                 <span className="text-foreground/60 hidden sm:inline">
@@ -236,17 +221,20 @@ export default function SecretGenerator() {
 
             <div className="flex items-center gap-2">
               <span className="text-foreground/80">Length:</span>
-              <input
-                type="range"
-                min="12"
-                max="48"
+              <HardwareFader
+                min={12}
+                max={48}
                 value={passwordLength}
-                onChange={handleLengthChange}
-                className="accent-utils-scent-orange bg-utils-scent-gray-01/50 h-1.5 w-20 cursor-pointer appearance-none rounded-lg sm:w-24"
+                onChange={(next) => {
+                  setPasswordLength(next);
+                  setPassword(generatePassword(next, includeSymbols));
+                }}
+                ariaLabel="Password length"
+                trackWidthClassName="w-24 sm:w-28"
+                ticks={7}
+                readout={passwordLength}
+                readoutClassName="min-w-8"
               />
-              <span className="text-foreground w-5 text-right font-mono font-medium">
-                {passwordLength}
-              </span>
             </div>
           </div>
         </div>
