@@ -4,7 +4,7 @@ import { ProjectsSkeleton } from "@/components/projects/layouts/projects-section
 import { getHomePage } from "@/lib/payload/actions";
 import { extractTextFromRichText } from "@/lib/payload/utils/extract-text";
 import { Media } from "@/payload-types";
-import { RichText } from "@payloadcms/richtext-lexical/react";
+import { RichText } from "@/components/RichText";
 import { ArrowDown } from "lucide-react";
 import { Metadata } from "next";
 import { Suspense } from "react";
@@ -85,7 +85,10 @@ export default async function Home() {
         <div id="about" className="flex scroll-mt-10 flex-col gap-5">
           <RichText className="text-xl md:text-2xl" data={homePage.subTitle} />
 
-          <RichText className="text-base" data={homePage.shortDescription} />
+          <RichText
+            className="prose prose-base text-foreground w-full max-w-none [--tw-prose-body:var(--foreground)] [--tw-prose-bold:var(--foreground)] [--tw-prose-headings:var(--foreground)] prose-p:my-3 prose-p:leading-relaxed prose-p:text-pretty prose-a:text-code-rust prose-a:no-underline hover:prose-a:underline [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+            data={homePage.shortDescription}
+          />
 
           <div className="flex flex-wrap items-center justify-start gap-3 pt-2">
             <CTAButton href="#projects" variant="primary">
