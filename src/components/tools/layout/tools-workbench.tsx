@@ -240,8 +240,8 @@ export default function ToolsWorkbench({
                   className={clsx(
                     "flex cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 text-xs font-medium transition-all active:translate-y-px",
                     isOpen
-                      ? "border-foreground/30 text-foreground border-solid bg-white shadow-[0_1px_1px_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] hover:bg-[#f7f5f2]"
-                      : "border-border-color text-foreground/60 hover:text-foreground border-dashed bg-[#ece9e3]/70 hover:bg-[#f7f5f2]",
+                      ? "bg-background border-background text-foreground border-solid hover:opacity-85"
+                      : "border-border-color text-foreground/75 hover:text-foreground border-dashed bg-white hover:bg-background/50",
                   )}
                 >
                   <span
