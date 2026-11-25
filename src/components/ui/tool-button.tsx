@@ -24,13 +24,13 @@ export type ToolButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const VARIANT_CLASSES: Record<ToolButtonVariant, string> = {
   primary:
-    "border-foreground bg-foreground text-background shadow-[0_1px_2px_rgba(24,20,17,0.28),inset_0_1px_0_rgba(255,255,255,0.18)] hover:bg-foreground/90 active:translate-y-px active:shadow-none",
+    "border-foreground bg-foreground text-background hover:bg-foreground/90",
   secondary:
-    "border-border-color/90 bg-[#f7f5f2] text-foreground shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] hover:bg-white active:translate-y-px active:shadow-none",
+    "border-border-color bg-background text-foreground hover:bg-utils-scent-gray-01/35",
   outline:
-    "border-border-color/90 bg-white text-foreground shadow-[0_1px_0_rgba(24,20,17,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] hover:bg-[#f7f5f2] active:translate-y-px active:shadow-none",
+    "border-border-color bg-white text-foreground hover:bg-background",
   danger:
-    "border-border-color/90 bg-[#f7f5f2] text-foreground/75 shadow-[0_1px_0_rgba(24,20,17,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] hover:border-code-rust/40 hover:bg-white hover:text-code-rust active:translate-y-px active:shadow-none",
+    "border-border-color bg-white text-foreground/70 hover:text-code-rust hover:bg-utils-scent-gray-01/30",
   ghost:
     "border-transparent bg-transparent text-foreground/70 hover:bg-utils-scent-gray-01/30 hover:text-foreground",
 };
@@ -45,7 +45,7 @@ const SIZE_CLASSES: Record<ToolButtonSize, string> = {
 };
 
 const BASE_CLASSES =
-  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border font-medium transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground motion-reduce:transform-none motion-reduce:transition-none";
+  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border font-medium transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground motion-reduce:transform-none motion-reduce:transition-none";
 
 /**
  * Shared dense control button primitive for tools and toolbars (`rounded-md`).
