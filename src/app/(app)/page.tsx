@@ -86,7 +86,7 @@ export default async function Home() {
           <RichText className="text-xl md:text-2xl" data={homePage.subTitle} />
 
           <RichText
-            className="prose prose-base text-foreground w-full max-w-none [--tw-prose-body:var(--foreground)] [--tw-prose-bold:var(--foreground)] [--tw-prose-headings:var(--foreground)] prose-p:my-3 prose-p:leading-relaxed prose-p:text-pretty prose-a:text-code-rust prose-a:no-underline hover:prose-a:underline [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+            className="prose prose-base text-foreground w-full max-w-none [--tw-prose-body:var(--foreground)] [--tw-prose-bold:var(--foreground)] [--tw-prose-headings:var(--foreground)] prose-p:my-3 prose-p:leading-relaxed sm:prose-p:text-pretty prose-a:text-code-rust prose-a:no-underline hover:prose-a:underline [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
             data={homePage.shortDescription}
           />
 
