@@ -1,7 +1,11 @@
 <!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
 
-This project uses **Next.js 16** (App Router) with **Tailwind CSS v4** and **Payload CMS v3**. APIs, conventions, and file structure may differ from your training data. Refer to the [Next.js docs](https://nextjs.org/docs) and the rest of this file before writing any code. Heed deprecation notices.
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
 <!-- END:nextjs-agent-rules -->
 
 ---
@@ -215,17 +219,22 @@ Applied globally via `headers()` in next config:
 
 ## Payload Admin Styling (`payloadStyles.css`)
 
-The admin panel has extensive custom CSS. Key patterns:
+The admin panel maps Payload's `--theme-elevation-0` → `--theme-elevation-1000` ramp and UI rules to the `jotadebeese.com` design system (warm paper `#eeeeee` / espresso `#181411` / putty `#e6d9d1` / orange `#ff9900`, `DM Sans` + `Roboto`) across both light and dark modes. Key patterns:
 
 | Selector                    | Purpose                                           |
 | --------------------------- | ------------------------------------------------- |
-| `.nav`                      | Sidebar container — rounded top-right, tinted bg  |
-| `.nav__link`                | Sidebar links — rounded pills, hover transitions  |
-| `.nav__link:not([href])`    | Active page indicator (Payload renders active link as `<div>`, not `<a>`) |
-| `.nav__link-indicator`      | **HIDDEN** — Payload's native black bar, removed via `display: none` |
-| `.btn--style-primary/secondary` | Rounded buttons with shadow                  |
-| `.doc-header__title`        | Inverted pill header (dark bg, white text)         |
-| `.card`                     | White bg in light mode, bordered in dark mode      |
+| `:root` / `html[data-theme="dark"]` | Warm `--theme-elevation-*` ramp, `--style-radius-*`, and `#ff9900` focus outline |
+| `.nav`                      | Flat warm paper sidebar with `1px solid var(--border-color)` right border (no shadow/radius) |
+| `.nav-group__toggle`        | `rounded-full` ToC-style group trigger (no bottom line) |
+| `.nav-group__content`       | Vertical `border-l border-dashed` ToC rail; `.nav__link` items use `rounded-md` with persistent 5px dot (`#ff9900` active) |
+| `.nav__link:not([href])`    | Active page indicator — warm putty pill + `#ff9900` dot (Payload renders active link as `<div>`, not `<a>`) |
+| `.nav__link-indicator`      | **HIDDEN** — Payload's native left bar, removed via `display: none` |
+| `.btn--style-primary/secondary` | Tactile `rounded-full` CTAs (`shadow-xs`, `active:scale-[0.98]`, `#181411` ink primary / warm putty secondary, preserving `.btn--withPopup` split radii) |
+| `.btn--style-subtle/pill`, `.pill` | Dense `rounded-md` (`6px`) toolbar buttons and warm putty badges |
+| `.doc-header__title`        | Clean editorial `Roboto` 200 heading (`letter-spacing: -0.02em`, transparent background) |
+| `.collections__card-list > li` / `.card` | `ProjectCard`-style double-shell bezel (`rounded-xl` translucent outer frame + `rounded-lg` crisp inner surface) |
+| `.template-minimal__wrap`   | Centered double-shell framed Login/Auth card with dashed `.login__brand` divider |
+| `.nav-group__content`, `.login__brand`, `.collections__group + .collections__group`, `.popup-divider`, `.dropzone`, `.no-results` | Dashed borders strictly reserved for structural dividers/rails, dropzones, and empty states |
 
 > **GOTCHA — Payload Active Links:** Payload renders inactive sidebar links as `<a class="nav__link">` but the ACTIVE page as `<div class="nav__link">` (no `href`). That's why `.nav__link:not([href])` is the correct selector for the active state. Do NOT use `a.active` or `a[aria-current]`.
 

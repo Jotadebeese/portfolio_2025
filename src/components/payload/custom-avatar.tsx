@@ -2,7 +2,7 @@
 import React from "react";
 import { useAuth } from "@payloadcms/ui";
 
-export default function CustomAvatar(props: any) {
+export default function CustomAvatar() {
   const { user } = useAuth();
 
   const initials = user?.name
@@ -10,8 +10,8 @@ export default function CustomAvatar(props: any) {
     : user?.email?.substring(0, 2).toUpperCase() || "?";
 
   return (
-    <div className="bg-foreground/10 border-border-color flex aspect-square h-full w-fit items-center justify-center rounded-full border p-2">
-      <div className="text-foreground">{initials}</div>
+    <div className="bg-utils-scent-gray-01/70 border-border-color text-foreground flex aspect-square h-full w-fit items-center justify-center rounded-full border p-2 text-xs font-medium">
+      <span>{initials}</span>
     </div>
   );
 }
